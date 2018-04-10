@@ -47,10 +47,9 @@ local nameplates_defaults = {
         enemyguardian = false,
         enemyminus = false, 
         healthWidth = 1,
-        healthHeight = 5,       
-        aurasscale = 1,
-        aurasoffset = -9,
-                     
+        healthHeight = 6,       
+        aurasscale = 1.1,
+        aurasoffset = -6,                    
     }
 }
 
@@ -74,6 +73,8 @@ local nameplates_config = {
         width = "full",
         get = function() return Nameplates.settings.enable end,
         set = function(_, v)
+            Nameplates.settings.enable = v
+            StaticPopup_Show ("ReloadUI_Popup")
         end,
         order = 2,
     },
@@ -85,36 +86,13 @@ local nameplates_config = {
         min = 6,
         max = 16,
         step = 1,
-        order = 2,
+        order = 3,
+        disabled = function(info) return not Nameplates.settings.enable end,
         get = function() return Nameplates.settings.nameSize end,
         set = function(_, value)
             Nameplates.settings.nameSize = value
             Nameplates:ForceUpdate()
         end,
-    },
-    friendlyName = {
-        type = "toggle",
-        name = "Color Friendly Name",
-        desc = "|cffaaaaaa Color Friendly names by class. |r",
-        descStyle = "inline",
-        width = "full",
-        order = 3,
-        set = function(info,val) Nameplates.settings.friendlyName = val
-        Nameplates:ForceUpdate()
-        end,
-        get = function(info) return Nameplates.settings.friendlyName end
-    },
-    hideHealth = {
-        type = "toggle",
-        name = "Hide HealthBar on Friendly",
-        desc = "|cffaaaaaa Hide the health bar for Friendly Nameplates. |r",
-        descStyle = "inline",
-        width = "full",
-        order = 4,
-        set = function(info,val) Nameplates.settings.hideHealth = val
-        Nameplates:ForceUpdate()
-        end,
-        get = function(info) return Nameplates.settings.hideHealth end
     },
     arenanumber = {
         type = "toggle",
@@ -122,17 +100,52 @@ local nameplates_config = {
         desc = "|cffaaaaaa Replace names on Nameplates with arena numbers. |r",
         descStyle = "inline",
         width = "full",
-        order = 5,
+        order = 4,
+        disabled = function(info) return not Nameplates.settings.enable end,
         set = function(info,val) Nameplates.settings.arenanumber = val
         Nameplates:ForceUpdate()
         end,
         get = function(info) return Nameplates.settings.arenanumber end
+    },
+    friendlyoptions = {
+        name = "Friendly Options",
+        type = "group",
+        inline = true,
+        order = 9,
+        disabled = function(info) return not Nameplates.settings.enable end,
+        args = {
+            friendlyName = {
+                type = "toggle",
+                name = "Color Friendly Name",
+                desc = "|cffaaaaaa Color Friendly names by class. |r",
+                descStyle = "inline",
+                width = "full",
+                order = 1,
+                set = function(info,val) Nameplates.settings.friendlyName = val
+                Nameplates:ForceUpdate()
+                end,
+                get = function(info) return Nameplates.settings.friendlyName end
+            },
+            hideHealth = {
+                type = "toggle",
+                name = "Hide Friendly Health",
+                desc = "|cffaaaaaa Hide the health bar for Friendly Nameplates. |r",
+                descStyle = "inline",
+                width = "full",
+                order = 2,
+                set = function(info,val) Nameplates.settings.hideHealth = val
+                Nameplates:ForceUpdate()
+                end,
+                get = function(info) return Nameplates.settings.hideHealth end
+            },
+        },
     },
     scale = {
         name = "Scale Options",
         type = "group",
         inline = true,
         order = 10,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             globalScale = {
                 type = "range",
@@ -184,6 +197,7 @@ local nameplates_config = {
         type = "group",
         inline = true,
         order = 20,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             sticky = {
                 name = "Sticky Nameplates",
@@ -239,6 +253,7 @@ local nameplates_config = {
         type = "group",
         inline = true,
         order = 30,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             stacking = {
                 type = "toggle",
@@ -273,7 +288,7 @@ local nameplates_config = {
                 max = 1.3,
                 step = 0.1,
                 order = 3,
-                disabled = function(info) return  not Nameplates.settings.overlap end,
+                disabled = function(info) return  not Nameplates.settings.overlap or not Nameplates.settings.enable end,
                 set = function(info,val) Nameplates.settings.verticalOverlap = val
                     SetCVar("nameplateOverlapV", val)
                 end,
@@ -288,7 +303,7 @@ local nameplates_config = {
                 max = 1.3,
                 step = 0.1,
                 order = 4,
-                disabled = function(info) return  not Nameplates.settings.overlap end,
+                disabled = function(info) return  not Nameplates.settings.overlap or not Nameplates.settings.enable end,
                 set = function(info,val) Nameplates.settings.horizontalOverlap = val
                     SetCVar("nameplateOverlapH", val)
                 end,
@@ -301,6 +316,7 @@ local nameplates_config = {
         type = "group",
         inline = true,
         order = 40,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             enemytotem = {
                 type = "toggle",
@@ -349,6 +365,7 @@ local nameplates_config = {
         type = "group",
         inline = true,
         order = 50,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             healthHeight = {
                 type = "range",
@@ -385,6 +402,7 @@ local nameplates_config = {
         type = "group",
         inline = true,
         order = 60,
+        disabled = function(info) return not Nameplates.settings.enable end,
         args = {
             aurasscale = {
                 type = "range",
@@ -422,6 +440,25 @@ function Nameplates:OnInitialize()
     self.db = JokUI.db:RegisterNamespace("Nameplates", nameplates_defaults)
     self.settings = self.db.profile
     JokUI.Config:Register("Nameplates", nameplates_config)
+
+    -- Set CVar
+    SetCVar("nameplateResourceOnTarget", 0)
+    SetCVar("nameplateShowSelf", 0)
+    SetCVar("nameplateShowAll", 1)
+
+    if self.settings.enable then
+        -- SetCVar("nameplateGlobalScale", val)
+        -- SetCVar("nameplateTargetScale", val)
+        -- SetCVar("nameplateImportantScale", val)
+        -- SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
+        -- SetCVar("nameplateMotion", Nameplates.settings.overlap)
+    end
+end
+
+function Nameplates:OnEnable()
+    if self.settings.enable then
+        Nameplates:Core()
+    end
 end
 
 	----------------------
@@ -493,210 +530,227 @@ function Nameplates:UpdateCastbarTimer(frame)
     end
 end
 
-	---------------------
-    -- SKIN NAMEPLATES --
-	---------------------
+function Nameplates:Core()
+
+    local z = CreateFrame("FRAME")
+    z:RegisterEvent("PLAYER_ENTERING_WORLD")
+    z:SetScript("OnEvent", function()
+        local _,type=IsInInstance()
+        if type=="party" or type=="raid" then
+            SetCVar("nameplateShowDebuffsOnFriendly", 0)
+            -- SetCVar("nameplateShowOnlyNames", 1)
+        else
+            SetCVar("nameplateShowDebuffsOnFriendly", 1)
+            -- SetCVar("nameplateShowOnlyNames", 0)
+        end
+        z:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    end)
 	
 	-- UPDATE HEALTH COLOR
 
-hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
-    if ( frame:IsForbidden() ) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+    hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
+        if ( frame:IsForbidden() ) then return end
+        if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-    local r, g, b;
-	if ( not UnitIsConnected(frame.unit) ) then
-		r, g, b = 0.5, 0.5, 0.5;
-	else
-		if ( frame.optionTable.healthBarColorOverride ) then
-			local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
-			r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
-		else
-			local localizedClass, englishClass = UnitClass(frame.unit);
-			local classColor = RAID_CLASS_COLORS[englishClass];
-			if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
-				r, g, b = classColor.r, classColor.g, classColor.b;
-			elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
-				r, g, b = 0.9, 0.9, 0.9;
-			elseif ( frame.optionTable.colorHealthBySelection ) then
-				if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
-					local target = frame.displayedUnit.."target"
-                    local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
-                        if ( isTanking and threatStatus ) then
-                            if ( threatStatus >= 3 ) then
-                                r, g, b = 0.5, 0.75, 0.95
+        local r, g, b;
+    	if ( not UnitIsConnected(frame.unit) ) then
+    		r, g, b = 0.5, 0.5, 0.5;
+    	else
+    		if ( frame.optionTable.healthBarColorOverride ) then
+    			local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
+    			r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
+    		else
+    			local localizedClass, englishClass = UnitClass(frame.unit);
+    			local classColor = RAID_CLASS_COLORS[englishClass];
+    			if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
+    				r, g, b = classColor.r, classColor.g, classColor.b;
+    			elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
+    				r, g, b = 0.9, 0.9, 0.9;
+    			elseif ( frame.optionTable.colorHealthBySelection ) then
+    				if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
+    					local target = frame.displayedUnit.."target"
+                        local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
+                            if ( isTanking and threatStatus ) then
+                                if ( threatStatus >= 3 ) then
+                                    r, g, b = 0.5, 0.75, 0.95
+                                end
+                            else
+                                r, g, b = 1.0, 0.0, 0.0
                             end
-                        else
-                            r, g, b = 1.0, 0.0, 0.0
-                        end
-				elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
-					r, g, b = 0.667, 0.667, 1.0;
-				else
-					r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
-				end
-			elseif ( UnitIsFriend("player", frame.unit) ) then
-				r, g, b = 0.0, 1.0, 0.0;
-			else
-				r, g, b = 1.0, 0.0, 0.0;
-			end
-		end
-	end
-	if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
-		frame.healthBar:SetStatusBarColor(r, g, b);
+    				elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
+    					r, g, b = 0.667, 0.667, 1.0;
+    				else
+    					r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
+    				end
+    			elseif ( UnitIsFriend("player", frame.unit) ) then
+    				r, g, b = 0.0, 1.0, 0.0;
+    			else
+    				r, g, b = 1.0, 0.0, 0.0;
+    			end
+    		end
+    	end
+    	if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
+    		frame.healthBar:SetStatusBarColor(r, g, b);
 
-		if (frame.optionTable.colorHealthWithExtendedColors) then
-			frame.selectionHighlight:SetVertexColor(r, g, b);
-		else
-			frame.selectionHighlight:SetVertexColor(1, 1, 1);
-		end
-		
-		frame.healthBar.r, frame.healthBar.g, frame.healthBar.b = r, g, b;
-	end
-end)
+    		if (frame.optionTable.colorHealthWithExtendedColors) then
+    			frame.selectionHighlight:SetVertexColor(r, g, b);
+    		else
+    			frame.selectionHighlight:SetVertexColor(1, 1, 1);
+    		end
+    		
+    		frame.healthBar.r, frame.healthBar.g, frame.healthBar.b = r, g, b;
+    	end
+    end)
 
-    -- UPDATE BUFFS 
+        -- UPDATE BUFFS 
 
-local function UpdateBuffFrame(...)
-    for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
-        if ( not v.UnitFrame:IsForbidden() ) then
-            local bf = v.UnitFrame.BuffFrame
-            bf:SetScale(Nameplates.settings.aurasscale) 
-            if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) then
-                bf.baseYOffset = Nameplates.settings.aurasoffset
-            elseif ( v.UnitFrame.displayedUnit ) then
-                bf.baseYOffset = 0
+    local function UpdateBuffFrame(...)
+        for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
+            if ( not v.UnitFrame:IsForbidden() ) then
+                local bf = v.UnitFrame.BuffFrame
+                bf:SetScale(Nameplates.settings.aurasscale) 
+                if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) then
+                    bf.baseYOffset = Nameplates.settings.aurasoffset
+                elseif ( v.UnitFrame.displayedUnit ) then
+                    bf.baseYOffset = 0
+                end
+
+                bf:UpdateAnchor()
             end
-
-            bf:UpdateAnchor()
         end
     end
-end
-NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
+    NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
 
-	-- UPDATE NAMEPLATE
-
-hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
-    if ( frame:IsForbidden() ) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-
-        -- Health Bar Height
-
-    frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
-    
-       -- Elite Icon
-        
-    frame.ClassificationFrame:SetScale(1)
-
-        -- Castbar.
-
-    --frame.castBar:SetHeight(8)
-    --frame.castBar:SetStatusBarTexture(statusBar)
-    
-       -- Hide Border Shield
-
-    frame.castBar.BorderShield:Hide()
-    frame.castBar.BorderShield:ClearAllPoints()
-    
-       -- Castbar Spell Name.
-    
-    frame.castBar.Text:SetShadowOffset(.5, -.5)
-
-       -- Set Castbar Timer.
-
-    if ( not frame.castBar.CastTime ) then
-        frame.castBar.CastTime = frame.castBar:CreateFontString(nil, "OVERLAY")
-        frame.castBar.CastTime:Hide()
-        frame.castBar.CastTime:SetPoint("RIGHT", frame.castBar, "RIGHT", 17, 0)
-        frame.castBar.CastTime:SetFont(castbarFont, 8, "OUTLINE")
-        frame.castBar.CastTime:Show()
-    end
-
-       -- Update Castbar.
-    
-    frame.castBar:SetScript("OnValueChanged", function(self, value)
-        Nameplates:UpdateCastbarTimer(frame)
-    end)
-	
-	-- Name Position.
-
-	frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)
-		
-	-- Name Size.
-		
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
-	
-	-- Abbreviate Long Names.
-	
-    local newName = frame.name:GetText()
-    newName = Nameplates:Abbrev(newName,32)
-	frame.name:SetText(newName)
-
-    -- Only Name Fix 
-
-     if not UnitIsPlayer(frame.displayedUnit) then
-        frame.healthBar:Show()
-     end
-
-    -- Friendly Nameplates Motion
-
+    -- Friendly Nameplates in protected area
     if Nameplates.settings.friendlymotion then
         if (not InCombatLockdown()) then
-            C_NamePlate.SetNamePlateFriendlySize(90, 1)
+            C_NamePlate.SetNamePlateFriendlySize(80, 1)
             C_NamePlate.SetNamePlateFriendlyClickThrough(true)
-        end
-
-        if ( not UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") ) then
-            frame.healthBar:SetHeight(3)
         end
     end
 
-    -- Color Friendly Player Name.
-	
-	if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and Nameplates.settings.friendlyName) then
-		local friendly_name = GetUnitName(frame.displayedUnit,true)
-		local _, class = UnitClass(frame.displayedUnit)
-        local colour = select(4, GetClassColor(class))
-    	local text = "|c"..colour..friendly_name:match("[^-]+")..""				
-		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-		frame.name:SetText(text)
-        C_NamePlate.SetNamePlateFriendlySize(90, 1)
-		if Nameplates.settings.hideHealth then
-			frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
-			frame.healthBar:Hide()
-			if IsActiveBattlefieldArena() then
-				frame.healthBar:Show()
-	            frame.healthBar:SetHeight(3)
-	            frame.healthBar:SetScale(0.8)
-				frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 3)
-			end
-        else
+    	-- UPDATE NAMEPLATE
+
+    hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
+        if ( frame:IsForbidden() ) then return end
+        if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+
+            -- Health Bar Height
+
+        frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
+        
+           -- Elite Icon
+            
+        frame.ClassificationFrame:SetScale(0.85)
+
+            -- Castbar.
+
+        --frame.castBar:SetHeight(8)
+        --frame.castBar:SetStatusBarTexture(statusBar)
+        
+           -- Hide Border Shield
+
+        -- frame.castBar.BorderShield:Hide()
+        -- frame.castBar.BorderShield:ClearAllPoints()
+        
+           -- Castbar Spell Name.
+        
+        frame.castBar.Text:SetShadowOffset(.5, -.5)
+
+           -- Set Castbar Timer.
+
+        if ( not frame.castBar.CastTime ) then
+            frame.castBar.CastTime = frame.castBar:CreateFontString(nil, "OVERLAY")
+            frame.castBar.CastTime:Hide()
+            frame.castBar.CastTime:SetPoint("RIGHT", frame.castBar, "RIGHT", 17, 0)
+            frame.castBar.CastTime:SetFont(castbarFont, 8, "OUTLINE")
+            frame.castBar.CastTime:Show()
+        end
+
+           -- Update Castbar.
+        
+        frame.castBar:SetScript("OnValueChanged", function(self, value)
+            Nameplates:UpdateCastbarTimer(frame)
+        end)
+    	
+    	-- Name Position.
+
+    	frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)
+    		
+    	-- Name Size.
+    		
+        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
+    	
+    	-- Abbreviate Long Names.
+    	
+        local newName = frame.name:GetText()
+        newName = Nameplates:Abbrev(newName,32)
+    	frame.name:SetText(newName)
+
+        -- Only Name Fix 
+
+         if not UnitIsPlayer(frame.displayedUnit) then
             frame.healthBar:Show()
-            frame.healthBar:SetHeight(4)
-		end
-	end
-	
-	-- Color Enemy Player Name.
-	
-	if ( UnitIsPlayer(frame.displayedUnit) and UnitCanAttack(frame.displayedUnit,"player") ) then
-		local enemy_name = GetUnitName(frame.displayedUnit,true)
-		local _, class = UnitClass(frame.displayedUnit)
-        local colour = select(4, GetClassColor(class))
-    	local text = "|c"..colour..enemy_name:match("[^-]+")..""				
-		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-		frame.name:SetText(text)
-		frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 2)
-	end
-	
-	-- Arena Number on Nameplates.
-	
-	if IsActiveBattlefieldArena() and frame.displayedUnit:find("nameplate") and Nameplates.settings.arenanumber then 
-		for i=1,5 do 
-			if UnitIsUnit(frame.displayedUnit,"arena"..i) then 
-				frame.name:SetText(i)
-				frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11)
-				frame.name:SetTextColor(1,1,0)
-				break 
-			end 
-		end 
-	end 
-		
-end)
+         end
+
+        -- Friendly Nameplates Motion
+
+        if Nameplates.settings.friendlymotion then
+            if ( not UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") ) then
+                frame.healthBar:SetHeight(3)
+            end
+        end
+
+        -- Color Friendly Player Name.
+    	
+    	if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and Nameplates.settings.friendlyName) then
+    		local friendly_name = GetUnitName(frame.displayedUnit,true)
+    		local _, class = UnitClass(frame.displayedUnit)
+            local colour = select(4, GetClassColor(class))
+        	local text = "|c"..colour..friendly_name:match("[^-]+")..""				
+    		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+    		frame.name:SetText(text)
+            -- 
+    		if Nameplates.settings.hideHealth and not frame:IsForbidden() then
+    			frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
+    			frame.healthBar:Hide()
+    			if IsActiveBattlefieldArena() then
+    				frame.healthBar:Show()
+    	            frame.healthBar:SetHeight(3)
+    	            frame.healthBar:SetScale(0.8)
+    				frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 3)
+    			end
+            else
+                frame.healthBar:Show()
+                frame.healthBar:SetHeight(4)
+    		end
+    	end
+    	
+    	-- Color Enemy Player Name.
+    	
+    	if ( UnitIsPlayer(frame.displayedUnit) and UnitCanAttack(frame.displayedUnit,"player") ) then
+    		local enemy_name = GetUnitName(frame.displayedUnit,true)
+    		local _, class = UnitClass(frame.displayedUnit)
+            local colour = select(4, GetClassColor(class))
+        	local text = "|c"..colour..enemy_name:match("[^-]+")..""				
+    		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+    		frame.name:SetText(text)
+    		frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 2)
+    	end
+    	
+    	-- Arena Number on Nameplates.
+    	
+    	if IsActiveBattlefieldArena() and frame.displayedUnit:find("nameplate") and Nameplates.settings.arenanumber then 
+    		for i=1,5 do 
+    			if UnitIsUnit(frame.displayedUnit,"arena"..i) then 
+    				frame.name:SetText(i)
+    				frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    				frame.name:SetTextColor(1,1,0)
+    				break 
+    			end 
+    		end 
+    	end 
+    		
+    end)
+
+end

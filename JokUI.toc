@@ -39,3 +39,6 @@ Core\Nameplates.lua
 Core\RaidFrames.lua
 Core\MythicPlus.lua
 Core\Progress.lua
+Core\Timer.lua
+Core\Schedule.lua
+Core\ProgressTracker.lua
