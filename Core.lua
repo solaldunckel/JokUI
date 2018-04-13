@@ -1,6 +1,7 @@
 local _, Core = ...
 
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local callbacks = {}
 
 JokUI = LibStub("AceAddon-3.0"):NewAddon(Core, "JokUI")
 
@@ -39,92 +40,20 @@ function Core:RegisterModule(name, ...)
 	return mod
 end
 
--- local Listener = CreateFrame('Frame', 'JokUI' .. 'Listener')
--- local EventListeners = {}
--- local function Core_OnEvent(frame, event, ...)
--- 	if EventListeners[event] then
--- 		for callback, func in pairs(EventListeners[event]) do
--- 			if func == 0 then
--- 				callback[event](callback, ...)
--- 			else
--- 				callback[func](callback, event, ...)
--- 			end
--- 		end
--- 	end
--- end
--- Listener:SetScript('OnEvent', Core_OnEvent)
--- function Core:RegisterEvent(event, callback, func)
--- 	if func == nil then func = 0 end
--- 	if EventListeners[event] == nil then
--- 		Listener:RegisterEvent(event)
--- 		EventListeners[event] = { [callback]=func }
--- 	else
--- 		EventListeners[event][callback] = func
--- 	end
--- end
-
--- function Core:UnregisterEvent(event, callback)
--- 	local listeners = EventListeners[event]
--- 	if listeners then
--- 		local count = 0
--- 		for index,_ in pairs(listeners) do
--- 			if index == callback then
--- 				listeners[index] = nil
--- 			else
--- 				count = count + 1
--- 			end
--- 		end
--- 		if count == 0 then
--- 			EventListeners[event] = nil
--- 			Listener:UnregisterEvent(event)
--- 		end
--- 	end
--- end
-
--- local AddOnListeners = {}
--- function Core:ADDON_LOADED(name)
--- 	if AddOnListeners[name] then
--- 		for callback, func in pairs(AddOnListeners[name]) do
--- 			if func == 0 then
--- 				callback[name](callback)
--- 			else
--- 				callback[func](callback, name)
--- 			end
--- 		end
--- 	end
--- end
-
--- function Core:RegisterAddOnLoaded(name, callback, func)
--- 	if func == nil then func = 0 end
--- 	if IsAddOnLoaded(name) then
--- 		if func == 0 then
--- 			callback[name](callback)
--- 		else
--- 			callback[func](callback, name)
--- 		end
--- 	else
--- 		self:RegisterEvent('ADDON_LOADED', self)
--- 		if AddOnListeners[name] == nil then
--- 			AddOnListeners[name] = { [callback]=func }
--- 		else
--- 			AddOnListeners[name][callback] = func
--- 		end
--- 	end
--- end
-
--- function Core:UnregisterAddOnLoaded(name, callback)
--- 	local listeners = AddOnListeners[name]
--- 	if listeners then
--- 		local count = 0
--- 		for index,_ in pairs(listeners) do
--- 			if index == callback then
--- 				listeners[index] = nil
--- 			else
--- 				count = count + 1
--- 			end
--- 		end
--- 		if count == 0 then
--- 			AddOnListeners[name] = nil
--- 		end
--- 	end
--- end
+function Core:RegisterCallback(key, func)
+	if type(key) == "table" then
+		for _, key2 in ipairs(key) do
+			if callbacks[key2] then
+				table.insert(callbacks, func)
+			else
+				callbacks[key2] = { func }
+			end
+		end
+	else
+		if callbacks[key] then
+			table.insert(callbacks, func)
+		else
+			callbacks[key] = { func }
+		end
+	end
+end

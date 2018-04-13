@@ -1,6 +1,10 @@
 local _, JokUI = ...
 local MythicPlus = JokUI:RegisterModule("Mythic +")
 
+-------------------------------------------------------------------------------
+-- Locals
+-------------------------------------------------------------------------------
+
 local features = {}
 
 local challengeMapID
@@ -51,6 +55,10 @@ local activeNameplates = {}
 mppSimulationMode = false
 local simulationMax = 220
 local simulationCurrent = 28
+
+-------------------------------------------------------------------------------
+-- Config
+-------------------------------------------------------------------------------
 
 -- Default npc's progress values
 defaultProgressValues = {{100216,4,"Hatecoil Wrangler"},{97182,6,"Night Watch Mariner"},{92168,8,"Target Dummy Test2"},{114716,1,"Boulangère fantôme"},{122413,4,"Traque-faille ombre-garde"},{91785,2,"Wandering Shellback"},{96480,1,"Viletongue Belcher"},{97087,2,"Valarjar Champion"},{96608,2,"Ebonclaw Worg"},{96640,2,"Valarjar Marksman"},{121711,4,"Flagellant vénéneux"},{95842,2,"Valarjar Thundercaller"},{91786,4,"Gritslime Snail"},{119923,4,"Soigneuse érédar"},{114334,4,"Golem endommagé"},{115388,5,"Roi"},{115484,4,"Gangroptère"},{114526,1,"Doublure fantomatique"},{100250,4,"Lieuse Ashioi"},{98813,4,"Bloodscent Felhound"},{95779,10,"Festerhide Grizzly"},{98366,4,"Ghostly Retainer"},{95843,4,"Roi Haldor"},{91787,1,"Mouette de la crique"},{98973,1,"Skeletal Warrior"},{95939,10,"Skrog Tidestomper"},{121553,4,"Chasseur de l'effroi"},{113537,10,"Unknown"},{114783,4,"Damoiselle repentie"},{105617,4,"Eredar Chaosbringer"},{95940,1,"Pillard mer-amère"},{102104,4,"Enslaved Shieldmaiden"},{115486,8,"Tueuse érudite"},{102232,4,"Rockbound Trapper"},{114624,8,"Gardien arcanique"},{99358,4,"Rotheart Dryad"},{98368,4,"Ghostly Protector"},{120405,4,"Aile de l'effroi"},{102584,4,"Malignant Defiler"},{105682,8,"Felguard Destroyer"},{104277,4,"Legion Hound"},{98177,12,"Glayvianna Soulrender"},{118713,4,"Lance-orbe gangrerôdeur"},{122322,4,"Roué affamé"},{99359,3,"Rotheart Keeper"},{113699,8,"Forgotten Spirit"},{120374,4,"Destructeur gangregarde"},{91790,4,"Mak'rana Siltwalker"},{114338,10,"Confluence de mana"},{105715,4,"Watchful Inquisitor"},{115488,4,"Pyromancien imprégné"},{104278,10,"Felbound Enforcer"},{118714,4,"Tentatrice feu-d'enfer"},{99360,9,"Vilethorn Blossom"},{98370,4,"Ghostly Councilor"},{104247,4,"Arcaniste de la Garde crépusculaire"},{105876,1,"Enchanted Broodling"},{98243,4,"Soul-Torn Champion"},{114627,4,"Terreur hurleuse"},{91792,10,"Stormwake Hydra"},{96934,2,"Valarjar Trapper"},{99649,12,"Dreadlord Mendacius"},{98691,4,"Risen Scout"},{118716,4,"Flagellant vénéneux"},{101438,4,"Vileshard Chunk"},{122421,8,"Adepte de la guerre ombreux"},{91793,1,"Seaspray Crab"},{119930,4,"Aile de l'effroi"},{96584,4,"Immoliant Fury"},{98756,4,"Arcane Anomaly"},{111563,4,"Duskwatch Guard"},{91794,1,"Saltscale Lurker"},{98533,10,"Foul Mother"},{102781,4,"Jeune gangroptère"},{102430,1,"Tarspitter Slug"},{98406,4,"Scorpion éclat-ardent"},{95947,4,"Mak'rana Hardshell"},{105720,4,"Understone Drudge"},{104251,4,"Duskwatch Sentry"},{90997,4,"Mightstone Breaker"},{118719,4,"Pillard langue-de-wyrm"},{99365,4,"Taintheart Stalker"},{124947,1,"Ecorcheur du Vide"},{100451,3,"Target Dummy Test"},{91796,10,"Skrog Wavecrasher"},{96587,4,"Felsworn Infester"},{90998,4,"Blightshard Shaper"},{98759,4,"Vicious Manafang"},{114632,4,"Domestique spectral"},{99366,4,"Taintheart Summoner"},{98919,4,"Seacursed Swiftblade"},{114792,4,"Dame vertueuse"},{116549,4,"Choriste"},{98728,7,"Bile acide"},{98792,4,"Wyrmtongue Scavenger"},{97068,5,"Drake-tempête"},{91000,8,"Vileshard Hulk"},{105915,4,"Nightborne Reclaimer"},{114634,4,"Serviteur immortel"},{114794,4,"Molosse squelettique"},{98538,10,"Dame Velandras Corvaltus"},{91001,4,"Tarspitter Lurker"},{97197,2,"Valarjar Purifier"},{118723,10,"Scrutax"},{114252,4,"Dévoreur de mana"},{98954,4,"Felsworn Myrmidon"},{95920,2,"Animated Storm"},{97677,1,"Barbed Spiderling"},{114636,4,"Garde fantôme"},{102404,4,"Stoneclaw Grubmaster"},{101414,2,"Saltscale Skulker"},{114796,4,"Hôtesse saine"},{113966,40,"Test NPC"},{113998,4,"Mightstone Breaker"},{102788,4,"Felspite Dominator"},{98732,1,"Plagued Rat"},{99307,12,"Skjal"},{114542,4,"Philanthrope fantomatique"},{97200,4,"Seacursed Soulkeeper"},{101991,4,"Nightmare Dweller"},{102566,12,"Grimhorn the Enslaver"},{121569,4,"Marcheur vilécorce"},{102375,3,"Runecarver Slave"},{115757,8,"Porte-flamme garde-courroux"},{98926,4,"Shadow Hunter"},{99629,1,"Pillard mer-amère"},{91006,4,"Rockback Gnasher"},{114544,4,"Ouvreur squelettique"},{105921,4,"Nightborne Spellsword"},{100364,4,"Spirit of Vengeance"},{122401,8,"Entourloupeur ombre-garde"},{95861,4,"Hatecoil Oracle"},{97043,4,"Seacursed Slaver"},{99630,1,"Pillard mer-amère"},{97171,10,"Hatecoil Arcanist"},{95766,4,"Crazed Razorbeak"},{114801,4,"Apprenti spectral"},{105699,3,"Mana Saber"},{120550,4,"Garde-courroux envahisseur"},{106785,1,"Bitterbrine Slave"},{91008,4,"Rockbound Pelter"},{97172,1,"Saltsea Droplet"},{122403,4,"Champion ombre-garde"},{114802,4,"Compagnon spectral"},{92350,4,"Understone Drudge"},{106786,1,"Bitterbrine Slave"},{104295,1,"Blazing Imp"},{98706,6,"Commander Shemdah'sohn"},{98770,4,"Wrathguard Felblade"},{96247,1,"Vileshard Crawler"},{95832,2,"Valarjar Shieldmaiden"},{114803,4,"Palefrenière spectrale"},{100527,3,"Dreadfire Imp"},{119977,4,"Flagellant constricteur"},{106787,1,"Bitterbrine Slave"},{118700,2,"Traqueur sylvechancre"},{95769,4,"Mindshattered Screecher"},{122405,4,"Adjuratrice ombre-garde"},{98963,1,"Blazing Imp"},{119978,1,"Flagellant fulminant"},{102253,4,"Understone Demolisher"},{96664,2,"Valarjar Runecarver"},{98900,4,"Wyrmtongue Trickster"},{100529,1,"Hatespawn Slime"},{102094,4,"Risen Swordsman"},{105703,1,"Mana Wyrm"},{101679,4,"Dreadsoul Poisoner"},{99188,4,"Waterlogged Soul Guard"},{102583,4,"Brûleur gangrené"},{101839,4,"Risen Companion"},{2,35,"Test NPC"},{95771,4,"Dreadsoul Ruiner"},{105629,1,"Wyrmtongue Scavenger"},{122407,4,"Traqueur dimensionnel"},{101549,1,"Arcane Minion"},{118717,4,"Diablotin feu-d'enfer"},{91332,4,"Stoneclaw Hunter"},{102095,4,"Lancier ressuscité"},{114629,4,"Factotum spectral"},{114804,4,"Destrier spectral"},{97081,5,"Roi Bjorn"},{114541,1,"Cliente spectrale"},{114628,4,"Serveur squelettique"},{102287,10,"Unknown"},{92610,4,"Batteur pierre-basse"},{118703,4,"Botaniste gangrenuit"},{122423,8,"Grand tisseur d'ombre"},{95772,4,"Frenzied Nightclaw"},{115765,4,"Annulateur abstrait"},{122408,4,"Traqueur des ombres"},{118724,4,"Gangréneur feu-d'enfer"},{100539,4,"Mornœil cœur-corrompu"},{100531,8,"Bloodtainted Fury"},{98173,4,"Mystique Ssa’veh"},{105705,4,"Bound Energy"},{120556,4,"Aile de l'effroi"},{111901,3,"Unknown"},{100248,4,"Ritualiste Lesha"},{104300,4,"Shadow Mistress"},{98275,4,"Risen Archer"},{114584,1,"Machiniste fantôme"},{118704,10,"Dul'zak"},{97097,4,"Helarjar Champion"},{105845,4,"Glowing Spiderling"},{115417,8,"Rat"},{97678,8,"Aranasi Broodmother"},{91781,4,"Hatecoil Warrior"},{98733,4,"Withered Fiend"},{122404,4,"Arqueur du Vide ombre-garde"},{91783,4,"Hatecoil Stormweaver"},{105706,10,"Prêtresse de misère"},{105651,10,"Dreadborne Seer"},{97083,5,"Roi Ranulf"},{114626,4,"Esprit lugubre"},{118690,4,"Garde-courroux envahisseur"},{98677,1,"Rook Spiderling"},{125860,8,"Gardien de la faille"},{118705,10,"Nal'asha"},{97365,4,"Seacursed Mistmender"},{114625,1,"Invité fantôme"},{98425,4,"Unstable Amalgamation"},{120366,4,"Tentatrice feu-d'enfer"},{91782,10,"Hatecoil Crusher"},{115831,4,"Dévoreur de mana"},{100526,4,"Tormented Bloodseeker"},{98521,10,"Lord Etheldrin Ravencrest"},{105636,4,"Understone Drudge"},{124171,4,"Subjugateur ombre-garde"},{97084,5,"Roi Tor"},{104270,8,"Guardian Construct"},{98681,6,"Rook Spinner"},{122410,1,"Ciaileron"},{97173,4,"Restless Tides"},{118706,2,"Jeune araignée nécrotique"},{95834,2,"Valarjar Mystic"},{96657,12,"Danse-lames Illianna"},{114714,4,"Régisseuse fantomatique"},{106059,4,"Warp Shade"},{98426,4,"Limon instable"},{106546,4,"Etincelle astrale"},{119952,4,"Destructeur gangregarde"},{99033,4,"Helarjar Mistcaller"},{122571,8,"Gardien de la faille"},{102351,1,"Mana Wyrm"},{96574,5,"Stormforged Sentinel"},{100441,1,"Unknown"},{116550,4,"Client spectral"},{100249,4,"Canaliste Varisz"},{104246,4,"Duskwatch Guard"},{114633,4,"Servante spectrale"},{98810,6,"Wrathguard Bladelord"},{114637,4,"Factionnaire spectral"},{114715,4,"Cuistot fantomatique"},{105952,6,"Withered Manawraith"},{122478,2,"Décharge du Vide"},{97185,10,"The Grimewalker"},{96611,2,"Taureau sabot-furieux"},{114364,1,"Wyrm gavé de mana"},{115418,8,"Araignée"},{98280,4,"Risen Arcanist"},{97119,1,"Shroud Hound"},}
@@ -192,14 +200,14 @@ function MythicPlus:OnEnable()
 	end
 
 	if MythicPlus.settings.enableProgress then
-		MythicPlus:Progress()
+		self:Progress()
 	end
 
 	if MythicPlus.settings.enableTimer then
-		MythicPlus:Timer()
+		self:Timer()
 	end
 
-	MythicPlus:Schedule()
+	self:Schedule()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 	self:RegisterEvent("CHALLENGE_MODE_START")
@@ -207,7 +215,11 @@ function MythicPlus:OnEnable()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("ADDON_LOADED")
 	self:RegisterEvent("BAG_UPDATE")
-	
+
+	self:AfterEnable()
+end
+
+function MythicPlus:AfterEnable()
 	requestKeystoneCheck = true
 
 	challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()
@@ -216,6 +228,15 @@ end
 
 function MythicPlus:Blizzard_TalkingHeadUI()
 	hooksecurefunc("TalkingHeadFrame_PlayCurrent", PlayCurrent)
+end
+
+function MythicPlus:ADDON_LOADED(event, addon)
+	if addon == "Blizzard_TalkingHeadUI" then
+		self:SyncFeature("MythicTalkingHead")
+	end
+	if addon == "Blizzard_ChallengesUI" then
+		self:Blizzard_ChallengesUI()
+	end
 end
 
 do
@@ -230,7 +251,7 @@ do
 			get = function() return MythicPlus.settings[name] end,
 			set = function(_, v)
 				MythicPlus.settings[name] = v
-				MythicPlus:SyncFeature(name)
+				self:SyncFeature(name)
 				if reload then
 					StaticPopup_Show ("ReloadUI_Popup")
 				end
@@ -245,15 +266,6 @@ end
 
 function MythicPlus:SyncFeature(name)
 	features[name](MythicPlus.settings[name])
-end
-
-function MythicPlus:ADDON_LOADED(event, addon)
-	if addon == "Blizzard_TalkingHeadUI" then
-		self:SyncFeature("MythicTalkingHead")
-	end
-	if addon == "Blizzard_ChallengesUI" then
-		self:Blizzard_ChallengesUI()
-	end
 end
 
 do
@@ -303,11 +315,274 @@ do
 		end)
 end
 
-	
+-------------------------------------------------------------------------------
+-- Functions
+-------------------------------------------------------------------------------
+
+function MythicPlus:Timer()
+
+	local function timeFormat(seconds)
+		local hours = floor(seconds / 3600)
+		local minutes = floor((seconds / 60) - (hours * 60))
+		seconds = seconds - hours * 3600 - minutes * 60
+
+		if hours == 0 then
+			return format("%d:%.2d", minutes, seconds)
+		else
+			return format("%d:%.2d:%.2d", hours, minutes, seconds)
+		end
+	end
+	MythicPlus.timeFormat = timeFormat
+
+	local function timeFormatMS(timeAmount)
+		local seconds = floor(timeAmount / 1000)
+		local ms = timeAmount - seconds * 1000
+		local hours = floor(seconds / 3600)
+		local minutes = floor((seconds / 60) - (hours * 60))
+		seconds = seconds - hours * 3600 - minutes * 60
+
+		if hours == 0 then
+			return format("%d:%.2d.%.3d", minutes, seconds, ms)
+		else
+			return format("%d:%.2d:%.2d.%.3d", hours, minutes, seconds, ms)
+		end
+	end
+	MythicPlus.timeFormatMS = timeFormatMS
+
+	local function GetTimerFrame(block)
+		if not block.TimerFrame then
+			local TimerFrame = CreateFrame("Frame", nil, block)
+			TimerFrame:SetAllPoints(block)
+			
+			TimerFrame.Text = TimerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+			TimerFrame.Text:SetPoint("LEFT", block.TimeLeft, "RIGHT", 4, 0)
+			
+			TimerFrame.Text2 = TimerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+			TimerFrame.Text2:SetPoint("LEFT", TimerFrame.Text, "RIGHT", 4, 0)
+
+			TimerFrame.Bar3 = TimerFrame:CreateTexture(nil, "OVERLAY")
+			TimerFrame.Bar3:SetPoint("TOPLEFT", block.StatusBar, "TOPLEFT", block.StatusBar:GetWidth() * (1 - TIME_FOR_3) - 4, 0)
+			TimerFrame.Bar3:SetSize(8, 10)
+			TimerFrame.Bar3:SetTexture("Interface\\Addons\\JokUI\\media\\bar")
+			TimerFrame.Bar3:SetTexCoord(0, 0.5, 0, 1)
+
+			TimerFrame.Bar2 = TimerFrame:CreateTexture(nil, "OVERLAY")
+			TimerFrame.Bar2:SetPoint("TOPLEFT", block.StatusBar, "TOPLEFT", block.StatusBar:GetWidth() * (1 - TIME_FOR_2) - 4, 0)
+			TimerFrame.Bar2:SetSize(8, 10)
+			TimerFrame.Bar2:SetTexture("Interface\\Addons\\JokUI\\media\\bar")
+			TimerFrame.Bar2:SetTexCoord(0.5, 1, 0, 1)
+
+			TimerFrame:Show()
+
+			block.TimerFrame = TimerFrame
+		end
+		return block.TimerFrame
+	end
+
+	local function UpdateTime(block, elapsedTime)
+		local TimerFrame = GetTimerFrame(block)
+
+		local time3 = block.timeLimit * TIME_FOR_3
+		local time2 = block.timeLimit * TIME_FOR_2
+
+		TimerFrame.Bar3:SetShown(elapsedTime < time3)
+		TimerFrame.Bar2:SetShown(elapsedTime < time2)
+
+		if elapsedTime < time3 then
+			TimerFrame.Text:SetText( timeFormat(time3 - elapsedTime) )
+			TimerFrame.Text:SetTextColor(1, 0.843, 0)
+			TimerFrame.Text:Show()
+			TimerFrame.Text:SetFont("Fonts\\FRIZQT__.TTF", 15)
+			
+			TimerFrame.Text2:SetText( timeFormat(time2 - elapsedTime) )
+			TimerFrame.Text2:SetTextColor(0.78, 0.78, 0.812)
+			TimerFrame.Text2:Show()
+			TimerFrame.Text2:SetFont("Fonts\\FRIZQT__.TTF", 11)
+
+		elseif elapsedTime < time2 then
+			TimerFrame.Text:SetText( timeFormat(time2 - elapsedTime) )
+			TimerFrame.Text:SetTextColor(0.78, 0.78, 0.812)
+			TimerFrame.Text:Show()
+			TimerFrame.Text:SetFont("Fonts\\FRIZQT__.TTF", 15)
+			TimerFrame.Text2:Hide()
+		else
+			TimerFrame.Text:Hide()
+			TimerFrame.Text2:Hide()
+		end
+
+		if elapsedTime > block.timeLimit then
+			block.TimeLeft:SetText(GetTimeStringFromSeconds(elapsedTime - block.timeLimit, false, true))
+		end
+	end
+
+	local function GetElapsedTime()
+		for i = 1, select("#", GetWorldElapsedTimers()) do
+			local timerID = select(i, GetWorldElapsedTimers())
+			local _, elapsedTime, type = GetWorldElapsedTime(timerID)
+			if type == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE then
+				return elapsedTime
+			end
+		end
+	end
+
+	local function IsInActiveInstance()
+		return select(10, C_Scenario.GetInfo()) == LE_SCENARIO_TYPE_CHALLENGE_MODE
+	end
+
+	local function ProgressBar_SetValue(self, percent)
+		if self.criteriaIndex then
+			local _, _, _, _, totalQuantity, _, _, quantityString, _, _, _, _, _ = C_Scenario.GetCriteriaInfo(self.criteriaIndex)
+			local currentQuantity = quantityString and tonumber( strsub(quantityString, 1, -2) )
+			if currentQuantity and totalQuantity then
+				self.Bar.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+				if MythicPlus.settings.showRawProgress then
+					self.Bar.Label:SetFormattedText("%.2f%% - %d/%d", currentQuantity/totalQuantity*100, currentQuantity, totalQuantity)
+				else
+					self.Bar.Label:SetFormattedText("%.2f%%", currentQuantity/totalQuantity*100)
+				end
+			end
+		end
+	end
+
+	hooksecurefunc("ScenarioTrackerProgressBar_SetValue", ProgressBar_SetValue)
+
+	local function ShowBlock(timerID, elapsedTime, timeLimit)
+		local block = ScenarioChallengeModeBlock
+		local level, affixes, wasEnergized = C_ChallengeMode.GetActiveKeystoneInfo()
+		local dmgPct, healthPct = C_ChallengeMode.GetPowerLevelDamageHealthMod(level)
+		block.Level:SetText( format("%s, +%d%%", CHALLENGE_MODE_POWER_LEVEL:format(level), dmgPct) )
+		block.Level:SetFont("Fonts\\FRIZQT__.TTF", 14)
+	end
+
+	hooksecurefunc("Scenario_ChallengeMode_UpdateTime", UpdateTime)
+	hooksecurefunc("Scenario_ChallengeMode_ShowBlock", ShowBlock)
+
+	local keystoneWasCompleted = false
+	function MythicPlus:PLAYER_ENTERING_WORLD()
+		if keystoneWasCompleted and IsInGroup() and UnitIsGroupLeader("player") then
+			StaticPopup_Show("CONFIRM_RESET_INSTANCES")
+		end
+		keystoneWasCompleted = false			
+	end
+
+	function MythicPlus:CHALLENGE_MODE_START()
+		keystoneWasCompleted = false
+		challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()
+		-- self:HideQuestModule()
+	end
+
+	function MythicPlus:CHALLENGE_MODE_RESET()
+		keystoneWasCompleted = false
+	end
+
+	function MythicPlus:CHALLENGE_MODE_COMPLETED()
+		keystoneWasCompleted = true
+		if not challengeMapID then return end
+
+		local mapID, level, time, onTime, keystoneUpgradeLevels = C_ChallengeMode.GetCompletionInfo()
+		local name, _, timeLimit = C_ChallengeMode.GetMapInfo(challengeMapID)
+
+		timeLimit = timeLimit * 1000
+		local timeLimit2 = timeLimit * TIME_FOR_2
+		local timeLimit3 = timeLimit * TIME_FOR_3
+
+		if time <= timeLimit3 then
+			print( format("|cff33ff99<%s>|r |cffffd700%s|r", "JokUI", format("Beat the timer for +3 %s in %s. You were %s ahead of the +3 timer.", name, timeFormatMS(time), timeFormatMS(timeLimit3 - time))) )
+		elseif time <= timeLimit2 then
+			print( format("|cff33ff99<%s>|r |cffc7c7cf%s|r", "JokUI", format("Beat the timer for +2 %s in %s. You were %s ahead of the +2 timer, and missed +3 by %s.", name, timeFormatMS(time), timeFormatMS(timeLimit2 - time), timeFormatMS(time - timeLimit3))) )
+		elseif onTime then
+			print( format("|cff33ff99<%s>|r |cffeda55f%s|r", "JokUI", format("Beat the timer for %s in %s. You were %s ahead of the timer, and missed +2 by %s.", name, timeFormatMS(time), timeFormatMS(timeLimit - time), timeFormatMS(time - timeLimit2))) )
+		else
+			print( format("|cff33ff99<%s>|r |cffff2020%s|r", "JokUI", format("Timer expired for %s with %s, you were %s over the time limit.", name, timeFormatMS(time), timeFormatMS(time - timeLimit))) )
+		end
+
+		-- ScenarioTimer_CheckTimers(GetWorldElapsedTimers())
+		-- ObjectiveTracker_Update()		
+	end
+
+	local function SkinProgressBars(self, _, line)
+		local progressBar = line and line.ProgressBar
+		local bar = progressBar and progressBar.Bar
+		if not bar then return end
+		local icon = bar.Icon
+		local label = bar.Label
+
+		if not progressBar.isSkinned then
+			if bar.BarFrame then bar.BarFrame:Hide() end
+			if bar.BarFrame2 then bar.BarFrame2:Hide() end
+			if bar.BarFrame3 then bar.BarFrame3:Hide() end
+			if bar.BarGlow then bar.BarGlow:Hide() end
+			if bar.Sheen then bar.Sheen:Hide() end
+			if bar.IconBG then bar.IconBG:SetAlpha(0) end
+			if bar.BorderLeft then bar.BorderLeft:SetAlpha(0.5) end
+			if bar.BorderRight then bar.BorderRight:SetAlpha(0.5) end
+			if bar.BorderMid then bar.BorderMid:SetAlpha(0.5) end
+
+			-- bar:CreateBackdrop("Transparent")
+			ObjectiveTrackerFrame:SetScale(1.2)
+			bar:SetWidth(210)
+			bar:SetHeight(20)
+			bar:SetStatusBarTexture("Interface\\Addons\\JokUI\\media\\normTex2")
+			
+			ObjectiveTrackerBlocksFrame.ScenarioHeader.Background:Hide()
+			ObjectiveTrackerBlocksFrame.ScenarioHeader.Text:SetFont("Fonts\\FRIZQT__.TTF", 13)
+
+			progressBar.isSkinned = true
+		elseif icon and progressBar.backdrop then
+			progressBar.backdrop:SetShown(icon:IsShown())
+		end
+	end
+	hooksecurefunc(SCENARIO_TRACKER_MODULE,"AddProgressBar",SkinProgressBars)
+end
+
+function MythicPlus:HideQuestModule()
+	ObjectiveTracker_Update_Old = ObjectiveTracker_Update
+	function ObjectiveTracker_Update(...)
+		if IsInActiveInstance() then
+			local tracker = ObjectiveTrackerFrame
+			local modules_old = tracker.MODULES
+			local modules_ui_old = tracker.MODULES_UI_ORDER
+
+			tracker.MODULES = { SCENARIO_CONTENT_TRACKER_MODULE }
+			tracker.MODULES_UI_ORDER = { SCENARIO_CONTENT_TRACKER_MODULE }
+
+			for i = 1, #modules_old do
+				local module = modules_old[i]
+				if module ~= SCENARIO_CONTENT_TRACKER_MODULE then
+					module:BeginLayout()
+					module:EndLayout()
+					module.Header:Hide()
+					if module.Header.animating then
+						module.Header.animating = nil
+						module.Header.HeaderOpenAnim:Stop()
+					end
+				end
+			end
+
+			ObjectiveTracker_Update_Old(...)
+
+			tracker.MODULES = modules_old
+			tracker.MODULES_UI_ORDER = modules_ui_old
+		else
+			ObjectiveTracker_Update_Old(...)
+		end
+	end
+
+	ObjectiveTracker_ReorderModules_Old = ObjectiveTracker_ReorderModules
+	function ObjectiveTracker_ReorderModules()
+		if IsInActiveInstance() then
+			local modules = ObjectiveTrackerFrame.MODULES;
+			local modulesUIOrder = ObjectiveTrackerFrame.MODULES_UI_ORDER;
+		else
+			ObjectiveTracker_ReorderModules_Old()
+		end
+	end
+end
+
 function MythicPlus:Schedule()
 	local function UpdateAffixes()
 		if requestKeystoneCheck then
-			MythicPlus:CheckInventoryKeystone()
+			self:CheckInventoryKeystone()
 		end
 		if currentWeek then
 			for i = 1, rowCount do
@@ -451,253 +726,6 @@ function MythicPlus:Schedule()
 
 	function MythicPlus:BAG_UPDATE()
 		requestKeystoneCheck = true
-	end
-end
-
-function MythicPlus:Timer()
-
-	local function timeFormat(seconds)
-		local hours = floor(seconds / 3600)
-		local minutes = floor((seconds / 60) - (hours * 60))
-		seconds = seconds - hours * 3600 - minutes * 60
-
-		if hours == 0 then
-			return format("%d:%.2d", minutes, seconds)
-		else
-			return format("%d:%.2d:%.2d", hours, minutes, seconds)
-		end
-	end
-	MythicPlus.timeFormat = timeFormat
-
-	local function timeFormatMS(timeAmount)
-		local seconds = floor(timeAmount / 1000)
-		local ms = timeAmount - seconds * 1000
-		local hours = floor(seconds / 3600)
-		local minutes = floor((seconds / 60) - (hours * 60))
-		seconds = seconds - hours * 3600 - minutes * 60
-
-		if hours == 0 then
-			return format("%d:%.2d.%.3d", minutes, seconds, ms)
-		else
-			return format("%d:%.2d:%.2d.%.3d", hours, minutes, seconds, ms)
-		end
-	end
-	MythicPlus.timeFormatMS = timeFormatMS
-
-	local function GetTimerFrame(block)
-		if not block.TimerFrame then
-			local TimerFrame = CreateFrame("Frame", nil, block)
-			TimerFrame:SetAllPoints(block)
-			
-			TimerFrame.Text = TimerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-			TimerFrame.Text:SetPoint("LEFT", block.TimeLeft, "RIGHT", 4, 0)
-			
-			TimerFrame.Text2 = TimerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-			TimerFrame.Text2:SetPoint("LEFT", TimerFrame.Text, "RIGHT", 4, 0)
-
-			TimerFrame.Bar3 = TimerFrame:CreateTexture(nil, "OVERLAY")
-			TimerFrame.Bar3:SetPoint("TOPLEFT", block.StatusBar, "TOPLEFT", block.StatusBar:GetWidth() * (1 - TIME_FOR_3) - 4, 0)
-			TimerFrame.Bar3:SetSize(8, 10)
-			TimerFrame.Bar3:SetTexture("Interface\\Addons\\JokUI\\media\\bar")
-			TimerFrame.Bar3:SetTexCoord(0, 0.5, 0, 1)
-
-			TimerFrame.Bar2 = TimerFrame:CreateTexture(nil, "OVERLAY")
-			TimerFrame.Bar2:SetPoint("TOPLEFT", block.StatusBar, "TOPLEFT", block.StatusBar:GetWidth() * (1 - TIME_FOR_2) - 4, 0)
-			TimerFrame.Bar2:SetSize(8, 10)
-			TimerFrame.Bar2:SetTexture("Interface\\Addons\\JokUI\\media\\bar")
-			TimerFrame.Bar2:SetTexCoord(0.5, 1, 0, 1)
-
-			TimerFrame:Show()
-
-			block.TimerFrame = TimerFrame
-		end
-		return block.TimerFrame
-	end
-
-	local function UpdateTime(block, elapsedTime)
-		local TimerFrame = GetTimerFrame(block)
-
-		local time3 = block.timeLimit * TIME_FOR_3
-		local time2 = block.timeLimit * TIME_FOR_2
-
-		TimerFrame.Bar3:SetShown(elapsedTime < time3)
-		TimerFrame.Bar2:SetShown(elapsedTime < time2)
-
-		if elapsedTime < time3 then
-			TimerFrame.Text:SetText( timeFormat(time3 - elapsedTime) )
-			TimerFrame.Text:SetTextColor(1, 0.843, 0)
-			TimerFrame.Text:Show()
-			TimerFrame.Text:SetFont("Fonts\\FRIZQT__.TTF", 15)
-			
-			TimerFrame.Text2:SetText( timeFormat(time2 - elapsedTime) )
-			TimerFrame.Text2:SetTextColor(0.78, 0.78, 0.812)
-			TimerFrame.Text2:Show()
-			TimerFrame.Text2:SetFont("Fonts\\FRIZQT__.TTF", 11)
-
-		elseif elapsedTime < time2 then
-			TimerFrame.Text:SetText( timeFormat(time2 - elapsedTime) )
-			TimerFrame.Text:SetTextColor(0.78, 0.78, 0.812)
-			TimerFrame.Text:Show()
-			TimerFrame.Text:SetFont("Fonts\\FRIZQT__.TTF", 15)
-			TimerFrame.Text2:Hide()
-		else
-			TimerFrame.Text:Hide()
-			TimerFrame.Text2:Hide()
-		end
-
-		if elapsedTime > block.timeLimit then
-			block.TimeLeft:SetText(GetTimeStringFromSeconds(elapsedTime - block.timeLimit, false, true))
-		end
-
-	end
-
-	local function GetElapsedTime()
-		for i = 1, select("#", GetWorldElapsedTimers()) do
-			local timerID = select(i, GetWorldElapsedTimers())
-			local _, elapsedTime, type = GetWorldElapsedTime(timerID)
-			if type == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE then
-				return elapsedTime
-			end
-		end
-	end
-
-	local function ProgressBar_SetValue(self, percent)
-		if self.criteriaIndex then
-			local _, _, _, _, totalQuantity, _, _, quantityString, _, _, _, _, _ = C_Scenario.GetCriteriaInfo(self.criteriaIndex)
-			local currentQuantity = quantityString and tonumber( strsub(quantityString, 1, -2) )
-			if currentQuantity and totalQuantity then
-				self.Bar.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-				if MythicPlus.settings.showRawProgress then
-					self.Bar.Label:SetFormattedText("%.2f%% - %d/%d", currentQuantity/totalQuantity*100, currentQuantity, totalQuantity)
-				else
-					self.Bar.Label:SetFormattedText("%.2f%%", currentQuantity/totalQuantity*100)
-				end
-			end
-		end
-	end
-
-	hooksecurefunc("ScenarioTrackerProgressBar_SetValue", ProgressBar_SetValue)
-
-	local function ShowBlock(timerID, elapsedTime, timeLimit)
-		local block = ScenarioChallengeModeBlock
-		local level, affixes, wasEnergized = C_ChallengeMode.GetActiveKeystoneInfo()
-		local dmgPct, healthPct = C_ChallengeMode.GetPowerLevelDamageHealthMod(level)
-		block.Level:SetText( format("%s, +%d%%", CHALLENGE_MODE_POWER_LEVEL:format(level), dmgPct) )
-		block.Level:SetFont("Fonts\\FRIZQT__.TTF", 14)
-	end
-
-	hooksecurefunc("Scenario_ChallengeMode_UpdateTime", UpdateTime)
-	hooksecurefunc("Scenario_ChallengeMode_ShowBlock", ShowBlock)
-
-	local function SkinProgressBars(self, _, line)
-		local progressBar = line and line.ProgressBar
-		local bar = progressBar and progressBar.Bar
-		if not bar then return end
-		local icon = bar.Icon
-		local label = bar.Label
-
-		if not progressBar.isSkinned then
-			if bar.BarFrame then bar.BarFrame:Hide() end
-			if bar.BarFrame2 then bar.BarFrame2:Hide() end
-			if bar.BarFrame3 then bar.BarFrame3:Hide() end
-			if bar.BarGlow then bar.BarGlow:Hide() end
-			if bar.Sheen then bar.Sheen:Hide() end
-			if bar.IconBG then bar.IconBG:SetAlpha(0) end
-			if bar.BorderLeft then bar.BorderLeft:SetAlpha(0.5) end
-			if bar.BorderRight then bar.BorderRight:SetAlpha(0.5) end
-			if bar.BorderMid then bar.BorderMid:SetAlpha(0.5) end
-
-			-- bar:CreateBackdrop("Transparent")
-			bar:SetWidth(210)
-			bar:SetHeight(20)
-			bar:SetStatusBarTexture("Interface\\Addons\\JokUI\\media\\normTex2")
-			
-			ObjectiveTrackerBlocksFrame.ScenarioHeader.Background:Hide()
-			ObjectiveTrackerBlocksFrame.ScenarioHeader.Text:SetFont("Fonts\\FRIZQT__.TTF", 13)
-
-			progressBar.isSkinned = true
-		elseif icon and progressBar.backdrop then
-			progressBar.backdrop:SetShown(icon:IsShown())
-		end
-	end
-	hooksecurefunc(SCENARIO_TRACKER_MODULE,"AddProgressBar",SkinProgressBars)
-
-	-- Hide quest / achievements during Mythic+
-	
-	local function IsInActiveInstance()
-		return select(10, C_Scenario.GetInfo()) == LE_SCENARIO_TYPE_CHALLENGE_MODE and select(3, C_Scenario.GetInfo()) ~= 0
-	end
-
-	ObjectiveTracker_Update_Old = ObjectiveTracker_Update
-	function ObjectiveTracker_Update(...)
-		if IsInActiveInstance() then
-			local tracker = ObjectiveTrackerFrame
-			local modules_old = tracker.MODULES
-			local modules_ui_old = tracker.MODULES_UI_ORDER
-
-			tracker.MODULES = { SCENARIO_CONTENT_TRACKER_MODULE }
-			tracker.MODULES_UI_ORDER = { SCENARIO_CONTENT_TRACKER_MODULE }
-
-			ObjectiveTracker_Update_Old(...)
-
-			tracker.MODULES = modules_old
-			tracker.MODULES_UI_ORDER = modules_ui_old
-		else
-			ObjectiveTracker_Update_Old(...)
-		end
-	end
-
-	ObjectiveTracker_ReorderModules_Old = ObjectiveTracker_ReorderModules
-	function ObjectiveTracker_ReorderModules()
-		if IsInActiveInstance() then
-			local modules = ObjectiveTrackerFrame.MODULES;
-			local modulesUIOrder = ObjectiveTrackerFrame.MODULES_UI_ORDER;
-		else
-			ObjectiveTracker_ReorderModules_Old()
-		end
-	end
-
-	local keystoneWasCompleted = false
-	function MythicPlus:PLAYER_ENTERING_WORLD()
-		if keystoneWasCompleted and IsInGroup() and UnitIsGroupLeader("player") then
-			StaticPopup_Show("CONFIRM_RESET_INSTANCES")
-		end
-		keystoneWasCompleted = false	
-
-	end
-
-	function MythicPlus:CHALLENGE_MODE_START()
-		keystoneWasCompleted = false
-		challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()
-	end
-
-	function MythicPlus:CHALLENGE_MODE_RESET()
-		keystoneWasCompleted = false
-	end
-
-	function MythicPlus:CHALLENGE_MODE_COMPLETED()
-		keystoneWasCompleted = true
-		if not challengeMapID then return end
-
-		local mapID, level, time, onTime, keystoneUpgradeLevels = C_ChallengeMode.GetCompletionInfo()
-		local name, _, timeLimit = C_ChallengeMode.GetMapInfo(challengeMapID)
-
-		timeLimit = timeLimit * 1000
-		local timeLimit2 = timeLimit * TIME_FOR_2
-		local timeLimit3 = timeLimit * TIME_FOR_3
-
-		if time <= timeLimit3 then
-			print( format("|cff33ff99<%s>|r |cffffd700%s|r", "JokUI", format("Beat the timer for +3 %s in %s. You were %s ahead of the +3 timer.", name, timeFormatMS(time), timeFormatMS(timeLimit3 - time))) )
-		elseif time <= timeLimit2 then
-			print( format("|cff33ff99<%s>|r |cffc7c7cf%s|r", "JokUI", format("Beat the timer for +2 %s in %s. You were %s ahead of the +2 timer, and missed +3 by %s.", name, timeFormatMS(time), timeFormatMS(timeLimit2 - time), timeFormatMS(time - timeLimit3))) )
-		elseif onTime then
-			print( format("|cff33ff99<%s>|r |cffeda55f%s|r", "JokUI", format("Beat the timer for %s in %s. You were %s ahead of the timer, and missed +2 by %s.", name, timeFormatMS(time), timeFormatMS(timeLimit - time), timeFormatMS(time - timeLimit2))) )
-		else
-			print( format("|cff33ff99<%s>|r |cffff2020%s|r", "JokUI", format("Timer expired for %s with %s, you were %s over the time limit.", name, timeFormatMS(time), timeFormatMS(time - timeLimit))) )
-		end
-
-		ScenarioTimer_CheckTimers(GetWorldElapsedTimers())
-		ObjectiveTracker_Update()
 	end
 end
 
@@ -1027,7 +1055,7 @@ function MythicPlus:Progress()
 
 	currentPullFrame = CreateFrame("frame", "currentPullFrame12", UIParent)
 	mppFrame = currentPullFrame
-	currentPullFrame:SetPoint("BOTTOM", ScenarioObjectiveBlock, 15, -60)
+	currentPullFrame:SetPoint("TOP", ObjectiveTrackerBlocksFrame.ScenarioHeader, 0, 45)
 	currentPullFrame:SetMovable(false)
 	currentPullFrame:RegisterForDrag("LeftButton")
 	currentPullFrame:SetScript("OnDragStart", currentPullFrame.StartMoving)
@@ -1153,7 +1181,7 @@ function MythicPlus:Progress()
 
 	local function createNameplateText(token)
 		local npcID = getNPCID(UnitGUID(token))
-		if npcID then
+		if npcID and MythicPlus.settings.enableNameplateText then
 			if activeNameplates[token] then
 				activeNameplates[token]:Hide() -- This should never happen...
 			end

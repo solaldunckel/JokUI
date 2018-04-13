@@ -78,9 +78,6 @@ function Config:OnEnable()
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(JokUI.db)
 end
 
--- function Config:OnEnable()
--- end
-
 function Config:Register(title, config, order)
 	if order == nil then order = 10 end
 	options.args[title] = {

@@ -1,6 +1,10 @@
 local _, JokUI = ...
 local RaidFrames = JokUI:RegisterModule("Raid Frames")
 
+-------------------------------------------------------------------------------
+-- Locals
+-------------------------------------------------------------------------------
+
 local features = {}
 
 local ABSORB_GLOW_ALPHA = 0.6;
@@ -10,6 +14,10 @@ local group = {
 	part = true, -- party, only check char 1 to 4
 	raid = true,
 }
+
+-------------------------------------------------------------------------------
+-- Config
+-------------------------------------------------------------------------------
 
 local raidframes_defaults = {
     profile = {
@@ -157,6 +165,10 @@ do
 			end
 		end)
 end
+
+-------------------------------------------------------------------------------
+-- Functions
+-------------------------------------------------------------------------------
 
 function RaidFrames:ShowAbsorb()
 	hooksecurefunc("UnitFrame_Update", function(frame)

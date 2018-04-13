@@ -172,6 +172,33 @@ do
 end
 
 do
+	Misc:RegisterFeature("PixelPerfect",
+		"Set Pixel Perfect",
+		"Set UI to Pixel Perfect Mode.",
+		false,
+		true,
+		function(state)
+			if state then
+				Advanced_UseUIScale:Disable()
+				Advanced_UIScaleSlider:Disable()
+				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetTextColor(1,0,0,1)
+				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetText("The 'Use UI Scale' toggle is unavailable while Pixel Perfect mode is active.")
+				Advanced_UseUIScaleText:SetPoint("LEFT",Advanced_UseUIScale,"LEFT",4,-40)
+				if not InCombatLockdown() then
+					MinimapCluster:SetScale(1.5)
+					local scale = 768/string.match(({GetScreenResolutions()})[GetCurrentResolution()], "%d+x(%d+)")
+					if scale < .64 then
+						UIParent:SetScale(scale)
+					else
+						self:UnregisterEvent("UI_SCALE_CHANGED")
+						SetCVar("uiScale", scale)
+					end
+				end
+			end
+		end)
+end
+
+do
 	Misc:RegisterFeature("InCombatIcon",
 		"Add 'In Combat' Icon",
 		"Adds an icon next to unit frames if it's in combat.",
@@ -205,6 +232,28 @@ do
 			end
 		end)
 end
+
+-- function SetPixelPerfect(self)
+-- 	if not InCombatLockdown() then
+-- 		local scale = 768/string.match(({GetScreenResolutions()})[GetCurrentResolution()], "%d+x(%d+)")
+-- 		if scale < .64 then
+-- 			UIParent:SetScale(scale)
+-- 		else
+-- 			self:UnregisterEvent("UI_SCALE_CHANGED")
+-- 			SetCVar("uiScale", scale)
+-- 		end
+-- 	else
+-- 		self:RegisterEvent("PLAYER_REGEN_ENABLED")
+-- 	end
+
+-- 	if event == "PLAYER_REGEN_ENABLED" then
+-- 		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+-- 	end
+-- end
+-- local f = CreateFrame("Frame")
+-- f:RegisterEvent("VARIABLES_LOADED")
+-- f:RegisterEvent("UI_SCALE_CHANGED")
+-- f:SetScript("OnEvent", SetPixelPerfect)
 
 function Misc:AutoRep()
 	local g = CreateFrame("Frame")
