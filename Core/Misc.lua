@@ -37,13 +37,13 @@ function Misc:OnInitialize()
 
 	self:RegisterEvent("ADDON_LOADED")
 
-	Misc:AutoRep()
-	Misc:RangeSpell()
-	Misc:SGrid()
-	Misc:ShowStats()
-	Misc:HoverBind()
-	Misc:TooltipID()
-	Misc:SafeQueue()
+	self:AutoRep()
+	self:RangeSpell()
+	self:SGrid()
+	self:ShowStats()
+	self:HoverBind()
+	self:TooltipID()
+	self:SafeQueue()
 end
 
 function Misc:OnEnable()
@@ -232,28 +232,6 @@ do
 			end
 		end)
 end
-
--- function SetPixelPerfect(self)
--- 	if not InCombatLockdown() then
--- 		local scale = 768/string.match(({GetScreenResolutions()})[GetCurrentResolution()], "%d+x(%d+)")
--- 		if scale < .64 then
--- 			UIParent:SetScale(scale)
--- 		else
--- 			self:UnregisterEvent("UI_SCALE_CHANGED")
--- 			SetCVar("uiScale", scale)
--- 		end
--- 	else
--- 		self:RegisterEvent("PLAYER_REGEN_ENABLED")
--- 	end
-
--- 	if event == "PLAYER_REGEN_ENABLED" then
--- 		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
--- 	end
--- end
--- local f = CreateFrame("Frame")
--- f:RegisterEvent("VARIABLES_LOADED")
--- f:RegisterEvent("UI_SCALE_CHANGED")
--- f:SetScript("OnEvent", SetPixelPerfect)
 
 function Misc:AutoRep()
 	local g = CreateFrame("Frame")

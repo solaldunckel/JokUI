@@ -6,17 +6,15 @@ local Nameplates = JokUI:RegisterModule("Nameplates")
 -------------------------------------------------------------------------------
 
 local len = string.len
-local gsub = string.gsub
 local match = string.match
 local format = format
 local floor = floor
 local ceil = ceil
-local unpack = unpack
 
 local borderColor = {0.40, 0.40, 0.40, 1}
 local nameFont = SystemFont_NamePlate:GetFont()
 local castbarFont = SystemFont_Shadow_Small:GetFont()
-local texturePath = "Interface\\AddOns\\JokUI\\media\\"
+local texturePath = "Interface\\AddOns\\JokUI\\media\\nameplates\\"
 local statusBar = texturePath.."UI-StatusBar"
 local borderTexture = texturePath.."borderTexture"
 local textureShadow = texturePath.."textureShadow"
@@ -457,7 +455,7 @@ end
 
 function Nameplates:OnEnable()
     if self.settings.enable then
-        Nameplates:Core()
+        self:Core()
     end
 end
 
@@ -535,8 +533,8 @@ function Nameplates:Core()
     local z = CreateFrame("FRAME")
     z:RegisterEvent("PLAYER_ENTERING_WORLD")
     z:SetScript("OnEvent", function()
-        local _,type=IsInInstance()
-        if type=="party" or type=="raid" then
+        local _, type = IsInInstance()
+        if type == "party" or type == "raid" then
             SetCVar("nameplateShowDebuffsOnFriendly", 0)
             -- SetCVar("nameplateShowOnlyNames", 1)
         else
@@ -638,6 +636,7 @@ function Nameplates:Core()
             -- Health Bar Height
 
         frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
+        frame.healthBar:SetStatusBarTexture(statusBar)
         
            -- Elite Icon
             
@@ -673,33 +672,33 @@ function Nameplates:Core()
             Nameplates:UpdateCastbarTimer(frame)
         end)
     	
-    	-- Name Position.
+    	   -- Name Position.
 
     	frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)
     		
-    	-- Name Size.
+    	   -- Name Size.
     		
         frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
     	
-    	-- Abbreviate Long Names.
+    	   -- Abbreviate Long Names.
     	
         local newName = frame.name:GetText()
         newName = Nameplates:Abbrev(newName,32)
     	frame.name:SetText(newName)
 
-        -- Only Name Fix 
+            -- Only Name Fix 
 
          if not UnitIsPlayer(frame.displayedUnit) then
             frame.healthBar:Show()
          end
 
-        -- Friendly Nameplates Motion
+        --     -- Friendly Nameplates Motion
 
-        if Nameplates.settings.friendlymotion then
-            if ( not UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") ) then
-                frame.healthBar:SetHeight(3)
-            end
-        end
+        -- if Nameplates.settings.friendlymotion then
+        --     if ( not UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") ) then
+        --         frame.healthBar:SetHeight(3)
+        --     end
+        -- end
 
         -- Color Friendly Player Name.
     	
@@ -749,8 +748,6 @@ function Nameplates:Core()
     				break 
     			end 
     		end 
-    	end 
-    		
+    	end     		
     end)
-
 end

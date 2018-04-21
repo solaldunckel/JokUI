@@ -29,16 +29,12 @@ libs\LibCompress\lib.xml
 libs\LibArtifactData-1.0.lua
 libs\indents.lua
 
-media\sharedmedia.lua
-
 Core.lua
 Config.lua
-Misc.lua
 
+Core\Misc.lua
 Core\Nameplates.lua
 Core\RaidFrames.lua
 Core\MythicPlus.lua
-Core\Progress.lua
-Core\Timer.lua
-Core\Schedule.lua
-Core\ProgressTracker.lua
+Core\Interface.lua
+Core\Bfa.xml

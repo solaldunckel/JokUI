@@ -50,7 +50,7 @@ local options = {
 					type = "description",
 					name = " |cffffd100/sgrid 64 : |r Show a grid on your screen.",
 					fontSize = "medium",
-					order = 5
+					order = 6
 				},
 			}
 		}
