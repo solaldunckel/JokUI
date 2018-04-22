@@ -7,6 +7,149 @@ local Interface = JokUI:RegisterModule("Interface")
 
 local features = {}
 
+textures = {
+    normal            = "Interface\\AddOns\\JokUI\\media\\textures\\gloss",
+    flash             = "Interface\\AddOns\\JokUI\\media\\textures\\flash",
+    hover             = "Interface\\AddOns\\JokUI\\media\\textures\\hover",
+    pushed            = "Interface\\AddOns\\JokUI\\media\\textures\\pushed",
+    checked           = "Interface\\AddOns\\JokUI\\media\\textures\\checked",
+    equipped          = "Interface\\AddOns\\JokUI\\media\\textures\\gloss_grey",
+    buttonback        = "Interface\\AddOns\\JokUI\\media\\textures\\button_background",
+    buttonbackflat    = "Interface\\AddOns\\JokUI\\media\\textures\\button_background_flat",
+    outer_shadow      = "Interface\\AddOns\\JokUI\\media\\textures\\outer_shadow",
+}
+
+background = {
+    showbg            = true,   --show an background image?
+    showshadow        = true,   --show an outer shadow?
+    useflatbackground = false,  --true uses plain flat color instead
+    backgroundcolor   = { r = 0.2, g = 0.2, b = 0.2, a = 0.3},
+    shadowcolor       = { r = 0, g = 0, b = 0, a = 0.9},
+    classcolored      = false,
+    inset             = 5,
+}
+
+hotkeys = {
+    fontsize          = 12,
+    pos1              = { a1 = "TOPRIGHT", x = 0, y = 0 },
+    pos2              = { a1 = "TOPLEFT", x = 0, y = 0 }, --important! two points are needed to make the hotkeyname be inside of the button
+}
+
+macroname = {
+    show              = true,
+    fontsize          = 10,
+    pos1              = { a1 = "BOTTOMLEFT", x = 0, y = 0 },
+    pos2              = { a1 = "BOTTOMRIGHT", x = 0, y = 0 }, --important! two points are needed to make the macroname be inside of the button
+}
+itemcount = {
+    show              = true,
+    fontsize          = 12,
+    pos1              = { a1 = "BOTTOMRIGHT", x = 0, y = 0 },
+}
+cooldown = {
+    spacing           = 0,
+  }
+
+color = {
+    normal            = { r = 0.37, g = 0.3, b = 0.3, },
+    equipped          = { r = 0.1, g = 0.5, b = 0.1, },
+    classcolored      = false,
+}
+
+adjustOneletterAbbrev = true
+font = STANDARD_TEXT_FONT
+
+	-- buff frame settings
+
+buffFrame = {
+    pos                 = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = 0 },
+    gap                 = 30, --gap between buff and debuff rows
+    userplaced          = true, --want to place the bar somewhere else?
+    rowSpacing          = 10,
+    colSpacing          = 7,
+    buttonsPerRow       = 10,
+    button = {
+      size              = 50,
+    },
+
+    icon = {
+      padding           = -2,
+    },
+
+    border = {
+      texture           = "Interface\\AddOns\\TomUI\\media\\textures\\gloss",
+      color             = { r = 0.4, g = 0.35, b = 0.35, },
+      classcolored      = false,
+    },
+
+    background = {
+      show              = false,   --show backdrop
+      edgeFile          = "Interface\\AddOns\\TomUI\\media\\textures\\outer_shadow",
+      color             = { r = 0, g = 0, b = 0, a = 0.9},
+      classcolored      = false,
+      inset             = 6,
+      padding           = 4,
+    },
+
+    duration = {
+      font              = STANDARD_TEXT_FONT,
+      size              = 13,
+      pos               = { a1 = "BOTTOM", x = 0, y = -13 },
+    },
+
+    count = {
+      font              = STANDARD_TEXT_FONT,
+      size              = 11,
+      pos               = { a1 = "TOPRIGHT", x = 0, y = 0 },
+    },
+}
+  
+-- debuff frame settings
+
+debuffFrame = {    
+	pos             = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = -85 },
+    gap                 = 10, --gap between buff and debuff rows
+    userplaced          = true, --want to place the bar somewhere else?
+    rowSpacing          = 10,
+    colSpacing          = 7,
+    buttonsPerRow       = 10,
+
+    button = {
+      size              = 50,
+    },
+
+    icon = {
+      padding           = -2,
+    },
+
+    border = {
+      texture           = "Interface\\AddOns\\TomUI\\media\\textures\\gloss",
+      color             = { r = 0.4, g = 0.35, b = 0.35, },
+      classcolored      = false,
+    },
+
+    background = {
+      show              = true,   --show backdrop
+      edgeFile          = "Interface\\AddOns\\TomUI\\media\\textures\\outer_shadow",
+      color             = { r = 0, g = 0, b = 0, a = 0.9},
+      classcolored      = false,
+      inset             = 6,
+      padding           = 4,
+    },
+
+    duration = {
+      font              = STANDARD_TEXT_FONT,
+      size              = 13,
+      pos               = { a1 = "BOTTOM", x = 0, y = -13 },
+    },
+
+    count = {
+      font              = STANDARD_TEXT_FONT,
+      size              = 11,
+      pos               = { a1 = "TOPRIGHT", x = 0, y = 0 },
+    },
+}
+
 -------------------------------------------------------------------------------
 -- Config
 -------------------------------------------------------------------------------
@@ -150,12 +293,12 @@ end
 
 function Interface:UnitFrames()
 	local unit = {}
-	-- local AURA_START_X = 5;
-	-- local AURA_START_Y = 28;
-	-- local AURA_OFFSET_Y = 3;
-	-- local LARGE_AURA_SIZE = 27
-	-- local SMALL_AURA_SIZE = 25
-	-- local AURA_ROW_WIDTH = 122;
+	local AURA_START_X = 6;
+	local AURA_START_Y = 28;
+	local AURA_OFFSET_Y = 3;
+	local LARGE_AURA_SIZE = 23
+	local SMALL_AURA_SIZE = 21
+	local AURA_ROW_WIDTH = 122;
 
 	local function ClassColor(statusbar, unit)
 			local _, class, c
@@ -449,146 +592,285 @@ function Interface:UnitFrames()
 		PetFrameManaBar:SetPoint("TOPLEFT", 45, -32)
 		PetFrameManaBar:SetHeight(5)
 		
-	-- --BUFFS
-	-- function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-	-- 	local size
-	-- 	local offsetY = AURA_OFFSET_Y
-	-- 	local rowWidth = 0
-	-- 	local firstBuffOnRow = 1
-	-- 	for i=1, numAuras do
-	-- 		if ( largeAuraList[i] ) then
-	-- 			size = LARGE_AURA_SIZE
-	-- 			offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
-	-- 		else
-	-- 			size = SMALL_AURA_SIZE
-	-- 		end
-	-- 		if ( i == 1 ) then
-	-- 			rowWidth = size
-	-- 			self.auraRows = self.auraRows + 1
-	-- 		else
-	-- 			rowWidth = rowWidth + size + offsetX
-	-- 		end
-	-- 		if ( rowWidth > maxRowWidth ) then
-	-- 			updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically)
-	-- 			rowWidth = size
-	-- 			self.auraRows = self.auraRows + 1
-	-- 			firstBuffOnRow = i
-	-- 			offsetY = AURA_OFFSET_Y
-	-- 		else
-	-- 			updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
-	-- 		end
-	-- 	end
-	-- end
+	--BUFFS
+	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+		local size
+		local offsetY = AURA_OFFSET_Y
+		local rowWidth = 0
+		local firstBuffOnRow = 1
+		for i=1, numAuras do
+			if ( largeAuraList[i] ) then
+				size = LARGE_AURA_SIZE
+				offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
+			else
+				size = SMALL_AURA_SIZE
+			end
+			if ( i == 1 ) then
+				rowWidth = size
+				self.auraRows = self.auraRows + 1
+			else
+				rowWidth = rowWidth + size + offsetX
+			end
+			if ( rowWidth > maxRowWidth ) then
+				updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically)
+				rowWidth = size
+				self.auraRows = self.auraRows + 1
+				firstBuffOnRow = i
+				offsetY = AURA_OFFSET_Y
+			else
+				updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+			end
+		end
+	end
 
-	-- local function unit_targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-	-- 	unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-	-- end
-	-- hooksecurefunc("TargetFrame_UpdateAuraPositions", unit_targetUpdateAuraPositions)
+	local function unit_targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+		unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateAuraPositions", unit_targetUpdateAuraPositions)
 
-	-- function unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- 	local point, relativePoint
-	-- 	local startY, auraOffsetY
-	-- 	if ( mirrorVertically ) then
-	-- 		point = "BOTTOM"
-	-- 		relativePoint = "TOP"
-	-- 		startY = -6
-	-- 		offsetY = -offsetY
-	-- 		auraOffsetY = -AURA_OFFSET_Y
-	-- 	else
-	-- 		point = "TOP"
-	-- 		relativePoint="BOTTOM"
-	-- 		startY = AURA_START_Y
-	-- 		auraOffsetY = AURA_OFFSET_Y
-	-- 	end
+	function unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		local point, relativePoint
+		local startY, auraOffsetY
+		if ( mirrorVertically ) then
+			point = "BOTTOM"
+			relativePoint = "TOP"
+			startY = -6
+			offsetY = -offsetY
+			auraOffsetY = -AURA_OFFSET_Y
+		else
+			point = "TOP"
+			relativePoint="BOTTOM"
+			startY = AURA_START_Y
+			auraOffsetY = AURA_OFFSET_Y
+		end
 		 
-	-- 	local buff = _G[buffName..index]
-	-- 	if ( index == 1 ) then
-	-- 		if ( UnitIsFriend("player", self.unit) or numDebuffs == 0 ) then
-	-- 			-- unit is friendly or there are no debuffs...buffs start on top
-	-- 			buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY)		   
-	-- 		else
-	-- 			-- unit is not friendly and we have debuffs...buffs start on bottom
-	-- 			buff:SetPoint(point.."LEFT", self.debuffs, relativePoint.."LEFT", 0, -offsetY)
-	-- 		end
-	-- 		self.buffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0)
-	-- 		self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
-	-- 		self.spellbarAnchor = buff
-	-- 	elseif ( anchorIndex ~= (index-1) ) then
-	-- 		-- anchor index is not the previous index...must be a new row
-	-- 		buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY)
-	-- 		self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
-	-- 		self.spellbarAnchor = buff
-	-- 	else
-	-- 		-- anchor index is the previous index
-	-- 		buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], point.."RIGHT", offsetX, 0)
-	-- 	end
+		local buff = _G[buffName..index]
+		if ( index == 1 ) then
+			if ( UnitIsFriend("player", self.unit) or numDebuffs == 0 ) then
+				-- unit is friendly or there are no debuffs...buffs start on top
+				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY)		   
+			else
+				-- unit is not friendly and we have debuffs...buffs start on bottom
+				buff:SetPoint(point.."LEFT", self.debuffs, relativePoint.."LEFT", 0, -offsetY)
+			end
+			self.buffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0)
+			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
+			self.spellbarAnchor = buff
+		elseif ( anchorIndex ~= (index-1) ) then
+			-- anchor index is not the previous index...must be a new row
+			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY)
+			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
+			self.spellbarAnchor = buff
+		else
+			-- anchor index is the previous index
+			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], point.."RIGHT", offsetX, 0)
+		end
 
-	-- 	buff:SetWidth(size)
-	-- 	buff:SetHeight(size)
-	-- end
+		buff:SetWidth(size)
+		buff:SetHeight(size)
+	end
 
-	-- local function unit_targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- 	unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- end
-	-- hooksecurefunc("TargetFrame_UpdateBuffAnchor", unit_targetUpdateBuffAnchor)
+	local function unit_targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateBuffAnchor", unit_targetUpdateBuffAnchor)
 
-	-- function unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- 	local buff = _G[debuffName..index];
-	-- 	local isFriend = UnitIsFriend("player", self.unit);
+	function unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		local buff = _G[debuffName..index];
+		local isFriend = UnitIsFriend("player", self.unit);
 		 
-	-- 	--For mirroring vertically
-	-- 	local point, relativePoint;
-	-- 	local startY, auraOffsetY;
-	-- 	if ( mirrorVertically ) then
-	-- 		point = "BOTTOM";
-	-- 		relativePoint = "TOP";
-	-- 		startY = -8;
-	-- 		offsetY = - offsetY;
-	-- 		auraOffsetY = -AURA_OFFSET_Y;
-	-- 	else
-	-- 		point = "TOP";
-	-- 		relativePoint="BOTTOM";
-	-- 		startY = AURA_START_Y;
-	-- 		auraOffsetY = AURA_OFFSET_Y;
-	-- 	end
+		--For mirroring vertically
+		local point, relativePoint;
+		local startY, auraOffsetY;
+		if ( mirrorVertically ) then
+			point = "BOTTOM";
+			relativePoint = "TOP";
+			startY = -8;
+			offsetY = - offsetY;
+			auraOffsetY = -AURA_OFFSET_Y;
+		else
+			point = "TOP";
+			relativePoint="BOTTOM";
+			startY = AURA_START_Y;
+			auraOffsetY = AURA_OFFSET_Y;
+		end
 		 
-	-- 	if ( index == 1 ) then
-	-- 		if ( isFriend and numBuffs > 0 ) then
-	-- 			-- unit is friendly and there are buffs...debuffs start on bottom
-	-- 			buff:SetPoint(point.."LEFT", self.buffs, relativePoint.."LEFT", 0, -offsetY);
-	-- 		else
-	-- 			-- unit is not friendly or there are no buffs...debuffs start on top
-	-- 			buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY);
-	-- 		end
-	-- 		self.debuffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0);
-	-- 		self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
-	-- 		if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
-	-- 			self.spellbarAnchor = buff;
-	-- 		end
-	-- 	elseif ( anchorIndex ~= (index-1) ) then
-	-- 		-- anchor index is not the previous index...must be a new row
-	-- 		buff:SetPoint(point.."LEFT", _G[debuffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY);
-	-- 		self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
-	-- 		if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
-	-- 			self.spellbarAnchor = buff;
-	-- 		end
-	-- 	else
-	-- 		-- anchor index is the previous index
-	-- 		buff:SetPoint(point.."LEFT", _G[debuffName..(index-1)], point.."RIGHT", offsetX, 0);
-	-- 	end
+		if ( index == 1 ) then
+			if ( isFriend and numBuffs > 0 ) then
+				-- unit is friendly and there are buffs...debuffs start on bottom
+				buff:SetPoint(point.."LEFT", self.buffs, relativePoint.."LEFT", 0, -offsetY);
+			else
+				-- unit is not friendly or there are no buffs...debuffs start on top
+				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY);
+			end
+			self.debuffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0);
+			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
+			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
+				self.spellbarAnchor = buff;
+			end
+		elseif ( anchorIndex ~= (index-1) ) then
+			-- anchor index is not the previous index...must be a new row
+			buff:SetPoint(point.."LEFT", _G[debuffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY);
+			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
+			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
+				self.spellbarAnchor = buff;
+			end
+		else
+			-- anchor index is the previous index
+			buff:SetPoint(point.."LEFT", _G[debuffName..(index-1)], point.."RIGHT", offsetX, 0);
+		end
 	 
-	-- 	-- Resize
-	-- 	buff:SetWidth(size);
-	-- 	buff:SetHeight(size);
-	-- 	local debuffFrame =_G[debuffName..index.."Border"];
-	-- 	debuffFrame:SetWidth(size+2);
-	-- 	debuffFrame:SetHeight(size+2);
-	-- end
+		-- Resize
+		buff:SetWidth(size);
+		buff:SetHeight(size);
+		local debuffFrame =_G[debuffName..index.."Border"];
+		debuffFrame:SetWidth(size+2);
+		debuffFrame:SetHeight(size+2);
+	end
 
-	-- local function unit_targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- 	unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	-- end
-	-- hooksecurefunc("TargetFrame_UpdateDebuffAnchor", unit_targetUpdateDebuffAnchor)
+	local function unit_targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateDebuffAnchor", unit_targetUpdateDebuffAnchor)
+
+	--classcolor
+
+    local classColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
+
+	--backdrop
+
+    local backdrop = {
+	bgFile = nil,
+	edgeFile = "Interface\\AddOns\\TomUI\\media\\textures\\outer_shadow",
+	tile = false,
+	tileSize = 32,
+	edgeSize = 4,
+	insets = {
+		left = 4,
+		right = 4,
+		top = 4,
+		bottom = 4,
+	},
+    }
+
+	--apply aura frame texture func
+
+    local function applySkin(b)
+	if not b or (b and b.styled) then return end
+	--button name
+	local name = b:GetName()
+	if (name:match("Debuff")) then
+		b.debuff = true
+   	else
+   		b.buff = true
+	end
+	--icon
+	local icon = _G[name.."Icon"]
+	icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+	icon:SetDrawLayer("BACKGROUND",-8)
+	b.icon = icon
+	--border
+	local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
+	border:SetTexture("Interface\\AddOns\\TomUI\\media\\textures\\gloss")
+	border:SetTexCoord(0, 1, 0, 1)
+	border:SetDrawLayer("BACKGROUND",- 7)
+	if b.buff then
+		border:SetVertexColor(0.4, 0.35, 0.35)
+	end
+	border:ClearAllPoints()
+	border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
+	border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
+	b.border = border
+	--shadow
+	local back = CreateFrame("Frame", nil, b)
+	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+	back:SetFrameLevel(b:GetFrameLevel() - 1)
+	back:SetBackdrop(backdrop)
+	back:SetBackdropBorderColor(0, 0, 0, 0.9)
+	b.bg = back
+	--set button styled variable
+	b.styled = true
+    end
+
+	--apply castbar texture
+
+    local function applycastSkin(b)
+	if not b or (b and b.styled) then return end
+	-- parent
+	if b == CastingBarFrame.Icon then
+		b.parent = CastingBarFrame
+	elseif b == FocusFrameSpellBar.Icon then
+		b.parent = FocusFrameSpellBar
+	else
+		b.parent = TargetFrameSpellBar
+	end
+	-- frame
+	frame = CreateFrame("Frame", nil, b.parent)
+    	--icon
+    	b:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+    	--border
+    	local border = frame:CreateTexture(nil, "BACKGROUND")
+    	border:SetTexture("Interface\\AddOns\\TomUI\\media\\textures\\gloss")
+    	border:SetTexCoord(0, 1, 0, 1)
+    	border:SetDrawLayer("BACKGROUND",- 7)
+	    border:SetVertexColor(0.4, 0.35, 0.35)
+    	border:ClearAllPoints()
+	    border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
+      	border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
+    	b.border = border
+	--shadow
+	local back = CreateFrame("Frame", nil, b.parent)
+	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+	back:SetFrameLevel(frame:GetFrameLevel() - 1)
+	back:SetBackdrop(backdrop)
+	back:SetBackdropBorderColor(0, 0, 0, 0.9)
+	b.bg = back
+	--set button styled variable
+	b.styled = true
+    end
+
+    -- setting timer for castbar icons
+
+    function UpdateTimer(self, elapsed)
+	total = total + elapsed
+	if CastingBarFrame.Icon then
+		applycastSkin(CastingBarFrame.Icon)
+	end
+	if TargetFrameSpellBar.Icon then
+		applycastSkin(TargetFrameSpellBar.Icon)
+	end
+	if FocusFrameSpellBar.Icon then
+		applycastSkin(FocusFrameSpellBar.Icon)
+	end
+	if CastingBarFrame.Icon.styled and TargetFrameSpellBar.Icon.styled then
+		cf:SetScript("OnUpdate", nil)
+	end
+    end
+  
+    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
+	for i = 1, MAX_TARGET_BUFFS do
+		b = _G["TargetFrameBuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_DEBUFFS do
+		b = _G["TargetFrameDebuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_BUFFS do
+		b = _G["FocusFrameBuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_DEBUFFS do
+		b = _G["FocusFrameDebuff"..i]
+		applySkin(b)
+	end
+    end)
+
+    total = 0
+    cf = CreateFrame("Frame")
+	cf:SetScript("OnUpdate", UpdateTimer)
 end
 
 function Interface:Chat()
@@ -1511,99 +1793,8 @@ end
 
 function Interface:Buffs()
 
-	background = {
-	    showbg            = true,   --show an background image?
-	    showshadow        = true,   --show an outer shadow?
-	    useflatbackground = false,  --true uses plain flat color instead
-	    backgroundcolor   = { r = 0.2, g = 0.2, b = 0.2, a = 0.3},
-	    shadowcolor       = { r = 0, g = 0, b = 0, a = 0.9},
-	    classcolored      = false,
-	    inset             = 5,
-	  }
-
-	adjustOneletterAbbrev = true
-
-		-- buff frame settings
-
-	  buffFrame = {
-	    pos                 = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = 0 },
-	    gap                 = 30, --gap between buff and debuff rows
-	    userplaced          = true, --want to place the bar somewhere else?
-	    rowSpacing          = 10,
-	    colSpacing          = 7,
-	    buttonsPerRow       = 10,
-	    button = {
-	      size              = 50,
-	    },
-	    icon = {
-	      padding           = -2,
-	    },
-	    border = {
-	      texture           = "Interface\\AddOns\\TomUI\\media\\textures\\gloss",
-	      color             = { r = 0.4, g = 0.35, b = 0.35, },
-	      classcolored      = false,
-	    },
-	    background = {
-	      show              = false,   --show backdrop
-	      edgeFile          = "Interface\\AddOns\\TomUI\\media\\textures\\outer_shadow",
-	      color             = { r = 0, g = 0, b = 0, a = 0.9},
-	      classcolored      = false,
-	      inset             = 6,
-	      padding           = 4,
-	    },
-	    duration = {
-	      font              = STANDARD_TEXT_FONT,
-	      size              = 13,
-	      pos               = { a1 = "BOTTOM", x = 0, y = -13 },
-	    },
-	    count = {
-	      font              = STANDARD_TEXT_FONT,
-	      size              = 11,
-	      pos               = { a1 = "TOPRIGHT", x = 0, y = 0 },
-	    },
-	  }
-	  
-	-- debuff frame settings
-
-	  debuffFrame = {    pos             = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = -85 },
-	    gap                 = 10, --gap between buff and debuff rows
-	    userplaced          = true, --want to place the bar somewhere else?
-	    rowSpacing          = 10,
-	    colSpacing          = 7,
-	    buttonsPerRow       = 10,
-	    button = {
-	      size              = 50,
-	    },
-	    icon = {
-	      padding           = -2,
-	    },
-	    border = {
-	      texture           = "Interface\\AddOns\\TomUI\\media\\textures\\gloss",
-	      color             = { r = 0.4, g = 0.35, b = 0.35, },
-	      classcolored      = false,
-	    },
-	    background = {
-	      show              = true,   --show backdrop
-	      edgeFile          = "Interface\\AddOns\\TomUI\\media\\textures\\outer_shadow",
-	      color             = { r = 0, g = 0, b = 0, a = 0.9},
-	      classcolored      = false,
-	      inset             = 6,
-	      padding           = 4,
-	    },
-	    duration = {
-	      font              = STANDARD_TEXT_FONT,
-	      size              = 13,
-	      pos               = { a1 = "BOTTOM", x = 0, y = -13 },
-	    },
-	    count = {
-	      font              = STANDARD_TEXT_FONT,
-	      size              = 11,
-	      pos               = { a1 = "TOPRIGHT", x = 0, y = 0 },
-	    },
-	  }
-
-		--rCreateDragFrame func
-	  function rCreateDragFrame(self, dragFrameList, inset, clamp)
+	--rCreateDragFrame func
+	function rCreateDragFrame(self, dragFrameList, inset, clamp)
 	    if not self or not dragFrameList then return end
 	    self.defaultPoint = rGetPoint(self)
 	    table.insert(dragFrameList,self)
@@ -1635,7 +1826,7 @@ function Interface:Buffs()
 	    self:SetClampedToScreen(clamp or false)
 	    self:SetMovable(true)
 	    self:SetUserPlaced(true)
-	  end
+	end
 
 	--rewrite the oneletter shortcuts
 
@@ -1881,3 +2072,378 @@ function Interface:Buffs()
 	  hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
 	  hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
 end
+
+ --  	--backdrop settings
+ --  	local bgfile, edgefile = "", ""
+ --  	if background.showshadow then edgefile = textures.outer_shadow end
+ -- 	if background.useflatbackground and background.showbg then bgfile = textures.buttonbackflat end
+
+ --  --backdrop
+ --  local backdrop = {
+ --    bgFile = bgfile,
+ --    edgeFile = edgefile,
+ --    tile = false,
+ --    tileSize = 32,
+ --    edgeSize = background.inset,
+ --    insets = {
+ --      left = background.inset,
+ --      right = background.inset,
+ --      top = background.inset,
+ --      bottom = background.inset,
+ --    },
+ --    }
+
+ --  ---------------------------------------
+ --  -- FUNCTIONS
+ --  ---------------------------------------
+
+ --  local function applyBackground(bu)
+ --    if not bu or (bu and bu.bg) then return end
+ --    --shadows+background
+ --    if bu:GetFrameLevel() < 1 then bu:SetFrameLevel(1) end
+ --    if background.showbg or background.showshadow then
+ --      bu.bg = CreateFrame("Frame", nil, bu)
+ --     -- bu.bg:SetAllPoints(bu)
+ --      bu.bg:SetPoint("TOPLEFT", bu, "TOPLEFT", -4, 4)
+ --      bu.bg:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", 4, -4)
+ --      bu.bg:SetFrameLevel(bu:GetFrameLevel()-1)
+ --      if background.showbg and not background.useflatbackground then
+ --        local t = bu.bg:CreateTexture(nil,"BACKGROUND",-8)
+ --        t:SetTexture(textures.buttonback)
+ --        --t:SetAllPoints(bu)
+ --        t:SetVertexColor(background.backgroundcolor.r,background.backgroundcolor.g,background.backgroundcolor.b,background.backgroundcolor.a)
+ --      end
+ --      bu.bg:SetBackdrop(backdrop)
+ --      if background.useflatbackground then
+ --        bu.bg:SetBackdropColor(background.backgroundcolor.r,background.backgroundcolor.g,background.backgroundcolor.b,background.backgroundcolor.a)
+ --      end
+ --      if background.showshadow then
+ --        bu.bg:SetBackdropBorderColor(background.shadowcolor.r,background.shadowcolor.g,background.shadowcolor.b,background.shadowcolor.a)
+ --      end
+ --    end
+ --  end
+
+ --  --style extraactionbutton
+ --  local function styleExtraActionButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then return end
+ --    local name = bu:GetName() or bu:GetParent():GetName()
+	-- local style = bu.style or bu.Style
+	-- local icon = bu.icon or bu.Icon
+	-- local cooldown = bu.cooldown or bu.Cooldown
+ --    local ho = _G[name.."HotKey"]
+ --    -- remove the style background theme
+	-- style:SetTexture(nil)
+ --    hooksecurefunc(style, "SetTexture", function(self, texture)
+ --      if texture then
+ --        --print("reseting texture: "..texture)
+ --        self:SetTexture(nil)
+ --      end
+ --    end)
+ --    --icon
+ --    icon:SetTexCoord(0.1,0.9,0.1,0.9)
+ --    --icon:SetAllPoints(bu)
+	--   icon:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --    icon:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --    --cooldown
+ --    cooldown:SetAllPoints(icon)
+ --    --hotkey
+	-- if ho then
+	-- 	ho:Hide()
+	-- end
+ --    --add button normaltexture
+ --    bu:SetNormalTexture(textures.normal)
+ --    local nt = bu:GetNormalTexture()
+ --    nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+ --    nt:SetAllPoints(bu)
+ --    --apply background
+ --    --if not bu.bg then applyBackground(bu) end
+	-- bu.Back = CreateFrame("Frame", nil, bu)
+	-- 	bu.Back:SetPoint("TOPLEFT", bu, "TOPLEFT", -3, 3)
+	-- 	bu.Back:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", 3, -3)
+	-- 	bu.Back:SetFrameLevel(bu:GetFrameLevel() - 1)
+	-- 	bu.Back:SetBackdrop(backdrop)
+	-- 	bu.Back:SetBackdropBorderColor(0, 0, 0, 0.9)
+ --    bu.rabs_styled = true
+ --  end
+
+ --  --initial style func
+ --    local function styleActionButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then
+ --      return
+ --    end
+ --    local action = bu.action
+ --    local name = bu:GetName()
+ --    local ic  = _G[name.."Icon"]
+ --    local co  = _G[name.."Count"]
+ --    local bo  = _G[name.."Border"]
+ --    local ho  = _G[name.."HotKey"]
+ --    local cd  = _G[name.."Cooldown"]
+ --    local na  = _G[name.."Name"]
+ --    local fl  = _G[name.."Flash"]
+ --    local nt  = _G[name.."NormalTexture"]
+ --    local fbg  = _G[name.."FloatingBG"]
+ --    local fob = _G[name.."FlyoutBorder"]
+ --    local fobs = _G[name.."FlyoutBorderShadow"]
+ --    if fbg then fbg:Hide() end  --floating background
+ --    --flyout border stuff
+ --    if fob then fob:SetTexture(nil) end
+ --    if fobs then fobs:SetTexture(nil) end
+ --    bo:SetTexture(nil) --hide the border (plain ugly, sry blizz)
+ --    --hotkey
+ --    ho:SetFont(font, hotkeys.fontsize, "OUTLINE")
+ --    ho:ClearAllPoints()
+ --    ho:SetPoint(hotkeys.pos1.a1,bu,hotkeys.pos1.x,hotkeys.pos1.y)
+ --    ho:SetPoint(hotkeys.pos2.a1,bu,hotkeys.pos2.x,hotkeys.pos2.y)
+ --    --macro name
+ --    na:SetFont(font, macroname.fontsize, "OUTLINE")
+ --    na:ClearAllPoints()
+ --    na:SetPoint(macroname.pos1.a1,bu,macroname.pos1.x,macroname.pos1.y)
+ --    na:SetPoint(macroname.pos2.a1,bu,macroname.pos2.x,macroname.pos2.y)
+ --    if not macroname.show then
+ --      na:Hide()
+ --    end
+ --    --item stack count
+ --    co:SetFont(font, itemcount.fontsize, "OUTLINE")
+ --    co:ClearAllPoints()
+ --    co:SetPoint(itemcount.pos1.a1,bu,itemcount.pos1.x,itemcount.pos1.y)
+ --    if not itemcount.show then
+ --      co:Hide()
+ --    end
+ --    --applying the textures
+ --    fl:SetTexture(textures.flash)
+ --    --bu:SetHighlightTexture(textures.hover)
+ --    bu:SetPushedTexture(textures.pushed)
+ --    --bu:SetCheckedTexture(textures.checked)
+ --    bu:SetNormalTexture(textures.normal)
+ --    if not nt then
+ --      --fix the non existent texture problem (no clue what is causing this)
+ --      nt = bu:GetNormalTexture()
+ --    end
+ --    --cut the default border of the icons and make them shiny
+ --    ic:SetTexCoord(0.1,0.9,0.1,0.9)
+ --    ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --    ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --    --adjust the cooldown frame
+ --    cd:SetPoint("TOPLEFT", bu, "TOPLEFT", cooldown.spacing, -cooldown.spacing)
+ --    cd:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -cooldown.spacing, cooldown.spacing)
+ --    --apply the normaltexture
+ --    if action and  IsEquippedAction(action) then
+ --      --bu:SetNormalTexture(textures.equipped)
+ --      nt:SetVertexColor(color.equipped.r,color.equipped.g,color.equipped.b,1)
+ --    else
+ --      bu:SetNormalTexture(textures.normal)
+ --      nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+ --    end
+ --    --make the normaltexture match the buttonsize
+ --    nt:SetAllPoints(bu)
+ --    --hook to prevent Blizzard from reseting our colors
+ --    --shadows+background
+ --    if not bu.bg then applyBackground(bu) end
+ --    bu.rabs_styled = true
+ --  end
+
+ --  -- style leave button
+ --  local function styleLeaveButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then return end
+	--   --local region = select(1, bu:GetRegions())
+	--   local name = bu:GetName()
+ --  	local nt = bu:GetNormalTexture()
+	--   local bo = bu:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
+ --  	nt:SetTexCoord(0.2,0.8,0.2,0.8)
+ --  	nt:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --    nt:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --  	bo:SetTexture(textures.normal)
+ --  	bo:SetTexCoord(0, 1, 0, 1)
+ --  	bo:SetDrawLayer("BACKGROUND",- 7)
+ --  	bo:SetVertexColor(0.4, 0.35, 0.35)
+	--   bo:ClearAllPoints()
+	--   bo:SetAllPoints(bu)
+ --    --shadows+background
+ --    if not bu.bg then applyBackground(bu) end
+ --    bu.rabs_styled = true
+ --  end
+
+ --  PetActionBarFrame:ClearAllPoints()
+ --  PetActionBarFrame:SetPoint("BOTTOM",MultiBarBottomLeft,"TOP",12,3)
+ --  PetActionBarFrame.SetPoint = function() end
+
+ --  --style pet buttons
+ --  local function stylePetButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then return end
+ --    local name = bu:GetName()
+ --    local ic  = _G[name.."Icon"]
+ --    local fl  = _G[name.."Flash"]
+ --    local nt  = _G[name.."NormalTexture2"]
+ --    nt:SetAllPoints(bu)
+ --    --applying color
+ --    nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+ --    --setting the textures
+ --    fl:SetTexture(textures.flash)
+ --    --bu:SetHighlightTexture(textures.hover)
+ --    bu:SetPushedTexture(textures.pushed)
+ --    --bu:SetCheckedTexture(textures.checked)
+ --    bu:SetNormalTexture(textures.normal)
+ --    hooksecurefunc(bu, "SetNormalTexture", function(self, texture)
+ --      --make sure the normaltexture stays the way we want it
+ --      if texture and texture ~= textures.normal then
+ --        self:SetNormalTexture(textures.normal)
+ --      end
+ --    end)
+ --    --cut the default border of the icons and make them shiny
+ --    ic:SetTexCoord(0.1,0.9,0.1,0.9)
+ --  	ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+	--   ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --    --shadows+background
+ --    if not bu.bg then applyBackground(bu) end
+ --    bu.rabs_styled = true
+ --    end
+
+	-- --style stance buttons
+
+ --  local function styleStanceButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then return end
+ --    local name = bu:GetName()
+ --    local ic  = _G[name.."Icon"]
+ --    local fl  = _G[name.."Flash"]
+ --    local nt  = _G[name.."NormalTexture2"]
+ --    nt:SetAllPoints(bu)
+ --    --applying color
+ --    nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+ --    --setting the textures
+ --    fl:SetTexture(textures.flash)
+ --    --bu:SetHighlightTexture(textures.hover)
+ --    bu:SetPushedTexture(textures.pushed)
+ --    --bu:SetCheckedTexture(textures.checked)
+ --    bu:SetNormalTexture(textures.normal)
+ --    --cut the default border of the icons and make them shiny
+ --    ic:SetTexCoord(0.1,0.9,0.1,0.9)
+ --    ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --    ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --    --shadows+background
+ --    if not bu.bg then applyBackground(bu) end
+ --    bu.rabs_styled = true
+ --    end
+
+	-- --style possess buttons
+
+ --  local function stylePossessButton(bu)
+ --    if not bu or (bu and bu.rabs_styled) then return end
+ --      local name = bu:GetName()
+ --      local ic  = _G[name.."Icon"]
+ --      local fl  = _G[name.."Flash"]
+ --      local nt  = _G[name.."NormalTexture"]
+ --      nt:SetAllPoints(bu)
+ --      --applying color
+ --      nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+ --      --setting the textures
+ --      fl:SetTexture(textures.flash)
+ --      --bu:SetHighlightTexture(textures.hover)
+ --      bu:SetPushedTexture(textures.pushed)
+ --      --bu:SetCheckedTexture(textures.checked)
+ --      bu:SetNormalTexture(textures.normal)
+ --      --cut the default border of the icons and make them shiny
+ --      ic:SetTexCoord(0.1,0.9,0.1,0.9)
+ --      ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --      ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --      --shadows+background
+ --      if not bu.bg then applyBackground(bu) end
+ --      bu.rabs_styled = true
+ --  end
+
+	-- -- style bags
+
+ --  local function styleBag(bu)
+ --  	if not bu or (bu and bu.rabs_styled) then return end
+	--     local name = bu:GetName()
+	--     local ic  = _G[name.."IconTexture"]
+	--     local nt  = _G[name.."NormalTexture"]
+	--     nt:SetTexCoord(0,1,0,1)
+	--     nt:SetDrawLayer("BACKGROUND", -7)
+	--     nt:SetVertexColor(0.4, 0.35, 0.35)
+	--     nt:SetAllPoints(bu)
+	--     local bo = bu.IconBorder
+	--     bo:Hide()
+	--     bo.Show = function() end
+	--     ic:SetTexCoord(0.1,0.9,0.1,0.9)
+ --      ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
+ --      ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
+ --  	  bu:SetNormalTexture(textures.normal)
+	--     --bu:SetHighlightTexture(textures.hover)
+ --      bu:SetPushedTexture(textures.pushed)
+ --      --bu:SetCheckedTexture(textures.checked)
+ 	
+ --      --make sure the normaltexture stays the way we want it
+ --  	  hooksecurefunc(bu, "SetNormalTexture", function(self, texture)
+ --      if texture and texture ~= textures.normal then
+ --        	self:SetNormalTexture(textures.normal)
+ --      end
+ --   	  end)
+	--     bu.Back = CreateFrame("Frame", nil, bu)
+	-- 	  bu.Back:SetPoint("TOPLEFT", bu, "TOPLEFT", -4, 4)
+	-- 	  bu.Back:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", 4, -4)
+	-- 	  bu.Back:SetFrameLevel(bu:GetFrameLevel() - 1)
+	-- 	  bu.Back:SetBackdrop(backdrop)
+ --      bu.Back:SetBackdropBorderColor(0, 0, 0, 0.9)
+ --  end
+
+	-- --update hotkey func
+
+ --  local function updateHotkey(self, actionButtonType)
+ --    local ho = _G[self:GetName().."HotKey"]
+ --    if ho and ho:IsShown() then
+ --      ho:Hide()
+ --    end
+ --  end
+
+ --  local function init()
+ --    --style the actionbar buttons
+ --    for i = 1, NUM_ACTIONBAR_BUTTONS do
+ --      styleActionButton(_G["ActionButton"..i])
+ --      styleActionButton(_G["MultiBarBottomLeftButton"..i])
+ --      styleActionButton(_G["MultiBarBottomRightButton"..i])
+ --      styleActionButton(_G["MultiBarRightButton"..i])
+ --      styleActionButton(_G["MultiBarLeftButton"..i])
+ --    end
+	--   --style bags
+ --    for i = 0, 3 do
+	-- 	styleBag(_G["CharacterBag"..i.."Slot"])
+ --    end
+	--   styleBag(MainMenuBarBackpackButton)
+ --    for i = 1, 6 do
+ --      styleActionButton(_G["OverrideActionBarButton"..i])
+ --    end
+ --    --style leave button
+	--   styleLeaveButton(MainMenuBarVehicleLeaveButton)
+ --    styleLeaveButton(rABS_LeaveVehicleButton)
+ --    --petbar buttons
+ --    for i=1, NUM_PET_ACTION_SLOTS do
+ --      stylePetButton(_G["PetActionButton"..i])
+ --    end
+ --    --stancebar buttons
+ --    for i=1, NUM_STANCE_SLOTS do
+ --      styleStanceButton(_G["StanceButton"..i])
+ --    end
+ --    --possess buttons
+ --    for i=1, NUM_POSSESS_SLOTS do
+ --      stylePossessButton(_G["PossessButton"..i])
+ --    end
+ --    --extraactionbutton1
+ --    styleExtraActionButton(ExtraActionButton1)
+	--   styleExtraActionButton(ZoneAbilityFrame.SpellButton)
+ --    --spell flyout
+ --    SpellFlyoutBackgroundEnd:SetTexture(nil)
+ --    SpellFlyoutHorizontalBackground:SetTexture(nil)
+ --    SpellFlyoutVerticalBackground:SetTexture(nil)
+ --    local function checkForFlyoutButtons(self)
+ --      local NUM_FLYOUT_BUTTONS = 10
+ --      for i = 1, NUM_FLYOUT_BUTTONS do
+ --        styleActionButton(_G["SpellFlyoutButton"..i])
+ --      end
+ --    end
+ --    SpellFlyout:HookScript("OnShow",checkForFlyoutButtons)
+
+ --  end
+
+ --  local a = CreateFrame("Frame")
+ --  a:RegisterEvent("PLAYER_LOGIN")
+ --  a:SetScript("OnEvent", init)
