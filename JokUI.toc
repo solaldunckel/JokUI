@@ -1,6 +1,6 @@
 ## Interface: 80000
 ## Title: |cffFF7D0AJok|rUI
-## Version: 0.8b
+## Version: 2.0
 ## Author: Tom
 ## Notes: PlaceHolder
 ## SavedVariables: JokUIDB
