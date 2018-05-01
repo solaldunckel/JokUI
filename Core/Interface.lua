@@ -7,55 +7,6 @@ local Interface = JokUI:RegisterModule("Interface")
 
 local features = {}
 
-textures = {
-    normal            = "Interface\\AddOns\\JokUI\\media\\textures\\gloss",
-    flash             = "Interface\\AddOns\\JokUI\\media\\textures\\flash",
-    hover             = "Interface\\AddOns\\JokUI\\media\\textures\\hover",
-    pushed            = "Interface\\AddOns\\JokUI\\media\\textures\\pushed",
-    checked           = "Interface\\AddOns\\JokUI\\media\\textures\\checked",
-    equipped          = "Interface\\AddOns\\JokUI\\media\\textures\\gloss_grey",
-    buttonback        = "Interface\\AddOns\\JokUI\\media\\textures\\button_background",
-    buttonbackflat    = "Interface\\AddOns\\JokUI\\media\\textures\\button_background_flat",
-    outer_shadow      = "Interface\\AddOns\\JokUI\\media\\textures\\outer_shadow",
-}
-
-background = {
-    showbg            = true,   --show an background image?
-    showshadow        = true,   --show an outer shadow?
-    useflatbackground = false,  --true uses plain flat color instead
-    backgroundcolor   = { r = 0.2, g = 0.2, b = 0.2, a = 0.3},
-    shadowcolor       = { r = 0, g = 0, b = 0, a = 0.9},
-    classcolored      = false,
-    inset             = 5,
-}
-
-hotkeys = {
-    fontsize          = 12,
-    pos1              = { a1 = "TOPRIGHT", x = 0, y = 0 },
-    pos2              = { a1 = "TOPLEFT", x = 0, y = 0 }, --important! two points are needed to make the hotkeyname be inside of the button
-}
-
-macroname = {
-    show              = true,
-    fontsize          = 10,
-    pos1              = { a1 = "BOTTOMLEFT", x = 0, y = 0 },
-    pos2              = { a1 = "BOTTOMRIGHT", x = 0, y = 0 }, --important! two points are needed to make the macroname be inside of the button
-}
-itemcount = {
-    show              = true,
-    fontsize          = 12,
-    pos1              = { a1 = "BOTTOMRIGHT", x = 0, y = 0 },
-}
-cooldown = {
-    spacing           = 0,
-  }
-
-color = {
-    normal            = { r = 0.37, g = 0.3, b = 0.3, },
-    equipped          = { r = 0.1, g = 0.5, b = 0.1, },
-    classcolored      = false,
-}
-
 adjustOneletterAbbrev = true
 font = STANDARD_TEXT_FONT
 
