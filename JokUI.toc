@@ -1,9 +1,11 @@
 ## Interface: 70300
-## Title: |cFF99CC01Jok|rUI
-## Version: 1.0
+## Title: |cffFF7D0AJok|rUI
+## Version: 0.8b
 ## Author: Tom
 ## Notes: PlaceHolder
 ## SavedVariables: JokUIDB
+
+## LIBS
 
 libs\Ace3\LibStub\LibStub.lua
 libs\Ace3\CallbackHandler-1.0\CallbackHandler-1.0.xml
@@ -29,12 +31,18 @@ libs\LibCompress\lib.xml
 libs\LibArtifactData-1.0.lua
 libs\indents.lua
 
+## CORE
+
 Core.lua
 Config.lua
 
-Core\Misc.lua
 Core\Nameplates.lua
 Core\RaidFrames.lua
 Core\MythicPlus.lua
+Core\Misc.lua
+
+## INTERFACE 
+
 Core\Interface.lua
 Core\Bfa.xml
+Core\Actionbars.lua

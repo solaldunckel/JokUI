@@ -33,7 +33,7 @@ local misc_config = {
 function Misc:OnInitialize()
 	self.db = JokUI.db:RegisterNamespace("Miscellaneous", misc_defaults)
 	self.settings = self.db.profile
-	JokUI.Config:Register("Miscellaneous", misc_config, 12)
+	JokUI.Config:Register("Miscellaneous", misc_config, 14)
 
 	self:RegisterEvent("ADDON_LOADED")
 
@@ -132,13 +132,15 @@ do
 		false,
 		function(state)
 			if state then
-				C_Timer.After(0.3, function()
-					LoadAddOn("Blizzard_OrderHallUI")
-					local b = OrderHallCommandBar
-					b:UnregisterAllEvents()
-					b:HookScript("OnShow", b.Hide)
-					b:Hide()
-				end)
+				if not InCombatLockdown() then
+					C_Timer.After(0.3, function()
+						LoadAddOn("Blizzard_OrderHallUI")
+						local b = OrderHallCommandBar
+						b:UnregisterAllEvents()
+						b:HookScript("OnShow", b.Hide)
+						b:Hide()
+					end)
+				end
 			end
 		end)
 end
@@ -171,32 +173,32 @@ do
 		end)
 end
 
-do
-	Misc:RegisterFeature("PixelPerfect",
-		"Set Pixel Perfect",
-		"Set UI to Pixel Perfect Mode.",
-		false,
-		true,
-		function(state)
-			if state then
-				Advanced_UseUIScale:Disable()
-				Advanced_UIScaleSlider:Disable()
-				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetTextColor(1,0,0,1)
-				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetText("The 'Use UI Scale' toggle is unavailable while Pixel Perfect mode is active.")
-				Advanced_UseUIScaleText:SetPoint("LEFT",Advanced_UseUIScale,"LEFT",4,-40)
-				if not InCombatLockdown() then
-					MinimapCluster:SetScale(1.5)
-					local scale = 768/string.match(({GetScreenResolutions()})[GetCurrentResolution()], "%d+x(%d+)")
-					if scale < .64 then
-						UIParent:SetScale(scale)
-					else
-						self:UnregisterEvent("UI_SCALE_CHANGED")
-						SetCVar("uiScale", scale)
-					end
-				end
-			end
-		end)
-end
+-- do
+-- 	Misc:RegisterFeature("PixelPerfect",
+-- 		"Set Pixel Perfect",
+-- 		"Set UI to Pixel Perfect Mode.",
+-- 		false,
+-- 		true,
+-- 		function(state)
+-- 			if state then
+-- 				Advanced_UseUIScale:Disable()
+-- 				Advanced_UIScaleSlider:Disable()
+-- 				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetTextColor(1,0,0,1)
+-- 				getglobal(Advanced_UseUIScale:GetName() .. "Text"):SetText("The 'Use UI Scale' toggle is unavailable while Pixel Perfect mode is active.")
+-- 				Advanced_UseUIScaleText:SetPoint("LEFT",Advanced_UseUIScale,"LEFT",4,-40)
+-- 				if not InCombatLockdown() then
+-- 					MinimapCluster:SetScale(1.5)
+-- 					local scale = 768/string.match(({GetScreenResolutions()})[GetCurrentResolution()], "%d+x(%d+)")
+-- 					if scale < .64 then
+-- 						UIParent:SetScale(scale)
+-- 					else
+-- 						self:UnregisterEvent("UI_SCALE_CHANGED")
+-- 						SetCVar("uiScale", scale)
+-- 					end
+-- 				end
+-- 			end
+-- 		end)
+-- end
 
 do
 	Misc:RegisterFeature("InCombatIcon",
@@ -389,6 +391,7 @@ end
 
 function Misc:ShowStats()
 	local cfg = CreateFrame("Frame")
+
 	cfg.stats = {
 	    pos1              = "TOPLEFT",
 	    pos2              = 10,
@@ -402,7 +405,7 @@ function Misc:ShowStats()
 	local fontSize = 14
 	local fontFlag = 'THINOUTLINE'
 	local textAlign = 'CENTER'
-	local position = { cfg.stats.pos1, UIParent, cfg.stats.pos3, cfg.stats.pos2, cfg.stats.pos4 }
+	local position = { "TOPLEFT", UIParent, "TOPLEFT", 10, -5 }
 	local customColor = false
 	local useShadow = true
 	local showClock = flase
@@ -1006,6 +1009,11 @@ function Misc:TooltipID()
   GameTooltip:HookScript("OnTooltipSetSpell", function(self)
     local id = select(3, self:GetSpell())
     if id then addLine(self, id, types.spell) end
+  end)
+
+  GameTooltip:HookScript("OnTooltipSetSpell", function(self)
+  	local id = GetMouseFocus():GetID() 
+    if id then addLine(self, id, types.talent) end
   end)
 
   -- Artifact Powers
