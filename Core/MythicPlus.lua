@@ -15,26 +15,28 @@ local TIME_FOR_2 = 0.8
 local rowCount = 4
 local requestKeystoneCheck
 
--- 1: Overflowing, 2: Skittish, 3: Volcanic, 4: Necrotic, 5: Teeming, 6: Raging, 7: Bolstering, 8: Sanguine, 9: Tyrannical, 10: Fortified, 11: Bursting, 12: Grievous, 13: Explosive 14: Quaking
+-- 1: Overflowing, 2: Skittish, 3: Volcanic, 4: Necrotic, 5: Teeming, 6: Raging, 7: Bolstering, 8: Sanguine, 9: Tyrannical, 10: Fortified, 11: Bursting, 12: Grievous, 13: Explosive, 14: Quaking
 local affixSchedule = {
-	{ 6, 3, 9 },
-	{ 5, 13, 10 },
-	{ 7, 12, 9 },
-	{ 8, 4, 10 },
-	{ 11, 2, 9 },
+	{ 6, 3, 9 }, -- Raging / Volcanic / Tyrannical
+	{ 5, 13, 10 }, -- Teeming / Explosive / Fortified
+	{ 7, 12, 9 }, -- Bolstering / Grievous / Tyrannical
+	{ 8, 4, 10 }, -- Sanguine / Necrotic / Fortified
+	{ 11, 2, 9 }, -- Bursting / Skittish / Tyrannical
 	{ 5, 14, 10 }, -- Teeming / Quaking / Fortified
 	{ 6, 4, 9 }, -- Raging / Necrotic / Tyrannical
 	{ 7, 2, 10 }, -- Bolstering / Skittish / Fortified
-	{ 5, 4, 9 }, -- Teeming / Necrotic / Tyrannical
+	{ 5, 3, 9 }, -- Teeming / Volcanic / Tyrannical
 	{ 8, 12, 10 }, -- Sanguine / Grievous / Fortified
 	{ 7, 13, 9 }, -- Bolstering / Explosive / Tyrannical
 	{ 11, 14, 10 }, -- Bursting / Quaking / Fortified
 }
 
-local scheduleWeek1 = "This week"
-local scheduleWeek2 = "Next week"
-local scheduleWeek3 = "In two weeks"
-local scheduleWeek4 = "In three weeks"
+schedule = {
+	Week1 = "This week",
+	Week2 = "Next week",
+	Week3 = "In two weeks",
+	Week4 = "In three weeks",
+}
 
 local currentWeek
 
@@ -66,13 +68,18 @@ defaultProgressValues = {{100216,4,"Hatecoil Wrangler"},{97182,6,"Night Watch Ma
 local mythicplus_defaults = {
     profile = {
     	enableProgress = true,
-    	enableTimer = true,
     	showRawProgress = true,
-    	currentPullFramey = -100,
-		currentPullFramex = 700,
 		enableNameplateText = true,
-		enableTooltip = true,	
-		enablePullEstimate = true,       
+		enablePullEstimate = true,
+		enableTimer = true,
+		cooldowns = {
+    		enableCooldowns = true,
+			iconSize = 30, 
+			iconGap = 5,
+			position = "LEFT",
+			x = -5,
+			y = 0,
+    	},
     }
 }
 
@@ -180,18 +187,106 @@ local mythicplus_config = {
 			},
         },
     },
+    enableCooldowns = {
+		type = "toggle",
+		name = "Enable",
+		width = "full",
+		order = 7,
+		set = function(info,val) MythicPlus.settings.cooldowns.enableCooldowns = val
+		end,
+		get = function(info) return MythicPlus.settings.cooldowns.enableCooldowns end
+	},
+    cooldowns = {
+        name = "Mythic + Cooldowns",
+        type = "group",
+        inline = true,
+        order = 8,
+        disabled = function() return not MythicPlus.settings.cooldowns.enableCooldowns end,
+        args = {
+        	iconSize = {
+                type = "range",
+                name = "Icon Size",
+                desc = "",
+                min = 20,
+                max = 50,
+                step = 1,
+                order = 1,
+                set = function(info,val) MythicPlus.settings.cooldowns.iconSize = val
+                JokUI.EditCDBar("size")
+                end,
+                get = function(info, val) return MythicPlus.settings.cooldowns.iconSize end
+            },
+            iconGap = {
+                type = "range",
+                name = "Icon Space",
+                desc = "",
+                min = 0,
+                max = 15,
+                step = 1,
+                order = 2,
+                set = function(info,val) MythicPlus.settings.cooldowns.iconGap = val
+                JokUI.EditCDBar("pos")
+                end,
+                get = function(info, val) return MythicPlus.settings.cooldowns.iconGap end
+            },
+            offsetX = {
+                type = "range",
+                name = "Offset X",
+                desc = "",
+                min = -20,
+                max = 20,
+                step = 1,
+                order = 3,
+                set = function(info,val) MythicPlus.settings.cooldowns.x = val
+                JokUI.EditCDBar("pos")
+                end,
+                get = function(info, val) return MythicPlus.settings.cooldowns.x end
+            },
+            offsetY = {
+                type = "range",
+                name = "Offset Y",
+                desc = "",
+                min = -30,
+                max = 30,
+                step = 1,
+                order = 4,
+                set = function(info,val) MythicPlus.settings.cooldowns.y = val
+                JokUI.EditCDBar("pos")
+                end,
+                get = function(info, val) return MythicPlus.settings.cooldowns.y end
+            },
+            position = {
+                type = "select",
+                style = "dropdown",
+                name = "Position",
+                desc = "",
+                width = "full",
+                values = {
+							["BOTTOM"] = "BOTTOM",
+							["TOP"] = "TOP",
+							["RIGHT"] = "LEFT",
+							["LEFT"] = "RIGHT",
+						},
+                order = 5,
+                set = function(info,val) MythicPlus.settings.cooldowns.position = val
+                JokUI.EditCDBar("pos")
+                end,
+                get = function(info, val) return MythicPlus.settings.cooldowns.position end
+            },
+        },
+    },
     misc = {
         type = "description",
         name = "\n |cff64b4ffMisc",
         fontSize = "large",
-        order = 7,
+        order = 9,
     },
 }
 
 function MythicPlus:OnInitialize()
     self.db = JokUI.db:RegisterNamespace("Mythic +", mythicplus_defaults)
     self.settings = self.db.profile
-    JokUI.Config:Register("Mythic +", mythicplus_config, 13)
+    JokUI.Config:Register("Mythic +", mythicplus_config, 11)
 end
 
 function MythicPlus:OnEnable()
@@ -205,6 +300,10 @@ function MythicPlus:OnEnable()
 
 	if MythicPlus.settings.enableTimer then
 		self:Timer()
+	end
+
+	if MythicPlus.settings.cooldowns.enableCooldowns then
+		self:Cooldowns()
 	end
 
 	self:Schedule()
@@ -659,7 +758,7 @@ function MythicPlus:Schedule()
 			text:SetWidth(120)
 			text:SetJustifyH("LEFT")
 			text:SetWordWrap(false)
-			text:SetText("Week "..i)
+			text:SetText( schedule["Week"..i] )
 			text:SetPoint("LEFT")
 			entry.Text = text
 
@@ -1017,7 +1116,7 @@ function MythicPlus:Progress()
 	end
 
 	local function shouldAddTooltip(unit)
-		if MythicPlus.settings.enableTooltip and isMythicPlus() and isValidTarget(unit) then
+		if isMythicPlus() and isValidTarget(unit) then
 			return true
 		end
 		return false
@@ -1072,39 +1171,6 @@ function MythicPlus:Progress()
 	currentPullText = currentPullFrame:CreateFontString("currentPullString", "BACKGROUND", "GameFontHighlightLarge")
 	currentPullText:SetPoint("CENTER");
 	currentPullText:SetText("")
-
-	-- function ProgressToggleFrame()
-	--     if frameToggle then
-	--         currentPullFrame:SetMovable(false)
-	--         currentPullFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", tile = true, tileSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 }})
-	--         frameToggle = false
-
-	--         local _, _, _, xOfs, yOfs = currentPullFrame:GetPoint()
-	--         MythicPlus.settings.currentPullFramey = yOfs;
-	--         MythicPlus.settings.currentPullFramex = xOfs;
-
-	--     else
-	--         currentPullFrame:SetMovable(true);
-	--         currentPullFrame:EnableMouse(true);
-	--         local backdrop = {
-	--             bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-	--             edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-	--             tile = true,
-	--             tileSize = 45,
-	--             edgeSize = 1,
-	--             insets = {
-	--                 left = 0,
-	--                 right = 0,
-	--                 top = 0,
-	--                 bottom = 0
-	--             }
-	--         }
-
-	--         currentPullFrame:SetBackdrop(backdrop)
-	--         frameToggle = true
-	--         currentPullFrame:Show();
-	--     end
-	-- end
 
 	---
 	--- NAMEPLATES
@@ -1314,4 +1380,582 @@ function MythicPlus:Progress()
 	z:SetScript("OnEvent", z.OnEvent)
 	z:SetScript("OnUpdate", z.OnUpdate)
 	GameTooltip:HookScript("OnTooltipSetUnit", onNPCTooltip)
+end
+
+function MythicPlus:Cooldowns()
+
+	--[[------------------------
+	--     Group Inspect     --
+	------------------------]]--
+
+	pab = LibStub("AceAddon-3.0"):NewAddon("pab")
+
+	if not pab then return end
+
+	pab.Roster = {}
+	pab.Frames = {}
+
+	if not pab.events then
+		pab.events = LibStub("CallbackHandler-1.0"):New(pab)
+	end
+
+	--[[
+		1 WAR - FURY = 72  ARMS = 71  PROT = 73
+		2 PALADIN - RET = 70  PROT = 65  HOLY = 66
+		3 HUNT - MARKSMANSHIP = 254  BM = 253  SURVIVAL = 255
+		4 ROGUE - SIN = 259  SUB = 260  OUTLAW = 261
+		5 PRIEST -  DISC = 256  SHADOW = 258  HOLY = 257
+		6 DK - BLOOD = 250  FROST = 251  UNHOLY = 252
+		7 SHAMAN - ELEM = 262 EHNANCEMENT = 263  RESTO = 264
+		8 MAGE - ARCANE = 62  FIRE = 63  FROST = 64
+		9 WARLOCK - AFFLICTION = 265  DEMO = 266  DESTRO = 267
+		10 MONK - BREWMASTER = 268  MISTWEAVER = 270  WINDWALKER = 269
+		11 DRUID - BALANCE = 102  FERAL = 103  GUARDIAN = 104  RESTO = 105
+		12 DH - HAVOC = 577  VENGEANCE = 581
+	]]--
+
+	local Cooldowns = {
+		["PALADIN"] = {
+			["642_11"] = {spellID = 642, cd = 240, spec =70, talent = 22485}, -- 圣盾术 惩戒
+			["642_12"] = {spellID = 642, cd = 300, spec =70, talent = 22483}, -- 圣盾术 惩戒
+			["642_13"] = {spellID = 642, cd = 300, spec =70, talent = 22484}, -- 圣盾术 惩戒
+			["642_21"] = {spellID = 642, cd = 210, spec =65, talent = 17575}, -- 圣盾术 神圣
+			["642_22"] = {spellID = 642, cd = 300, spec =65, talent = 22176}, -- 圣盾术 神圣
+			["642_23"] = {spellID = 642, cd = 300, spec =65, talent = 17577}, -- 圣盾术 神圣
+			["642_31"] = {spellID = 642, cd = 300, spec =66, talent = "all"}, -- 圣盾术 防护
+			["1022_1"] = {spellID = 1022, cd = 240, spec =70, talent = "all"}, -- 保护之手 惩戒
+			["1022_2"] = {spellID = 1022, cd = 240, spec =65, talent = "all"}, -- 保护之手 神圣
+			["1022_3"] = {spellID = 1022, cd = 300, spec =66, talent = "all"}, -- 保护之手 防护
+			["31850"] = {spellID = 31850, cd = 80, spec =66, talent = "all"}, -- 炽热防御者
+			["86659"] = {spellID = 86659, cd = 300, spec =66, talent = "all"}, -- 远古列王守卫
+			["20473"] = {spellID = 20473, cd = 8, spec =65, talent = "all"}, -- 神圣震击
+		},
+		
+		["MAGE"] = {
+			["45438"] = {spellID = 45438, cd = 240, spec ="all", talent = "all"}, -- 寒冰屏障
+			["235219"] = {spellID = 235219, cd = 300, spec =64, talent = "all"}, -- 急速冷却
+		},
+		
+		["DEMONHUNTER"] = {
+			["196555"] = {spellID = 196555, cd = 120, spec = 577, talent = 21863}, -- 虚空行走 浩劫
+			["198589"] = {spellID = 198589, cd = 60, spec = 577, talent = "all"}, -- 疾影 浩劫
+		},
+		
+		["HUNTER"] = {
+			["186265"] = {spellID = 186265, cd = 180, spec = "all", talent = "all"}, -- 灵龟守护
+		},
+		
+		["ROGUE"] = {
+			["31224"] = {spellID = 31224, cd = 90, spec = "all", talent = "all"}, -- 暗影斗篷
+		},
+		
+		["SHAMAN"] = {
+			["108271"] = {spellID = 108271, cd = 90, spec = "all", talent = "all"}, -- 星界转移
+		},
+		
+		["DRUID"] = {
+			["22812_1"] = {spellID = 22812, cd = 60, spec = 102, talent = "all"}, -- 树皮术 鹌鹑
+			["22812_2"] = {spellID = 22812, cd = 60, spec = 105, talent = "all"}, -- 树皮术 树
+			["22812_3"] = {spellID = 22812, cd = 90, spec = 104, talent = "all"}, -- 树皮术 熊
+			["61336_1"] = {spellID = 61336, cd = 120, spec = 103, charge = 2, talent = "all"}, -- 生存本能
+			["61336_2"] = {spellID = 61336, cd = 240, spec = 104, charge = 2, talent = "all"}, -- 生存本能
+			
+		},
+		
+		["PRIEST"] = {
+			["47585"] = {spellID = 47585, cd = 80, spec = 258, talent = "all"}, -- 消散
+		},
+		
+		["MONK"] = {
+			["115203"] = {spellID = 115203, cd = 420, spec = 268, talent = "all"}, -- 壮胆酒
+			["122470"] = {spellID = 122470, cd = 90, spec = 269, talent = "all"}, -- 业报之触
+			["122783"] = {spellID = 122783, cd = 90, spec = 269, talent = 20173}, -- 散魔功
+		},
+		
+		["DEATHKNIGHT"] = {
+			["48707"] = {spellID = 48707, cd = 60, spec = "all", talent = "all"}, -- AMS
+			["48792_1"] = {spellID = 48792, cd = 180, spec = 251, talent = "all"}, -- IBF
+			["48792_2"] = {spellID = 48792, cd = 180, spec = 252, talent = "all"}, -- IBF
+			["55233"] = {spellID = 55233, cd = 90, spec = 250, talent = "all"}, -- VAMPIRIC BLOOD
+			["49028"] = {spellID = 49028, cd = 180, spec = 250, talent = "all"}, -- DANCING RUNIC WEAPON
+			
+		},
+		
+		["WARRIOR"] = {
+			["871"] = {spellID = 871, cd = 240, spec = 73, talent = "all"}, -- 盾墙
+			["12975"] = {spellID = 12975, cd = 180, spec = 73, talent = "all"}, -- 破釜沉舟
+			["118038"] = {spellID = 118038, cd = 180, spec = 71, talent = "all"}, -- 剑在人在
+			["184364"] = {spellID = 184364, cd = 120, spec = 72, talent = "all"}, -- 狂怒回复	
+		},
+		
+		["WARLOCK"] = {
+			["104773_1"] = {spellID = 104773, cd = 60, spec = 267, talent = "all"}, -- 不灭决心
+			["104773_2"] = {spellID = 104773, cd = 200, spec = 266, talent = "all"}, -- 不灭决心
+			["104773_3"] = {spellID = 104773, cd = 240, spec = 265, talent = "all"}, -- 不灭决心
+		}
+		
+	}
+
+	JokUI.createborder = function(f, r, g, b)
+		if f.style then return end
+		
+		f.sd = CreateFrame("Frame", nil, f)
+		local lvl = f:GetFrameLevel()
+		f.sd:SetFrameLevel(lvl == 0 and 1 or lvl - 1)
+		f.sd:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = "Interface\\AddOns\\SMT\\media\\glow",
+			edgeSize = 3,
+				insets = { left = 3, right = 3, top = 3, bottom = 3,}
+			})
+		f.sd:SetPoint("TOPLEFT", f, -3, 3)
+		f.sd:SetPoint("BOTTOMRIGHT", f, 3, -3)
+		if not (r and g and b) then
+			f.sd:SetBackdropColor(.05, .05, .05, .5)
+			f.sd:SetBackdropBorderColor(0, 0, 0)
+		else
+			f.sd:SetBackdropColor(r, g, b, .5)
+			f.sd:SetBackdropBorderColor(r, g, b)
+		end
+		f.style = true
+	end
+
+	JokUI.createtext = function(frame, layer, fontsize, flag, justifyh, shadow)
+		local text = frame:CreateFontString(nil, layer)
+		text:SetFont(font, fontsize, flag)
+		text:SetJustifyH(justifyh)
+		
+		if shadow then
+			text:SetShadowColor(0, 0, 0)
+			text:SetShadowOffset(1, -1)
+		end
+		
+		return text
+	end
+
+	local function CreateIcon(f)
+		local icon = CreateFrame("Frame", nil, f)
+		icon:SetSize(MythicPlus.settings.cooldowns.iconSize, MythicPlus.settings.cooldowns.iconSize)
+		JokUI.createborder(icon)
+		
+		icon.spellID = 0
+		
+		icon.cd = CreateFrame("Cooldown", nil, icon, "CooldownFrameTemplate")
+		icon.cd:SetAllPoints(icon)
+        icon.cd:SetDrawEdge(false)
+		icon.cd:SetAlpha(.9)
+		icon.cd:SetScript("OnShow", function()
+			if not pab['Roster'][icon.player_name][icon.spellID] then return end
+			if pab['Roster'][icon.player_name][icon.spellID]["charge"] then
+				icon:SetAlpha(1)
+			else
+				icon:SetAlpha(1)
+			end
+		end)
+		icon.cd:SetScript("OnHide", function()	
+			if pab['Roster'][icon.player_name] and pab['Roster'][icon.player_name][icon.spellID] and pab['Roster'][icon.player_name][icon.spellID]["charge"] then
+				if pab['Roster'][icon.player_name][icon.spellID]["charge"] == pab['Roster'][icon.player_name][icon.spellID]["max_charge"] then return end
+				pab['Roster'][icon.player_name][icon.spellID]["charge"] = pab['Roster'][icon.player_name][icon.spellID]["charge"] + 1
+				icon.count:SetText(pab['Roster'][icon.player_name][icon.spellID]["charge"])
+				if pab['Roster'][icon.player_name][icon.spellID]["charge"] ~= pab['Roster'][icon.player_name][icon.spellID]["max_charge"] then
+					icon.cd:SetCooldown(GetTime(), pab['Roster'][icon.player_name][icon.spellID]["dur"])
+				end
+			else
+				icon:SetAlpha(1)
+				f.lineup()
+			end
+		end)
+		
+		icon.tex = icon:CreateTexture(nil, "OVERLAY")
+		icon.tex:SetAllPoints(icon)
+		icon.tex:SetTexCoord( .1, .9, .1, .9)
+		
+		icon.count = JokUI.createtext(icon, "OVERLAY", 16, "OUTLINE", "RIGHT")
+		icon.count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0, 0)
+
+		table.insert(f.icons, icon)
+	end
+
+	local function GetRemain(Cooldown)
+		local startTime, duration = Cooldown:GetCooldownTimes()
+		local remain
+		if duration == 0 then
+			remain = 0
+		else
+			remain = duration - (GetTime() - startTime)
+		end
+		return remain
+	end
+
+	local function CreateCDBar(unit)
+		local f = CreateFrame("Frame", nil, UIParent)
+		f:SetSize(MythicPlus.settings.cooldowns.iconSize, MythicPlus.settings.cooldowns.iconSize)
+		f.icons = {}
+		
+		for i = 1, 6 do
+			CreateIcon(f)
+		end
+		
+		f.point = function()
+			f:ClearAllPoints()
+			local hasGrid = IsAddOnLoaded("Grid")
+			local hasGrid2 = IsAddOnLoaded("Grid2")
+			local hasCompactRaid = IsAddOnLoaded("CompactRaid")
+			local hasVuhDo = IsAddOnLoaded("VuhDo")
+			local hasElvUI = _G["ElvUF_Raid"] and _G["ElvUF_Raid"]:IsVisible()
+			local hasAltzUI = _G["Altz_HealerRaid"] and _G["Altz_HealerRaid"]:IsVisible()
+			
+			for i=1, 40 do
+					local uf = _G["CompactRaidFrame"..i]
+					if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
+						if MythicPlus.settings.cooldowns.position == "RIGHT" then
+							f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+						elseif MythicPlus.settings.cooldowns.position == "LEFT" then
+							f:SetPoint("LEFT", uf, "RIGHT", -MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+						elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
+							f:SetPoint("BOTTOM", uf, "TOP", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+						elseif MythicPlus.settings.cooldowns.position == "TOP" then
+							f:SetPoint("TOP", uf, "BOTTOM", MythicPlus.settings.cooldowns.x, -MythicPlus.settings.cooldowns.y)
+						end
+						break
+					end
+				end
+				for i=1, 4 do
+					for j=1, 5 do
+						local uf = _G["CompactRaidGroup"..i.."Member"..j]
+						if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
+							if MythicPlus.settings.cooldowns.position == "RIGHT" then
+								f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+							elseif MythicPlus.settings.cooldowns.position == "LEFT" then
+								f:SetPoint("LEFT", uf, "RIGHT", -MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+							elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
+								f:SetPoint("BOTTOM", uf, "TOP", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+							elseif MythicPlus.settings.cooldowns.position == "TOP" then
+								f:SetPoint("TOP", uf, "BOTTOM", MythicPlus.settings.cooldowns.x, -MythicPlus.settings.cooldowns.y)
+							end
+							break
+						end
+					end
+				end
+			end
+		
+		
+		f.reset = function()
+			for i = 1,6 do
+				f.icons[i]:Hide()
+				f.icons[i]["spellID"] = 0
+				f.icons[i]["tex"]:SetTexture(nil)
+				f.icons[i]["cd"]:SetCooldown(0,0)		
+			end
+		end
+		
+		f.update_size = function()
+			for i = 1,6 do
+				f.icons[i]:SetSize(MythicPlus.settings.cooldowns.iconSize, MythicPlus.settings.cooldowns.iconSize)
+			end
+		end
+		
+		f.update_unit = function()
+			f.reset()
+			
+			f.name = UnitName(unit)
+
+			if f.name then
+				local spell_num = 0
+				if pab['Roster'][f.name] then
+					for spellid, info in pairs(pab['Roster'][f.name]) do
+						if spellid ~= "spec" then
+							spell_num = spell_num + 1
+							f.icons[spell_num]["spellID"] = spellid
+							f.icons[spell_num]["player_name"] = f.name
+							f.icons[spell_num]["tex"]:SetTexture(select(3, GetSpellInfo(spellid)))
+							if info["charge"] then
+								f.icons[spell_num]["count"]:SetText(info["charge"])
+							else
+								f.icons[spell_num]["count"]:SetText("")
+							end
+							f.icons[spell_num]:Show()
+						end
+					end
+				end
+			end
+			
+		end
+		
+		f.update_cd = function(spellid)
+			if f.name then
+				if spellid then		
+					for i = 1, 6 do
+						if f.icons[i]["spellID"] == spellid and pab['Roster'][f.name][spellid] then
+							local info = pab['Roster'][f.name][spellid]
+							if info["start"] and info["start"] + info["dur"] > GetTime() then
+								if pab['Roster'][f.name][spellid]["charge"] then
+									if pab['Roster'][f.name][spellid]["charge"] == pab['Roster'][f.name][spellid]["max_charge"] then
+										f.icons[i]["cd"]:SetCooldown(info["start"], info["dur"])
+									end
+									pab['Roster'][f.name][spellid]["charge"] = pab['Roster'][f.name][spellid]["charge"] - 1
+									f.icons[i]["count"]:SetText(pab['Roster'][f.name][spellid]["charge"])
+									if pab['Roster'][f.name][spellid]["charge"] == 0 then
+										f.icons[i]:SetAlpha(0.8)
+									end
+								else
+									f.icons[i]["cd"]:SetCooldown(info["start"], info["dur"])
+									f.icons[i]["count"]:SetText("")
+								end
+							else
+								f.icons[i]["cd"]:SetCooldown(0,0)		
+							end
+							break
+						end
+						
+					end
+				else
+					for i = 1, 6 do
+						local icon_spellid = f.icons[i]["spellID"]
+						if icon_spellid ~= 0 and pab['Roster'][f.name][icon_spellid] then
+							local info = pab['Roster'][f.name][icon_spellid]
+							if info["start"] and info["start"] + info["dur"] > GetTime() then
+								f.icons[i]["cd"]:SetCooldown(info["start"], info["dur"])
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		f.lineup = function()
+			if not IsInGroup() then return end
+			
+			table.sort(f.icons, function(a,b)
+				--if not a.cd or b.cd then return end
+				if a.spellID ~= 0 and b.spellID ~= 0 then
+					if GetRemain(a.cd) < GetRemain(b.cd) then
+						return true
+					elseif GetRemain(a.cd) == GetRemain(b.cd) and a.spellID < b.spellID then
+						return true
+					end
+				elseif a.spellID ~= 0 and b.spellID == 0 then
+					return true
+				end
+			end)
+
+			for i = 1,6 do
+				f.icons[i]:ClearAllPoints()
+
+				if MythicPlus.settings.cooldowns.position == "RIGHT" then
+					f.icons[i]:SetPoint("RIGHT", f, "RIGHT", -(i-1)*(MythicPlus.settings.cooldowns.iconSize+MythicPlus.settings.cooldowns.iconGap), 0)
+				elseif MythicPlus.settings.cooldowns.position == "LEFT" then
+					f.icons[i]:SetPoint("LEFT", f, "LEFT", (i-1)*(MythicPlus.settings.cooldowns.iconSize+MythicPlus.settings.cooldowns.iconGap), 0)
+				elseif MythicPlus.settings.cooldowns.position == "TOP" then
+					f.icons[i]:SetPoint("TOP", f, "TOP", 0, (i-1)*(MythicPlus.settings.cooldowns.iconSize+MythicPlus.settings.cooldowns.iconGap))
+				elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
+					f.icons[i]:SetPoint("BOTTOM", f, "BOTTOM", 0, -(i-1)*(MythicPlus.settings.cooldowns.iconSize+MythicPlus.settings.cooldowns.iconGap))
+				end
+			
+				
+				if f.icons[i].spellID ~= 0 and i<= 6 then
+					f.icons[i]:Show()
+				else
+					f.icons[i]:Hide()
+				end
+			end
+		end
+		
+		table.insert(pab.Frames, f)
+	end
+
+	local function UpdateCDBar(tag)
+		for i = 1, #pab.Frames do
+			local f = pab.Frames[i]		
+			if tag == "all" or tag == "unit" then
+				f.update_unit()
+				f.point()
+			end
+			
+			if tag == "all" or tag == "cd" then
+				f.update_cd()
+				f.lineup()
+			end
+		end
+	end
+
+	local function UpdateCD(name, spellID)
+		for i = 1, #pab.Frames do
+			local f = pab.Frames[i]
+			if f.name and f.name == name then
+				f.update_cd(spellID)
+				f.lineup()
+			end
+		end
+	end
+
+	JokUI.EditCDBar = function(tag)
+		for i = 1, #pab.Frames do
+			local f = pab.Frames[i]
+			
+			if tag == "show" then
+				if not IsInRaid() then
+					f:Show()
+				else
+					f:Hide()
+				end
+			elseif tag == "size" then
+				f.update_size()
+				f.lineup()
+			elseif tag == "pos" then
+				f.point()
+				f.lineup()
+			elseif tag == "alpha" then
+				for i = 1,6 do
+					if f.icons[i].cd:GetCooldownDuration() > 0 then
+						f.icons[i]:SetAlpha(0.8)
+					end
+				end
+			end
+		end
+	end
+
+	function pab:OnUpdate(unit, info)
+		if not info.name or not info.class or not info.global_spec_id or not info.talents then return end
+		
+		if Cooldowns[info.class] then	
+			if UnitInParty(info.name) then
+				if not pab['Roster'][info.name] or pab['Roster'][info.name]["spec"] ~= info.global_spec_id then
+					pab['Roster'][info.name] = {}
+					pab['Roster'][info.name]["spec"] = info.global_spec_id
+				
+					for tag, spell_info in pairs (Cooldowns[info.class]) do
+						if (spell_info.spec == "all" or spell_info.spec == info.global_spec_id) and (spell_info.talent == "all" or info.talents[spell_info.talent]) then
+							pab['Roster'][info.name][spell_info.spellID] = {}
+							pab['Roster'][info.name][spell_info.spellID]["dur"] = spell_info.cd
+							pab['Roster'][info.name][spell_info.spellID]["tag"] = tag
+							pab['Roster'][info.name][spell_info.spellID]["max_charge"] = spell_info.charge
+							pab['Roster'][info.name][spell_info.spellID]["charge"] = spell_info.charge
+						end
+					end
+				end
+				UpdateCDBar("all")
+			elseif pab['Roster'][info.name] then
+			
+				pab['Roster'][info.name] = nil
+				UpdateCDBar("all")
+				
+			end
+		end
+	end
+
+	function pab:OnRemove(guid)
+		if (guid) then
+		    local name = select(6, GetPlayerInfoByGUID(guid))
+			if pab['Roster'][name] then
+				pab['Roster'][name] = nil
+				UpdateCDBar("all")
+			end
+		else
+			pab['Roster'] = {}
+			UpdateCDBar("all")
+		end
+	end
+
+	local LGIST = LibStub:GetLibrary("LibGroupInSpecT-1.1")
+
+	function pab:OnInitialize()
+		LGIST.RegisterCallback (pab, "GroupInSpecT_Update", function(event, ...)
+			pab.OnUpdate(...)
+		end)
+		LGIST.RegisterCallback (pab, "GroupInSpecT_Remove", function(...)
+			pab.OnRemove(...)
+		end)
+	end
+
+	local Group_Update = CreateFrame("Frame")
+	Group_Update:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+	local function ResetCD()
+		for player, spells in pairs(pab['Roster']) do
+			for spellid, info in pairs(pab['Roster'][player]) do
+				if spellid ~= "spec" then
+					pab['Roster'][player][spellid]["start"] = 0
+				end
+			end
+		end
+	end
+
+	Group_Update:SetScript("OnEvent", function(self, event, ...)
+		if event == "PLAYER_ENTERING_WORLD" then
+		
+			CreateCDBar("party1")
+			CreateCDBar("party2")
+			CreateCDBar("party3")
+			CreateCDBar("party4")
+			CreateCDBar("player")
+			--ResetCD()
+			JokUI.EditCDBar("show")
+			
+			Group_Update:UnregisterEvent("PLAYER_ENTERING_WORLD")
+			Group_Update:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+			Group_Update:RegisterEvent("ENCOUNTER_END")
+			Group_Update:RegisterEvent("GROUP_ROSTER_UPDATE")
+			Group_Update:RegisterEvent("CHALLENGE_MODE_START")			
+			
+		elseif event == "ENCOUNTER_END" then
+		
+			--ResetCD()
+			UpdateCDBar("cd")
+			
+		elseif event == "GROUP_ROSTER_UPDATE" then
+			JokUI.EditCDBar("show")
+			UpdateCDBar("all")
+
+		elseif event == "CHALLENGE_MODE_START" then
+			JokUI.EditCDBar("show")
+			UpdateCDBar("all")
+			
+		elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+		
+			local _, event_type, _, sourceGUID, sourceName, _, _, _, _, _, _, spellID = ...
+			
+			if not sourceName or not spellID then return end
+			local name = string.split("-", sourceName)
+			if event_type == "SPELL_CAST_SUCCESS" and pab['Roster'][name] then
+				if pab['Roster'][name][spellID] then
+					pab['Roster'][name][spellID]["start"] = GetTime()
+					UpdateCD(name, spellID)
+				end
+				if spellID == 235219 then -- ICEBLOCK RESET
+					pab['Roster'][name][45438]["start"] = 0 -- ICEBLOCK
+					UpdateCD(name, 45438)
+				elseif spellID == 49998 then -- VAMPIRIC BLOOD
+					local info = LGIST:GetCachedInfo (sourceGUID)
+					if info.talents[22014] and pab['Roster'][name][55233]["start"] then
+							pab['Roster'][name][55233]["start"] = pab['Roster'][name][55233]["start"]-7.5
+							UpdateCD(name, 55233)
+					end
+				elseif spellID == 191427 then -- METAMORPH RESET
+					local info = LGIST:GetCachedInfo (sourceGUID)
+					if info.talents[22767] then -- VOILE CORROMPU
+						pab['Roster'][name][198589]["start"] = 0
+						UpdateCD(name, 198589)
+					end
+				end
+			end
+
+			if event_type == "SPELL_DAMAGE" and pab['Roster'][name] then -- SHOCKWAVE
+				if spellID == 46968 then
+					state.hits = state.hits+1
+            		if state.hits == 3 then
+                		state.expirationTime = state.expirationTime-20
+                		state.hits = 0
+            		end
+				end
+			end
+
+			if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
+				if spellID == 97547	then
+					pab['Roster'][name][78675]["start"] = pab['Roster'][name][78675]["start"]-15
+				end
+			end
+			
+		end
+	end)
 end

@@ -606,7 +606,6 @@ function Nameplates:Core()
         for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
             if ( not v.UnitFrame:IsForbidden() ) then
                 local bf = v.UnitFrame.BuffFrame
-                bf:SetScale(Nameplates.settings.aurasscale) 
                 if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) then
                     bf.baseYOffset = Nameplates.settings.aurasoffset
                 elseif ( v.UnitFrame.displayedUnit ) then

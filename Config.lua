@@ -31,7 +31,7 @@ local options = {
 				},
 				version = {
 					type = "description",
-					name = "|cffffd100Version: |r" .. "1.0b\n",
+					name = "|cffffd100Version: |r" .. GetAddOnMetadata("JokUI", "Version"),
 					order = 3
 				},
 				command = {
