@@ -42,7 +42,7 @@ function Misc:OnInitialize()
 	self:SGrid()
 	self:ShowStats()
 	self:HoverBind()
-	self:TooltipID()
+	-- self:TooltipID()
 	self:SafeQueue()
 end
 

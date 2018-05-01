@@ -1,4 +1,4 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: |cffFF7D0AJok|rUI
 ## Version: 0.8b
 ## Author: Tom
@@ -44,5 +44,4 @@ Core\Misc.lua
 ## INTERFACE 
 
 Core\Interface.lua
-Core\Bfa.xml
 Core\Actionbars.lua
