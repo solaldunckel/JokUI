@@ -1950,11 +1950,11 @@ function MythicPlus:Cooldowns()
 				end
 			end
 
-			if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
-				if spellID == 97547	then
-					pab['Roster'][name][78675]["start"] = pab['Roster'][name][78675]["start"]-15
-				end
-			end
+			-- if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
+			-- 	if spellID == 97547	then
+			-- 		pab['Roster'][name][78675]["start"] = pab['Roster'][name][78675]["start"]-15
+			-- 	end
+			-- end
 			
 		end
 	end)
