@@ -34,7 +34,7 @@ local nameplates_defaults = {
         targetScale = 1,
         importantScale = 1,
         sticky = true,
-        nameplateAlpha = 0.6,
+        nameplateAlpha = 0.8,
         nameplateRange = 60,
         overlap = true,
         verticalOverlap = 0.7,
@@ -226,7 +226,6 @@ local nameplates_config = {
                 step = 0.1,
                 order = 3,
                 set = function(info,val) Nameplates.settings.nameplateAlpha = val
-                    SetCVar("nameplateMinAlpha", val)
                 end,
                 get = function(info) return Nameplates.settings.nameplateAlpha end
             },
@@ -551,53 +550,83 @@ function Nameplates:Core()
         if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
         local r, g, b;
-    	if ( not UnitIsConnected(frame.unit) ) then
-    		r, g, b = 0.5, 0.5, 0.5;
-    	else
-    		if ( frame.optionTable.healthBarColorOverride ) then
-    			local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
-    			r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
-    		else
-    			local localizedClass, englishClass = UnitClass(frame.unit);
-    			local classColor = RAID_CLASS_COLORS[englishClass];
-    			if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
-    				r, g, b = classColor.r, classColor.g, classColor.b;
-    			elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
-    				r, g, b = 0.9, 0.9, 0.9;
-    			elseif ( frame.optionTable.colorHealthBySelection ) then
-    				if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
-    					local target = frame.displayedUnit.."target"
-                        local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
-                            if ( isTanking and threatStatus ) then
-                                if ( threatStatus >= 3 ) then
-                                    r, g, b = 0.5, 0.75, 0.95
-                                end
-                            else
-                                r, g, b = 1.0, 0.0, 0.0
-                            end
-    				elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
-    					r, g, b = 0.667, 0.667, 1.0;
-    				else
-    					r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
-    				end
-    			elseif ( UnitIsFriend("player", frame.unit) ) then
-    				r, g, b = 0.0, 1.0, 0.0;
-    			else
-    				r, g, b = 1.0, 0.0, 0.0;
-    			end
-    		end
-    	end
-    	if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
-    		frame.healthBar:SetStatusBarColor(r, g, b);
+        if ( not UnitIsConnected(frame.unit) ) then
+            r, g, b = 0.5, 0.5, 0.5;
+        else
+            if ( frame.optionTable.healthBarColorOverride ) then
+                local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
+                r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
+            else
+                local localizedClass, englishClass = UnitClass(frame.unit);
+                local classColor = RAID_CLASS_COLORS[englishClass];
+                if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
+                    r, g, b = classColor.r, classColor.g, classColor.b;
+                elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
+                    r, g, b = 0.9, 0.9, 0.9;
+                elseif ( frame.optionTable.colorHealthBySelection ) then
+                    if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
+                        local target = frame.displayedUnit.."target"
+                        local threat = UnitThreatSituation("player", frame.unit)                            
+                        if threat == 3 then --3 = Securely tanking; make borders red.
+                            r, g, b = 0.5, 0.75, 0.95
+                        elseif threat == 2 then
+                            r, g, b = 1, 0.5, 0
+                        elseif threat == 1 then
+                            r, g, b = 1, 1, 0.4
+                        else
+                            r, g, b = 1.0, 0.0, 0.0
+                        end
+                    elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
+                        r, g, b = 0.667, 0.667, 1.0;
+                    else
+                        r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
+                    end
+                elseif ( UnitIsFriend("player", frame.unit) ) then
+                    r, g, b = 0.0, 1.0, 0.0;
+                else
+                    r, g, b = 1.0, 0.0, 0.0;
+                end
+            end
+        end
+        if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
+            frame.healthBar:SetStatusBarColor(r, g, b);
 
-    		if (frame.optionTable.colorHealthWithExtendedColors) then
-    			frame.selectionHighlight:SetVertexColor(r, g, b);
-    		else
-    			frame.selectionHighlight:SetVertexColor(1, 1, 1);
-    		end
-    		
-    		frame.healthBar.r, frame.healthBar.g, frame.healthBar.b = r, g, b;
-    	end
+            if (frame.optionTable.colorHealthWithExtendedColors) then
+                frame.selectionHighlight:SetVertexColor(r, g, b);
+            else
+                frame.selectionHighlight:SetVertexColor(1, 1, 1);
+            end
+        end
+    end)
+
+    -- hooksecurefunc("CompactUnitFrame_UpdateHealthBorder", function(frame)
+    --     local mouseoverFrame = CreateFrame("frame")
+    --     mouseoverFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+    --     mouseoverFrame:SetScript("OnEvent", function(self, event, ...)
+    --         if event == "UPDATE_MOUSEOVER_UNIT" then      
+    --             for _, frame in pairs(C_NamePlate.GetNamePlates()) do            
+    --                 local unit = frame.namePlateUnitToken
+    --                 if UnitIsUnit("mouseover", unit) then
+    --                     frame.UnitFrame.healthBar.border:SetVertexColor(1, 1, 0.4, 1)     
+    --                 else  
+    --                     frame.UnitFrame.healthBar.border:SetVertexColor(1, 1, 0.4, 1) 
+    --                 end           
+    --             end
+    --         end
+    --     end)
+    -- end)
+
+    -- Current target visibility, see also L#366.
+    local targetFrame = CreateFrame("frame")
+    targetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    targetFrame:SetScript("OnEvent", function(self, event)
+        for _, frame in pairs(C_NamePlate.GetNamePlates()) do
+            if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
+                frame.UnitFrame:SetAlpha(1)
+            else
+                frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
+            end
+        end
     end)
 
         -- UPDATE BUFFS 
