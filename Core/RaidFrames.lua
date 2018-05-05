@@ -109,6 +109,7 @@ function RaidFrames:OnEnable()
 	for name in pairs(features) do
 		self:SyncFeature(name)
 	end
+	self:Misc()
 end
 
 do
@@ -416,69 +417,79 @@ function RaidFrames:Antidote()
 	end
 end
 
--- RAID BUFFS
+function RaidFrames:Misc()
+	-- RAID BUFFS
 
-for i=1,4 do
-	local f = _G["PartyMemberFrame"..i]
-	f:UnregisterEvent("UNIT_AURA")
-	local g = CreateFrame("Frame")
-	g:RegisterEvent("UNIT_AURA")
-	g:SetScript("OnEvent",function(self,event,a1)
-			if a1 == f.unit then
-					RefreshDebuffs(f,a1,20,nil,1)
-			else
-					if a1 == f.unit.."pet" then
-							PartyMemberFrame_RefreshPetDebuffs(f)
-					end
-			end
-	end)
-	local b = _G[f:GetName().."Debuff1"]
-	b:ClearAllPoints()
-	b:SetPoint("LEFT",f,"RIGHT",-7,5)
-	for j=5,20 do
-			local l = f:GetName().."Debuff"
-			local n = l..j
-			local c = CreateFrame("Frame",n,f,"PartyDebuffFrameTemplate")
-			c:SetPoint("LEFT",_G[l..(j-1)],"RIGHT")
+	for i=1,4 do
+		local f = _G["PartyMemberFrame"..i]
+		f:UnregisterEvent("UNIT_AURA")
+		local g = CreateFrame("Frame")
+		g:RegisterEvent("UNIT_AURA")
+		g:SetScript("OnEvent",function(self,event,a1)
+				if a1 == f.unit then
+						RefreshDebuffs(f,a1,20,nil,1)
+				else
+						if a1 == f.unit.."pet" then
+								PartyMemberFrame_RefreshPetDebuffs(f)
+						end
+				end
+		end)
+		local b = _G[f:GetName().."Debuff1"]
+		b:ClearAllPoints()
+		b:SetPoint("LEFT",f,"RIGHT",-7,5)
+		for j=5,20 do
+				local l = f:GetName().."Debuff"
+				local n = l..j
+				local c = CreateFrame("Frame",n,f,"PartyDebuffFrameTemplate")
+				c:SetPoint("LEFT",_G[l..(j-1)],"RIGHT")
+		end
 	end
-end
 
-for i=1,4 do
-	local f = _G["PartyMemberFrame"..i]
-	f:UnregisterEvent("UNIT_AURA")
-	local g = CreateFrame("Frame")
-	g:RegisterEvent("UNIT_AURA")
-	g:SetScript("OnEvent",function(self,event,a1)
-			if a1 == f.unit then
-					RefreshBuffs(f,a1,20,nil,1)
-			end
-	end)
-	for j=1,20 do
-			local l = f:GetName().."Buff"
-			local n = l..j
-			local c = CreateFrame("Frame",n,f,"TargetBuffFrameTemplate")
-			c:EnableMouse(false)
-			if j == 1 then
-					c:SetPoint("TOPLEFT",48,-32)
-			else
-					c:SetPoint("LEFT",_G[l..(j-1)],"RIGHT",1,0)
-			end
+	for i=1,4 do
+		local f = _G["PartyMemberFrame"..i]
+		f:UnregisterEvent("UNIT_AURA")
+		local g = CreateFrame("Frame")
+		g:RegisterEvent("UNIT_AURA")
+		g:SetScript("OnEvent",function(self,event,a1)
+				if a1 == f.unit then
+						RefreshBuffs(f,a1,20,nil,1)
+				end
+		end)
+		for j=1,20 do
+				local l = f:GetName().."Buff"
+				local n = l..j
+				local c = CreateFrame("Frame",n,f,"TargetBuffFrameTemplate")
+				c:EnableMouse(false)
+				if j == 1 then
+						c:SetPoint("TOPLEFT",48,-32)
+				else
+						c:SetPoint("LEFT",_G[l..(j-1)],"RIGHT",1,0)
+				end
+		end
 	end
+
+	-- BUFF/DEBUFF SIZE
+	hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
+		for _,d in pairs(f.debuffFrames) do 
+			d.baseSize = RaidFrames.settings.debuffscale 
+		end 
+		for _,d in pairs(f.buffFrames) do 
+			d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale) 
+		end 
+	end)
+
+	-- RAID FRAMES SIZE DEFAULT SLIDER
+	local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
+	_G[n.."HeightSlider"],
+	_G[n.."WidthSlider"] 
+	h:SetMinMaxValues(1,200) 
+	w:SetMinMaxValues(1,200)
+
+	CompactRaidFrameManager:HookScript("OnEnter", function(self) if self:IsMouseOver() then self:SetAlpha(1) end end)
+	CompactRaidFrameManager:HookScript("OnLeave", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) end end)
+	CompactRaidFrameManager:HookScript("OnShow", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) else self:SetAlpha(1) end end)
+	CompactRaidFrameManagerToggleButton:HookScript("OnLeave", function(self) if not CompactRaidFrameManager:IsMouseOver() then CompactRaidFrameManager:SetAlpha(0.5) end end)
+
+	CompactRaidFrameManager:HookScript("OnHide", function(self) self:Show() end)
+	CompactRaidFrameManager:Show()
 end
-
--- BUFF/DEBUFF SIZE
-hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
-	for _,d in pairs(f.debuffFrames) do 
-		d.baseSize = RaidFrames.settings.debuffscale 
-	end 
-	for _,d in pairs(f.buffFrames) do 
-		d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale) 
-	end 
-end)
-
--- RAID FRAMES SIZE DEFAULT SLIDER
-local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
-_G[n.."HeightSlider"],
-_G[n.."WidthSlider"] 
-h:SetMinMaxValues(1,200) 
-w:SetMinMaxValues(1,200)

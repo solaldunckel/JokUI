@@ -336,7 +336,7 @@ function Interface:UnitFrames()
 
 		PlayerName:SetPoint("CENTER",50,23);
 		PlayerLeaderIcon:SetPoint("TOPLEFT",40,-12);
-		PlayerMasterIcon:SetPoint("TOPLEFT",86,0);
+		-- PlayerMasterIcon:SetPoint("TOPLEFT",86,0);
 		PlayerFrameGroupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOPLEFT", 97, -13);
 
 		PlayerFrameBackground:SetWidth(114);
@@ -1673,7 +1673,7 @@ function Interface:ItemLevel()
 	    end;
 	    if unit and self.hasItem then
 	        _, level, _, _, quality = LibItemLevel:GetUnitItemInfo(unit, id);
-	        if level > 0 and quality > 2 then
+	        if level > 0 and quality > 1 then
 	            self.levelString:SetText(level);
 	            result = true;
 	        end;

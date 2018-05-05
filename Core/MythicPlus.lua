@@ -1911,9 +1911,9 @@ function MythicPlus:Cooldowns()
 			JokUI.EditCDBar("show")
 			UpdateCDBar("all")
 			
-		elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+		elseif CombatLogGetCurrentEventInfo then
 		
-			local _, event_type, _, sourceGUID, sourceName, _, _, _, _, _, _, spellID = ...
+			local _, event_type, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellID, spellName, _, _, amount = CombatLogGetCurrentEventInfo()
 			
 			if not sourceName or not spellID then return end
 			local name = string.split("-", sourceName)
@@ -1940,21 +1940,21 @@ function MythicPlus:Cooldowns()
 				end
 			end
 
-			if event_type == "SPELL_DAMAGE" and pab['Roster'][name] then -- SHOCKWAVE
-				if spellID == 46968 then
-					state.hits = state.hits+1
-            		if state.hits == 3 then
-                		state.expirationTime = state.expirationTime-20
-                		state.hits = 0
-            		end
-				end
-			end
+			-- if event_type == "SPELL_DAMAGE" and pab['Roster'][name] then -- SHOCKWAVE
+			-- 	if spellID == 46968 then
+			-- 		state.hits = state.hits+1
+   --          		if state.hits == 3 then
+   --              		state.expirationTime = state.expirationTime-20
+   --              		state.hits = 0
+   --          		end
+			-- 	end
+			-- end
 
-			if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
-				if spellID == 97547	then
-					pab['Roster'][name][78675]["start"] = pab['Roster'][name][78675]["start"]-15
-				end
-			end
+			-- if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
+			-- 	if spellID == 97547	then
+			-- 		pab['Roster'][name][78675]["start"] = pab['Roster'][name][78675]["start"]-15
+			-- 	end
+			-- end
 			
 		end
 	end)

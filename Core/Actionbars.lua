@@ -264,9 +264,9 @@ end
     bu.rabs_styled = true
   end
 
-  PetActionBarFrame:ClearAllPoints()
-  PetActionBarFrame:SetPoint("BOTTOM",MultiBarBottomLeft,"TOP",12,3)
-  PetActionBarFrame.SetPoint = function() end
+  -- PetActionBarFrame:ClearAllPoints()
+  -- PetActionBarFrame:SetPoint("BOTTOM",MultiBarBottomLeft,"TOP",12,3)
+  -- PetActionBarFrame.SetPoint = function() end
 
   --style pet buttons
   local function stylePetButton(bu)
