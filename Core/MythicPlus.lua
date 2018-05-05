@@ -1940,15 +1940,16 @@ function MythicPlus:Cooldowns()
 				end
 			end
 
-			if event_type == "SPELL_DAMAGE" and pab['Roster'][name] then -- SHOCKWAVE
-				if spellID == 46968 then
-					state.hits = state.hits+1
-            		if state.hits == 3 then
-                		state.expirationTime = state.expirationTime-20
-                		state.hits = 0
-            		end
-				end
-			end
+			-- if event_type == "SPELL_DAMAGE" and pab['Roster'][name] then -- SHOCKWAVE
+			-- 	local hits = 0
+			-- 	if spellID == 46968 then
+			-- 		hits = hits+1
+   --          		if hits == 3 then
+   --              		state.expirationTime = state.expirationTime-20
+   --              		hits = 0
+   --          		end
+			-- 	end
+			-- end
 
 			-- if event_type == "SPELL_INTERRUPT" and pab['Roster'][name] then -- SOLAR BEAM
 			-- 	if spellID == 97547	then

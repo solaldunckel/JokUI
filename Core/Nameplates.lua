@@ -650,7 +650,7 @@ function Nameplates:Core()
     -- Friendly Nameplates in protected area
     if Nameplates.settings.friendlymotion then
         if (not InCombatLockdown()) then
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
+            C_NamePlate.SetNamePlateFriendlySize(100, 1)
             C_NamePlate.SetNamePlateFriendlyClickThrough(true)
         end
     end
@@ -668,7 +668,7 @@ function Nameplates:Core()
         
            -- Elite Icon
             
-        frame.ClassificationFrame:SetScale(0.85)
+        frame.ClassificationFrame:SetScale(1)
 
             -- Castbar.
 
