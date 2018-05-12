@@ -216,7 +216,7 @@ end
       nt:SetVertexColor(color.equipped.r,color.equipped.g,color.equipped.b,1)
     else
       bu:SetNormalTexture(textures.normal)
-      nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
+      -- nt:SetVertexColor(color.normal.r,color.normal.g,color.normal.b,1)
     end
     --make the normaltexture match the buttonsize
     nt:SetAllPoints(bu)

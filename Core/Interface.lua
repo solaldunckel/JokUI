@@ -368,7 +368,8 @@ function Interface:UnitFrames()
 	--PLAYER
 	function wPlayerFrame_ToPlayerArt(self)
 		PlayerFrame:SetScale(Interface.settings.unitframes.scale) -- Scale
-		PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
+		-- PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
+		PlayerName:Hide()
 		PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame");
 		PlayerFrameGroupIndicatorText:ClearAllPoints();
 		PlayerFrameGroupIndicatorText:SetPoint("BOTTOMLEFT", PlayerFrame,"TOP",0,-20);

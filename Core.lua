@@ -516,9 +516,9 @@ function Core:Skins()
 		WorldMapFrameBg,
 		WorldMapFrameTitleBg,
 		WorldMapFrame.BorderFrame.ButtonFrameEdge,
-		WorldMapFrameNavBar.InsetBorderBottom,
-		WorldMapFrameNavBar.InsetBorderBottomRight,
-		WorldMapFrameNavBar.InsetBorderBottomLeft,
+		WorldMapFrame.NavBar.InsetBorderBottom,
+		WorldMapFrame.NavBar.InsetBorderBottomRight,
+		WorldMapFrame.NavBar.InsetBorderBottomLeft,
 
 	    WorldMapFrameInsetTopBorder,
 

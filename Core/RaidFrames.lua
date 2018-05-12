@@ -485,11 +485,11 @@ function RaidFrames:Misc()
 	h:SetMinMaxValues(1,200) 
 	w:SetMinMaxValues(1,200)
 
-	CompactRaidFrameManager:HookScript("OnEnter", function(self) if self:IsMouseOver() then self:SetAlpha(1) end end)
-	CompactRaidFrameManager:HookScript("OnLeave", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) end end)
-	CompactRaidFrameManager:HookScript("OnShow", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) else self:SetAlpha(1) end end)
-	CompactRaidFrameManagerToggleButton:HookScript("OnLeave", function(self) if not CompactRaidFrameManager:IsMouseOver() then CompactRaidFrameManager:SetAlpha(0.5) end end)
+	-- CompactRaidFrameManager:HookScript("OnEnter", function(self) if self:IsMouseOver() then self:SetAlpha(1) end end)
+	-- CompactRaidFrameManager:HookScript("OnLeave", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) end end)
+	-- CompactRaidFrameManager:HookScript("OnShow", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) else self:SetAlpha(1) end end)
+	-- CompactRaidFrameManagerToggleButton:HookScript("OnLeave", function(self) if not CompactRaidFrameManager:IsMouseOver() then CompactRaidFrameManager:SetAlpha(0.5) end end)
 
-	CompactRaidFrameManager:HookScript("OnHide", function(self) self:Show() end)
-	CompactRaidFrameManager:Show()
+	-- CompactRaidFrameManager:HookScript("OnHide", function(self) self:Show() end)
+	-- CompactRaidFrameManager:Show()
 end

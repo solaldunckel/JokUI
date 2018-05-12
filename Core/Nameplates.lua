@@ -595,8 +595,6 @@ function Nameplates:Core()
     		else
     			frame.selectionHighlight:SetVertexColor(1, 1, 1);
     		end
-    		
-    		frame.healthBar.r, frame.healthBar.g, frame.healthBar.b = r, g, b;
     	end
     end)
 
