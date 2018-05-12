@@ -119,10 +119,10 @@ function Core:Skins()
 	if not IsAddOnLoaded("Blizzard_TalentUI") then
 			LoadAddOn("Blizzard_TalentUI")
 	end
-	-- if not IsAddOnLoaded("Blizzard_GuildUI") then
-	-- 		LoadAddOn("Blizzard_GuildUI")
-	-- 		LoadAddOn("Blizzard_PVPUI")
-	-- end
+	if not IsAddOnLoaded("Blizzard_GuildUI") then
+			LoadAddOn("Blizzard_GuildUI")
+			LoadAddOn("Blizzard_PVPUI")
+	end
 	if not IsAddOnLoaded("Blizzard_PVPUI") then
 			LoadAddOn("Blizzard_PVPUI")
 	end
@@ -516,9 +516,9 @@ function Core:Skins()
 		WorldMapFrameBg,
 		WorldMapFrameTitleBg,
 		WorldMapFrame.BorderFrame.ButtonFrameEdge,
-		WorldMapFrame.NavBar.InsetBorderBottom,
-		WorldMapFrame.NavBar.InsetBorderBottomRight,
-		WorldMapFrame.NavBar.InsetBorderBottomLeft,
+		WorldMapFrameNavBar.InsetBorderBottom,
+		WorldMapFrameNavBar.InsetBorderBottomRight,
+		WorldMapFrameNavBar.InsetBorderBottomLeft,
 
 	    WorldMapFrameInsetTopBorder,
 
@@ -611,49 +611,49 @@ function Core:Skins()
 		v:SetVertexColor(.35, .35, .35)
 	end 
 
-	-- for i,v in pairs({
-	-- 	GuildNewsContainerScrollBarScrollUpButton.Normal,
-	-- 	GuildNewsContainerScrollBarScrollUpButton.Disabled,
-	-- 	GuildNewsContainerScrollBarScrollUpButton.Highlight,
-	-- 	GuildNewsContainerScrollBarScrollUpButton.Pushed,
+	for i,v in pairs({
+		GuildNewsContainerScrollBarScrollUpButton.Normal,
+		GuildNewsContainerScrollBarScrollUpButton.Disabled,
+		GuildNewsContainerScrollBarScrollUpButton.Highlight,
+		GuildNewsContainerScrollBarScrollUpButton.Pushed,
 
-	-- 	GuildNewsContainerScrollBarScrollDownButton.Normal,
-	-- 	GuildNewsContainerScrollBarScrollDownButton.Disabled,
-	-- 	GuildNewsContainerScrollBarScrollDownButton.Highlight,
-	-- 	GuildNewsContainerScrollBarScrollDownButton.Pushed,
+		GuildNewsContainerScrollBarScrollDownButton.Normal,
+		GuildNewsContainerScrollBarScrollDownButton.Disabled,
+		GuildNewsContainerScrollBarScrollDownButton.Highlight,
+		GuildNewsContainerScrollBarScrollDownButton.Pushed,
 		
-	-- 	GuildNewsContainerScrollBarThumbTexture,
+		GuildNewsContainerScrollBarThumbTexture,
 
-	-- 	GuildRosterContainerScrollBarScrollUpButton.Normal,
-	-- 	GuildRosterContainerScrollBarScrollUpButton.Disabled,
-	-- 	GuildRosterContainerScrollBarScrollUpButton.Highlight,
-	-- 	GuildRosterContainerScrollBarScrollUpButton.Pushed,
+		GuildRosterContainerScrollBarScrollUpButton.Normal,
+		GuildRosterContainerScrollBarScrollUpButton.Disabled,
+		GuildRosterContainerScrollBarScrollUpButton.Highlight,
+		GuildRosterContainerScrollBarScrollUpButton.Pushed,
 
-	-- 	GuildRosterContainerScrollBarScrollDownButton.Normal,
-	-- 	GuildRosterContainerScrollBarScrollDownButton.Disabled,
-	-- 	GuildRosterContainerScrollBarScrollDownButton.Highlight,
-	-- 	GuildRosterContainerScrollBarScrollDownButton.Pushed,
+		GuildRosterContainerScrollBarScrollDownButton.Normal,
+		GuildRosterContainerScrollBarScrollDownButton.Disabled,
+		GuildRosterContainerScrollBarScrollDownButton.Highlight,
+		GuildRosterContainerScrollBarScrollDownButton.Pushed,
 		
-	-- 	GuildRosterContainerScrollBarThumbTexture,
+		GuildRosterContainerScrollBarThumbTexture,
 
-	-- 	GuildRewardsContainerScrollBarScrollUpButton.Normal,
-	-- 	GuildRewardsContainerScrollBarScrollUpButton.Disabled,
-	-- 	GuildRewardsContainerScrollBarScrollUpButton.Highlight,
-	-- 	GuildRewardsContainerScrollBarScrollUpButton.Pushed,
+		GuildRewardsContainerScrollBarScrollUpButton.Normal,
+		GuildRewardsContainerScrollBarScrollUpButton.Disabled,
+		GuildRewardsContainerScrollBarScrollUpButton.Highlight,
+		GuildRewardsContainerScrollBarScrollUpButton.Pushed,
 
-	-- 	GuildRewardsContainerScrollBarScrollDownButton.Normal,
-	-- 	GuildRewardsContainerScrollBarScrollDownButton.Disabled,
-	-- 	GuildRewardsContainerScrollBarScrollDownButton.Highlight,
-	-- 	GuildRewardsContainerScrollBarScrollDownButton.Pushed,
+		GuildRewardsContainerScrollBarScrollDownButton.Normal,
+		GuildRewardsContainerScrollBarScrollDownButton.Disabled,
+		GuildRewardsContainerScrollBarScrollDownButton.Highlight,
+		GuildRewardsContainerScrollBarScrollDownButton.Pushed,
 		
-	-- 	GuildRewardsContainerScrollBarThumbTexture,
+		GuildRewardsContainerScrollBarThumbTexture,
 
-	-- 	GuildFactionBarLeft,
-	-- 	GuildFactionBarMiddle,
-	-- 	GuildFactionBarRight,
-	-- }) do
-	-- 	v:SetVertexColor(.50, .50, .50)
-	-- end 
+		GuildFactionBarLeft,
+		GuildFactionBarMiddle,
+		GuildFactionBarRight,
+	}) do
+		v:SetVertexColor(.50, .50, .50)
+	end 
 
 	--Merchant
 	for i,v in pairs({

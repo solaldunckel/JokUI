@@ -233,6 +233,23 @@ function Interface:SyncFeature(name)
 	features[name](Interface.settings[name])
 end
 
+do
+	Interface:RegisterFeature("BFAUI",
+		"Use Battle For Azeroth UI",
+		"Use Battle For Azeroth UI style.",
+		false,
+		true,
+		function(state)
+			if state then
+				Interface:Bfa()
+			else
+				MicroMenuArt:Hide()
+				ActionBarArtTexture:Hide()
+				ActionBarArtSmallTexture:Hide() 
+			end
+		end)
+end
+
 -------------------------------------------------------------------------------
 -- Functions
 -------------------------------------------------------------------------------
@@ -336,7 +353,7 @@ function Interface:UnitFrames()
 
 		PlayerName:SetPoint("CENTER",50,23);
 		PlayerLeaderIcon:SetPoint("TOPLEFT",40,-12);
-		-- PlayerMasterIcon:SetPoint("TOPLEFT",86,0);
+		PlayerMasterIcon:SetPoint("TOPLEFT",86,0);
 		PlayerFrameGroupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOPLEFT", 97, -13);
 
 		PlayerFrameBackground:SetWidth(114);
@@ -368,8 +385,7 @@ function Interface:UnitFrames()
 	--PLAYER
 	function wPlayerFrame_ToPlayerArt(self)
 		PlayerFrame:SetScale(Interface.settings.unitframes.scale) -- Scale
-		-- PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
-		PlayerName:Hide()
+		PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
 		PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame");
 		PlayerFrameGroupIndicatorText:ClearAllPoints();
 		PlayerFrameGroupIndicatorText:SetPoint("BOTTOMLEFT", PlayerFrame,"TOP",0,-20);
@@ -1025,23 +1041,45 @@ function Interface:Colors()
 		ReputationXPBarTexture1,
 		ReputationXPBarTexture2,
 		ReputationXPBarTexture3,
+		ReputationWatchBar.StatusBar.XPBarTexture0,
+		ReputationWatchBar.StatusBar.XPBarTexture1,	
+		ReputationWatchBar.StatusBar.XPBarTexture2,	
+		ReputationWatchBar.StatusBar.XPBarTexture3,
+		ReputationWatchBar.StatusBar.WatchBarTexture0,
+		ReputationWatchBar.StatusBar.WatchBarTexture1,
+		ReputationWatchBar.StatusBar.WatchBarTexture2,
+		ReputationWatchBar.StatusBar.WatchBarTexture3,	
+		ArtifactWatchBar.StatusBar.XPBarTexture0,
+		ArtifactWatchBar.StatusBar.XPBarTexture1,
+		ArtifactWatchBar.StatusBar.XPBarTexture2,
+		ArtifactWatchBar.StatusBar.XPBarTexture3,
+		ArtifactWatchBar.StatusBar.WatchBarTexture0,
+		ArtifactWatchBar.StatusBar.WatchBarTexture1,
+		ArtifactWatchBar.StatusBar.WatchBarTexture2,
+		ArtifactWatchBar.StatusBar.WatchBarTexture3,
+		HonorWatchBar.StatusBar.XPBarTexture0,
+		HonorWatchBar.StatusBar.XPBarTexture1,
+		HonorWatchBar.StatusBar.XPBarTexture2,
+		HonorWatchBar.StatusBar.XPBarTexture3,
+		HonorWatchBar.StatusBar.WatchBarTexture0,
+		HonorWatchBar.StatusBar.WatchBarTexture1,
+		HonorWatchBar.StatusBar.WatchBarTexture2,
+		HonorWatchBar.StatusBar.WatchBarTexture3,
 	}) do
 
 		v:SetVertexColor(.15, .15, .15)
   
 	end 	
 
-	-- for i=1,19 do 
-	-- 	_G["MainMenuXPBarDiv"..i]:SetTexture(Empty_Art) 
-	-- end
+	for i=1,19 do 
+		_G["MainMenuXPBarDiv"..i]:SetTexture(Empty_Art) 
+	end
 	
-	-- ArtifactWatchBar.Tick.Normal:SetVertexColor(0.4, 0.4, 0.4)
-	-- ExhaustionTick:SetAlpha(0)
+	ArtifactWatchBar.Tick.Normal:SetVertexColor(0.4, 0.4, 0.4)
+	ExhaustionTick:SetAlpha(0)
         for i,v in pairs({
-			MainMenuBarArtFrame.LeftEndCap,
-	        MainMenuBarArtFrame.RightEndCap,
-	        MainMenuBarArtFrameBackground.BackgroundLarge,
-	        MainMenuBarArtFrameBackground.BackgroundSmall,
+			MainMenuBarLeftEndCap,
+	        MainMenuBarRightEndCap, 
 			StanceBarLeft,
 			StanceBarMiddle,
 			StanceBarRight, 
@@ -1054,18 +1092,6 @@ function Interface:Colors()
 		end
 	
 	for _, region in pairs({CompactRaidFrameManager:GetRegions()}) do
-		if region:IsObjectType("Texture") then
-			region:SetVertexColor(.15, .15, .15)
-		end
-	end
-
-	for _, region in pairs({StatusTrackingBarManager:GetRegions()}) do
-		if region:IsObjectType("Texture") then
-			region:SetVertexColor(.15, .15, .15)
-		end
-	end
-
-	for _, region in pairs({MicroButtonAndBagsBar:GetRegions()}) do
 		if region:IsObjectType("Texture") then
 			region:SetVertexColor(.15, .15, .15)
 		end
@@ -1102,14 +1128,6 @@ function Interface:Colors()
 		_G["PartyMemberFrame"..i.."NotPresentIcon"]:Hide()
 		_G["PartyMemberFrame"..i.."NotPresentIcon"].Show = function() end
 	end
-	for i=1,12 do 
-		_G["ActionButton"..i.."Icon"]:SetTexCoord(0.1,0.9,0.1,0.9)
-		_G["ActionButton"..i.."NormalTexture"]:SetVertexColor(0.25, 0.25, 0.15, 1)
-		_G["MultiBarBottomLeftButton"..i.."Icon"]:SetTexCoord(0.1,0.9,0.1,0.9)
-		_G["MultiBarBottomLeftButton"..i.."NormalTexture"]:SetVertexColor(0.25, 0.25, 0.15, 1)
-		_G["MultiBarBottomRightButton"..i.."Icon"]:SetTexCoord(0.1,0.9,0.1,0.9)
-		_G["MultiBarBottomRightButton"..i.."NormalTexture"]:SetVertexColor(0.25, 0.25, 0.15, 1)
-	end
 	PlayerFrameGroupIndicator:SetAlpha(0)
 	PlayerHitIndicator:SetText(nil) 
 	PlayerHitIndicator.SetText = function() end
@@ -1121,6 +1139,459 @@ function Interface:Colors()
 					region:SetVertexColor(.15, .15, .15)
 				end
 		end
+	end
+end
+
+function Interface:Bfa()
+
+	local function null()
+	    -- I do nothing (for a reason)
+	end
+
+	--efficiant way to remove frames (does not work on textures)
+	local function Kill(frame)
+	    if type(frame) == 'table' and frame.SetScript then
+	        frame:UnregisterAllEvents()
+	        frame:SetScript('OnEvent',nil)
+	        frame:SetScript('OnUpdate',nil)
+	        frame:SetScript('OnHide',nil)
+	        frame:Hide()
+	        frame.SetScript = null
+	        frame.RegisterEvent = null
+	        frame.RegisterAllEvents = null
+	        frame.Show = null
+	    end
+	end
+
+	Kill(ReputationWatchBar)
+	Kill(HonorWatchBar)
+	Kill(MainMenuBarMaxLevelBar) --Fixed visual bug when unequipping artifact weapon at max level
+
+	--disable "Show as Experience Bar" checkbox
+	ReputationDetailMainScreenCheckBox:Disable()
+	ReputationDetailMainScreenCheckBoxText:SetTextColor(.5,.5,.5)
+
+	--------------------==≡≡[ XP BAR ]≡≡==-----------------------------------
+
+	for i = 1, 19 do --for loop, hides MainMenuXPBarDiv (1-19)
+	   _G["MainMenuXPBarDiv" .. i]:Hide()
+	end
+
+	MainMenuXPBarTextureMid:Hide()
+	MainMenuXPBarTextureLeftCap:Hide()
+	MainMenuXPBarTextureRightCap:Hide()
+	MainMenuExpBar:SetFrameStrata("LOW")
+	ExhaustionTick:SetFrameStrata("MEDIUM")
+
+	MainMenuBarExpText:ClearAllPoints()
+	MainMenuBarExpText:SetPoint("CENTER",MainMenuExpBar,0,-1)
+
+	MainMenuBarOverlayFrame:SetFrameStrata("MEDIUM") --changes xp bar text strata
+
+	--------------------==≡≡[ ARTIFACT BAR ]≡≡==-----------------------------------
+
+	ArtifactWatchBar.StatusBar.XPBarTexture0:SetTexture(nil)
+	ArtifactWatchBar.StatusBar.XPBarTexture1:SetTexture(nil)
+	ArtifactWatchBar.StatusBar.XPBarTexture2:SetTexture(nil)
+	ArtifactWatchBar.StatusBar.XPBarTexture3:SetTexture(nil)
+
+	--stops Artiact bar from moving around
+	local function UpdateArtifactWatchBar()
+		ArtifactWatchBar:ClearAllPoints()
+		ArtifactWatchBar:SetPoint("BOTTOM",UIParent,"BOTTOM",0,0)
+		ArtifactWatchBar:SetFrameStrata("MEDIUM")
+		ArtifactWatchBar.StatusBar.Background:SetAlpha(0)
+		ArtifactWatchBar.OverlayFrame.Text:ClearAllPoints()
+		ArtifactWatchBar.OverlayFrame.Text:SetPoint("CENTER",ArtifactWatchBar.OverlayFrame,0,-1)
+		local WeaponQuality = GetInventoryItemQuality("player", 16) --artifact quality is 6
+		if ( UnitLevel("player") ~= MAX_PLAYER_LEVEL and IsXPUserDisabled() == false ) or ( WeaponQuality ~= 6 ) then
+			ArtifactWatchBar:Hide()
+		else
+			ArtifactWatchBar:Show()
+		end
+	end
+	local f=CreateFrame("Frame")
+	hooksecurefunc("MainMenuBar_UpdateExperienceBars", UpdateArtifactWatchBar) --prevents movement on BGs, and most events
+
+	--------------------==≡≡[ MICRO MENU MOVEMENT, POSITIONING AND SIZING ]≡≡==----------------------------------
+
+	local function MoveMicroButtons_Hook(...)
+		local hasVehicleUI = UnitHasVehicleUI("player")
+		local isInBattle = C_PetBattles.IsInBattle("player")
+		if hasVehicleUI == false and isInBattle == false then
+			MoveMicroButtonsToBottomRight()
+		else --set micro menu to vehicle ui + pet battle positions and sizes:
+			for i=1, #MICRO_BUTTONS do
+				_G[MICRO_BUTTONS[i]]:SetSize(28,58)
+			end
+			MainMenuBarPerformanceBar:SetPoint("CENTER",MainMenuMicroButton,0,0)
+			MicroButtonPortrait:SetPoint("TOP",CharacterMicroButton,0,-28)
+			MicroButtonPortrait:SetSize(18,25)
+			GuildMicroButtonTabard:SetPoint("TOPLEFT",GuildMicroButton,0,0)
+			GuildMicroButtonTabard:SetSize(28,58)
+			GuildMicroButtonTabardEmblem:SetPoint("CENTER",GuildMicroButtonTabard,0,-9)
+			GuildMicroButtonTabardEmblem:SetSize(16,16)
+			GuildMicroButtonTabardBackground:SetSize(30,60)
+
+			CharacterMicroButtonFlash:SetSize(64,64)
+			CharacterMicroButtonFlash:SetPoint("TOPLEFT",CharacterMicroButton,-2,-18)
+			SpellbookMicroButtonFlash:SetSize(64,64)
+			SpellbookMicroButtonFlash:SetPoint("TOPLEFT",SpellbookMicroButton,-2,-18)
+			TalentMicroButtonFlash:SetSize(64,64)
+			TalentMicroButtonFlash:SetPoint("TOPLEFT",TalentMicroButton,-2,-18)
+			AchievementMicroButtonFlash:SetSize(64,64)
+			AchievementMicroButtonFlash:SetPoint("TOPLEFT",AchievementMicroButton,-2,-18)
+			QuestLogMicroButtonFlash:SetSize(64,64)
+			QuestLogMicroButtonFlash:SetPoint("TOPLEFT",QuestLogMicroButton,-2,-18)
+			GuildMicroButtonFlash:SetSize(64,64)
+			GuildMicroButtonFlash:SetPoint("TOPLEFT",GuildMicroButton,-2,-18)
+			LFDMicroButtonFlash:SetSize(64,64)
+			LFDMicroButtonFlash:SetPoint("TOPLEFT",LFDMicroButton,-2,-18)
+			CollectionsMicroButtonFlash:SetSize(64,64)
+			CollectionsMicroButtonFlash:SetPoint("TOPLEFT",CollectionsMicroButton,-2,-18)
+			EJMicroButtonFlash:SetSize(64,64)
+			EJMicroButtonFlash:SetPoint("TOPLEFT",EJMicroButton,-2,-18)
+			StoreMicroButtonFlash:SetSize(64,64)
+			StoreMicroButtonFlash:SetPoint("TOPLEFT",StoreMicroButton,-2,-18)
+			MainMenuMicroButtonFlash:SetSize(64,64)
+			MainMenuMicroButtonFlash:SetPoint("TOPLEFT",MainMenuMicroButton,-2,-18)
+
+			MicroMenuArt:Hide()
+		end
+	end
+	hooksecurefunc("MoveMicroButtons", MoveMicroButtons_Hook)
+	hooksecurefunc("MainMenuBarVehicleLeaveButton_Update", MoveMicroButtons_Hook)
+
+
+	function MoveMicroButtonsToBottomRight()
+		for i=1, #MICRO_BUTTONS do --select micro menu buttons
+		  v = _G[MICRO_BUTTONS[i]]
+		  v:ClearAllPoints()
+		  v:SetSize(24,44) --Originally w=28 h=58
+		end
+		QuickJoinToastButton:Hide()
+		CharacterMicroButton:SetPoint("BOTTOMRIGHT",UIParent,-244,4)
+		SpellbookMicroButton:SetPoint("BOTTOMRIGHT",CharacterMicroButton,24,0)
+		TalentMicroButton:SetPoint("BOTTOMRIGHT",SpellbookMicroButton,24,0)
+		AchievementMicroButton:SetPoint("BOTTOMRIGHT",TalentMicroButton,24,0)
+		QuestLogMicroButton:SetPoint("BOTTOMRIGHT",AchievementMicroButton,24,0)
+		GuildMicroButton:SetPoint("BOTTOMRIGHT",QuestLogMicroButton,24,0)
+		LFDMicroButton:SetPoint("BOTTOMRIGHT",GuildMicroButton,24,0)
+		CollectionsMicroButton:SetPoint("BOTTOMRIGHT",LFDMicroButton,24,0)
+		EJMicroButton:SetPoint("BOTTOMRIGHT",CollectionsMicroButton,24,0)
+		StoreMicroButton:SetPoint("BOTTOMRIGHT",EJMicroButton,24,0)
+		MainMenuMicroButton:SetPoint("BOTTOMRIGHT",StoreMicroButton,24,0)
+
+		MicroButtonPortrait:SetPoint("TOP",CharacterMicroButton,0,-20) --Originally "TOP",CharacterMicroButton", "TOP", 0, -28
+		MicroButtonPortrait:SetSize(16,20) --Originally w=18 h=25
+		GuildMicroButtonTabard:SetPoint("CENTER",GuildMicroButton,0,0) --Originally "TOPLEFT",GuildMicroButton", "TOPLEFT", 0, 0
+		GuildMicroButtonTabard:SetSize(24,44) --Originally w=28 h=58
+		GuildMicroButtonTabardEmblem:SetPoint("CENTER",GuildMicroButtonTabard,0,-7) --Originally "CENTER",GuildMicroButtonTabard", "CENTER", 0, -9
+		GuildMicroButtonTabardEmblem:SetSize(11,11) --Originally w=16 h=16
+		GuildMicroButtonTabardBackground:SetSize(24,50) --Originally w=30 h=60
+		MainMenuBarPerformanceBar:SetPoint("CENTER",MainMenuMicroButton,0,5) --Originally "CENTER",MainMenuMicroButton", "CENTER", 0, 0
+		MicroMenuArt:Show()
+		MicroMenuArtTexture:SetVertexColor(.25,.25,.25)
+		MicroMenuArt:SetFrameStrata("BACKGROUND")
+
+		CharacterMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		CharacterMicroButtonFlash:SetPoint("TOPLEFT",CharacterMicroButton,-1,-14) -- Originally ("TOPLEFT",CharacterMicroButton,"TOPLEFT",-2,-18)
+		SpellbookMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		SpellbookMicroButtonFlash:SetPoint("TOPLEFT",SpellbookMicroButton,-1,-14) -- Originally ("TOPLEFT",SpellbookMicroButton,"TOPLEFT",-2,-18)
+		TalentMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		TalentMicroButtonFlash:SetPoint("TOPLEFT",TalentMicroButton,-1,-14) -- Originally ("TOPLEFT",TalentMicroButton,"TOPLEFT",-2,-18)
+		AchievementMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		AchievementMicroButtonFlash:SetPoint("TOPLEFT",AchievementMicroButton,-1,-14) -- Originally ("TOPLEFT",AchievementMicroButton,"TOPLEFT",-2,-18)
+		QuestLogMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		QuestLogMicroButtonFlash:SetPoint("TOPLEFT",QuestLogMicroButton,-1,-14) -- Originally ("TOPLEFT",QuestLogMicroButton,"TOPLEFT",-2,-18)
+		GuildMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		GuildMicroButtonFlash:SetPoint("TOPLEFT",GuildMicroButton,-1,-14) -- Originally ("TOPLEFT",GuildMicroButton,"TOPLEFT",-2,-18)
+		LFDMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		LFDMicroButtonFlash:SetPoint("TOPLEFT",LFDMicroButton,-1,-14) -- Originally ("TOPLEFT",LFDMicroButton,"TOPLEFT",-2,-18)
+		CollectionsMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		CollectionsMicroButtonFlash:SetPoint("TOPLEFT",CollectionsMicroButton,-1,-14) -- Originally ("TOPLEFT",CollectionsMicroButton,"TOPLEFT",-2,-18)
+		EJMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		EJMicroButtonFlash:SetPoint("TOPLEFT",EJMicroButton,-1,-14) -- Originally ("TOPLEFT",EJMicroButton,"TOPLEFT",-2,-18)
+		StoreMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		StoreMicroButtonFlash:SetPoint("TOPLEFT",StoreMicroButton,-1,-14) -- Originally ("TOPLEFT",StoreMicroButton,"TOPLEFT",-2,-18)
+		MainMenuMicroButtonFlash:SetSize(51,47) -- Originally w=64 h=64
+		MainMenuMicroButtonFlash:SetPoint("TOPLEFT",MainMenuMicroButton,-1,-14) -- Originally ("TOPLEFT",MainMenuMicroButton,"TOPLEFT",-2,-18)
+	end
+	local f=CreateFrame("Frame")
+	f:RegisterEvent("PET_BATTLE_CLOSE")
+	f:SetScript("OnEvent", MoveMicroButtonsToBottomRight)
+
+
+	--------------------==≡≡[ ACTIONBARS/BUTTONS POSITIONING AND SCALING ]≡≡==-----------------------------------
+
+		if not InCombatLockdown() then
+			--reposition bottom left actionbuttons
+			MultiBarBottomLeftButton1:SetPoint("BOTTOMLEFT",MultiBarBottomLeft,0,-6)
+
+			--reposition bottom right actionbar
+			MultiBarBottomRight:SetPoint("LEFT",MultiBarBottomLeft,"RIGHT",43,-6)
+
+			--reposition second half of top right bar, underneath
+			MultiBarBottomRightButton7:SetPoint("LEFT",MultiBarBottomRight,0,-48)
+
+			--reposition right bottom
+			MultiBarLeftButton1:SetPoint("TOPRIGHT",MultiBarLeft,0,200)
+
+			--reposition bags
+			MainMenuBarBackpackButton:SetPoint("BOTTOMRIGHT",UIParent,-4,39)
+
+			--reposition pet actionbuttons
+			SlidingActionBarTexture0:SetPoint("TOPLEFT",PetActionBarFrame,1,-5) -- pet bar texture (displayed when bottom left bar is hidden)
+			PetActionButton1:ClearAllPoints()
+			PetActionButton1:SetPoint("TOP",PetActionBarFrame,"LEFT",51,4)
+
+			--stance buttons
+			StanceBarLeft:SetPoint("BOTTOMLEFT",StanceBarFrame,0,-5) --stance bar texture for when Bottom Left Bar is hidden
+			StanceButton1:ClearAllPoints()
+		end
+
+
+	local function ActivateLongBar()
+		ActionBarArt:Show()
+		ActionBarArtSmall:Hide()
+		ActionBarArtTexture:SetVertexColor(.25,.25,.25)
+		if not InCombatLockdown() then
+			--arrows and page number
+			ActionBarUpButton:SetPoint("CENTER",MainMenuBarArtFrame,"TOPLEFT",521,-23)
+			ActionBarDownButton:SetPoint("CENTER",MainMenuBarArtFrame,"TOPLEFT",521,-42)
+			MainMenuBarPageNumber:SetPoint("CENTER",MainMenuBarArtFrame,28,-5)
+
+			--exp bar sizing and positioning
+			MainMenuExpBar:SetSize(800,11)
+			MainMenuExpBar:ClearAllPoints()
+			MainMenuExpBar:SetPoint("BOTTOM",UIParent,0,0)
+
+			--artifact bar sizing
+			ArtifactWatchBar:SetSize(800,11)
+			ArtifactWatchBar.StatusBar:SetSize(800,11)
+
+			--reposition ALL actionbars (right bars not affected)
+			MainMenuBar:SetPoint("BOTTOM",UIParent,110,11)
+
+			--xp bar background (the one I made)
+			XPBarBackground:SetSize(800,11)
+			XPBarBackground:SetPoint("BOTTOM",MainMenuBar,-110,-11)
+
+			MainMenuBar_ArtifactUpdateTick() --Blizzard function
+
+			if ExhaustionTick:IsShown() then
+				ExhaustionTick_OnEvent(ExhaustionTick, "UPDATE_EXHAUSTION") --Blizzard function, updates exhaustion tick position on XP bar resize
+			end
+		end
+	end
+
+	function ActivateShortBar()
+		ActionBarArt:Hide()
+		ActionBarArtSmall:Show()
+		ActionBarArtSmallTexture:SetVertexColor(.25,.25,.25)
+		if not InCombatLockdown() then
+			--arrows and page number
+			ActionBarUpButton:SetPoint("CENTER",MainMenuBarArtFrame,"TOPLEFT",521,-23)
+			ActionBarDownButton:SetPoint("CENTER",MainMenuBarArtFrame,"TOPLEFT",521,-42)
+			MainMenuBarPageNumber:SetPoint("CENTER",MainMenuBarArtFrame,29,-5)
+
+			--exp bar sizing and positioning
+			MainMenuExpBar:SetSize(542,10)
+			MainMenuExpBar:ClearAllPoints()
+			MainMenuExpBar:SetPoint("BOTTOM",UIParent,0,0)
+
+			--artifact bar sizing
+			ArtifactWatchBar:SetSize(542,10)
+			ArtifactWatchBar.StatusBar:SetSize(542,10)
+
+			--reposition ALL actionbars (right bars not affected)
+			MainMenuBar:SetPoint("BOTTOM",UIParent,237,11)
+
+			--xp bar background (the one I made)
+			XPBarBackground:SetSize(542,10)
+			XPBarBackground:SetPoint("BOTTOM",MainMenuBar,-237,-11)
+
+			MainMenuBar_ArtifactUpdateTick() --Blizzard function
+
+			if ExhaustionTick:IsShown() then
+				ExhaustionTick_OnEvent(ExhaustionTick, "UPDATE_EXHAUSTION") --Blizzard function, updates exhaustion tick position on XP bar resize
+			end
+		end
+	end
+
+	local function Update_ActionBars()
+		if not InCombatLockdown() then
+			--Bottom Left Bar:
+			if MultiBarBottomLeft:IsShown() then
+				PetActionButton1:SetPoint("TOP",PetActionBarFrame,"LEFT",51,4)
+				StanceButton1:SetPoint("LEFT",StanceBarFrame,2,-4)
+			else
+				PetActionButton1:SetPoint("TOP",PetActionBarFrame,"LEFT",51,7)
+				StanceButton1:SetPoint("LEFT",StanceBarFrame,12,-2)
+			end
+
+			-- --Right Bar:
+			-- if MultiBarRight:IsShown() then
+			-- 	--do
+			-- else
+			-- end
+
+			--Right Bar 2:
+			if MultiBarLeft:IsShown() then
+				--make MultiBarRight smaller 
+				MultiBarRightButton1:SetPoint("TOPRIGHT",MultiBarRight,0,200)
+			else
+				--make MultiBarRight bigger and vertically more centered, maybe also move objective frame
+				MultiBarRightButton1:SetPoint("TOPRIGHT",MultiBarRight,-2,64)
+			end
+		end
+
+		--Bottom Right Bar: (needs to be run in or out of combat, this is for the art when exiting vehicles in combat)
+		if MultiBarBottomRight:IsShown() == true then
+			ActivateLongBar()
+		else
+			ActivateShortBar()
+		end
+	end
+	MultiBarBottomLeft:HookScript('OnShow', Update_ActionBars)
+	MultiBarBottomLeft:HookScript('OnHide', Update_ActionBars)
+	MultiBarBottomRight:HookScript('OnShow', Update_ActionBars)
+	MultiBarBottomRight:HookScript('OnHide', Update_ActionBars)
+	MultiBarRight:HookScript('OnShow', Update_ActionBars)
+	MultiBarRight:HookScript('OnHide', Update_ActionBars)
+	MultiBarLeft:HookScript('OnShow', Update_ActionBars)
+	MultiBarLeft:HookScript('OnHide', Update_ActionBars)
+	local f=CreateFrame("Frame")
+	f:RegisterEvent("PLAYER_LOGIN") --Required to check bar visibility on load
+	f:SetScript("OnEvent", Update_ActionBars)
+
+
+
+	local function PlayerEnteredCombat()
+		InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars - |cffFF0000You must leave combat to toggle the ActionBars")
+		InterfaceOptionsActionBarsPanelBottomLeft:Disable()
+		InterfaceOptionsActionBarsPanelBottomRight:Disable()
+		InterfaceOptionsActionBarsPanelRight:Disable()
+		InterfaceOptionsActionBarsPanelRightTwo:Disable()
+	end
+	local f=CreateFrame("Frame")
+	f:RegisterEvent("PLAYER_REGEN_DISABLED")
+	f:SetScript("OnEvent", PlayerEnteredCombat)
+
+	local function PlayerLeftCombat()
+		InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars")
+		InterfaceOptionsActionBarsPanelBottomLeft:Enable()
+		InterfaceOptionsActionBarsPanelBottomRight:Enable()
+		InterfaceOptionsActionBarsPanelRight:Enable()
+		InterfaceOptionsActionBarsPanelRightTwo:Enable()
+
+		Update_ActionBars()
+	end
+	local f=CreateFrame("Frame")
+	f:RegisterEvent("PLAYER_REGEN_ENABLED")
+	f:SetScript("OnEvent", PlayerLeftCombat)
+
+
+
+	--------------------==≡≡[ OBJECTIVE TRACKER, VEHICLE SEAT INDICATOR, ENEMY ARENA FRAMES ]≡≡==-----------------------------------
+
+	--fixes Blizzard's bug by removing all achievements that are tracked but not visible on the objective tracker:
+	--the "bug" seems to occur when completing an achievement on one character, while it is tracked on another
+	--code example; if GetNumTrackedAchievements() = 1 but no visible achievements, then remove the invisible tracked achievement
+	local function RemoveInvisibleTrackedAchievements()
+		local t1,t2,t3,t4,t5,t6,t7,t8,t9,t10 = GetTrackedAchievements()
+		local table = {t1,t2,t3,t4,t5,t6,t7,t8,t9,t10}
+		for i = 1, 10 do
+		   if table[i] ~= nil then
+		      local _, _, _, _, _, _, _, _, _, _, _, _, wasEarnedByMe = GetAchievementInfo(table[i])
+		      if wasEarnedByMe then
+		         RemoveTrackedAchievement(table[i])
+		      end
+		   end
+		end
+	end
+	local f=CreateFrame("Frame")
+	f:RegisterEvent("PLAYER_ENTERING_WORLD")
+	f:SetScript("OnEvent", RemoveInvisibleTrackedAchievements)
+
+	ObjectiveTrackerBlocksFrame:SetPoint("TOPRIGHT",UIParent,-54,-700)
+
+
+	local function VehicleSeatIndicator_Positioning()
+		if VehicleSeatIndicator:IsShown() then
+			VehicleSeatIndicator:ClearAllPoints()
+			point3 = "TOPRIGHT"
+			relativeTo3 = MinimapCluster
+			relativePoint3 = "BOTTOMRIGHT"
+			xOffset3 = -99
+			yOffset3 = 0
+			if ArenaEnemyFrames ~= nil and ArenaEnemyFrames:IsShown() then --ArenaEnemyFrames visible:
+				VehicleSeatIndicator:SetPoint(point3,relativeTo3,relativePoint3,xOffset3,yOffset3)
+				print("ArenaEnemyFrames visible")
+			elseif ObjectiveTrackerFrame.HeaderMenu:IsShown() then --active Objectives (minimize button shown):
+				if ObjectiveTrackerFrame.collapsed then --minimized Objectives:
+					point1 = "TOPRIGHT"
+					relativeTo1 = ObjectiveTrackerBlocksFrame
+					relativePoint1 = "TOPLEFT"
+					xOffset1 = 160
+					yOffset1 = 0
+					VehicleSeatIndicator:SetPoint(point1,relativeTo1,relativePoint1,xOffset1,yOffset1)
+				else --expanded Objectives:
+					point2 = "TOPRIGHT"
+					relativeTo2 = ObjectiveTrackerBlocksFrame
+					relativePoint2 = "TOPLEFT"
+					xOffset2 = -15
+					yOffset2 = 0
+					VehicleSeatIndicator:SetPoint(point2,relativeTo2,relativePoint2,xOffset2,yOffset2)
+				end
+			else --no active Objectives (minimize button not shown):
+				VehicleSeatIndicator:SetPoint(point3,relativeTo3,relativePoint3,xOffset3,yOffset3)
+			end
+		end
+	end
+	hooksecurefunc("ObjectiveTracker_Update", VehicleSeatIndicator_Positioning) --also works on clicking the minimise/expand button
+
+	hooksecurefunc(VehicleSeatIndicator,"SetPoint",function(self,_,_,_,xOffset)
+		if (xOffset~=xOffset1) and (xOffset~=xOffset2) and (xOffset~=xOffset3) then
+			VehicleSeatIndicator_Positioning()
+		end
+	end)
+	--Objective Tracker positioning .. reference: https://us.battle.net/forums/en/wow/topic/15141304174#2
+	local f = CreateFrame("Frame")
+	f:SetScript("OnEvent",function(self,event,addon)
+		if IsAddOnLoaded("Blizzard_ObjectiveTracker") then
+			ObjectiveTrackerBlocksFrame:SetPoint("TOPRIGHT",UIParent,-54,-700)
+			hooksecurefunc(ObjectiveTrackerFrame,"SetPoint",function(self,Point,RelativeTo)
+				if IsAddOnLoaded("Blizzard_ArenaUI") and ArenaEnemyFrames:IsShown() then  --ArenaEnemyFrames visible:
+					--[[
+					for i = 1, 5 do
+	   					if (Point~="TOPRIGHT") and (RelativeTo~="ArenaEnemyFrame"..i) and (_G["ArenaEnemyFrame"..i]:IsShown()) then
+					    ObjectiveTrackerFrame:SetPoint("TOPRIGHT",_G["ArenaEnemyFrame"..i],"BOTTOM",45,-20)
+					    print("RelativeTo, set to ArenaEnemyFrame"..i)
+					   end
+					end
+					]]
+				else --ArenaEnemyFrames NOT visible:
+					if (Point~="TOPRIGHT") and (RelativeTo~=UIParent) then
+						ObjectiveTrackerBlocksFrame:SetPoint("TOPRIGHT",UIParent,-54,-700)
+					end
+				end
+			end)
+	    	self:UnregisterEvent("ADDON_LOADED")
+		else
+	    	self:RegisterEvent("ADDON_LOADED")
+	  	end
+	end)
+	f:RegisterEvent("PLAYER_LOGIN")
+
+	--------------------==≡≡[ BLIZZARD TEXTURES ]≡≡==-----------------------------------
+
+	--hide Blizzard art textures
+	MainMenuBarLeftEndCap:Hide()
+	MainMenuBarRightEndCap:Hide()
+
+	for i = 0, 3 do --for loop, hides MainMenuBarTexture (0-3)
+	   _G["MainMenuBarTexture" .. i]:Hide()
 	end
 end
 
@@ -1674,7 +2145,7 @@ function Interface:ItemLevel()
 	    end;
 	    if unit and self.hasItem then
 	        _, level, _, _, quality = LibItemLevel:GetUnitItemInfo(unit, id);
-	        if level > 0 and quality > 1 then
+	        if level > 0 and quality > 2 then
 	            self.levelString:SetText(level);
 	            result = true;
 	        end;

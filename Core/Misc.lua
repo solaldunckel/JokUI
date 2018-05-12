@@ -44,8 +44,6 @@ function Misc:OnInitialize()
 	self:HoverBind()
 	self:TooltipID()
 	self:SafeQueue()
-	self:Coords()
-	-- self:AFK()
 end
 
 function Misc:OnEnable()
@@ -989,17 +987,17 @@ function Misc:TooltipID()
 
   -- Spells
   hooksecurefunc(GameTooltip, "SetUnitBuff", function(self, ...)
-    local id = select(10, UnitBuff(...))
+    local id = select(11, UnitBuff(...))
     if id then addLine(self, id, types.spell) end
   end)
 
   hooksecurefunc(GameTooltip, "SetUnitDebuff", function(self,...)
-    local id = select(10, UnitDebuff(...))
+    local id = select(11, UnitDebuff(...))
     if id then addLine(self, id, types.spell) end
   end)
 
   hooksecurefunc(GameTooltip, "SetUnitAura", function(self,...)
-    local id = select(10, UnitAura(...))
+    local id = select(11, UnitAura(...))
     if id then addLine(self, id, types.spell) end
   end)
 
@@ -1008,14 +1006,14 @@ function Misc:TooltipID()
     if id then addLine(ItemRefTooltip, id, types.spell) end
   end)
 
-  -- GameTooltip:HookScript("OnTooltipSetSpell", function(self)
-  --   local id = select(3, self:GetSpell())
-  --   if id then addLine(self, id, types.spell) end
-  -- end)
+  GameTooltip:HookScript("OnTooltipSetSpell", function(self)
+    local id = select(3, self:GetSpell())
+    if id then addLine(self, id, types.spell) end
+  end)
 
   GameTooltip:HookScript("OnTooltipSetSpell", function(self)
-  	local id = select(2, self:GetSpell())
-    if id then addLine(self, id, types.spell) end
+  	local id = GetMouseFocus():GetID() 
+    if id then addLine(self, id, types.talent) end
   end)
 
   -- Artifact Powers
@@ -1187,20 +1185,20 @@ function Misc:TooltipID()
      if id then addLine(self, id, types.currency) end
   end)
 
-  -- -- Quests
-  -- do
-  --   local function questhook(self)
-  --     if self.questID then addLine(GameTooltip, self.questID, types.quest) end
-  --   end
-  --   local titlebuttonshooked = {}
-  --   hooksecurefunc("QuestLogQuests_GetTitleButton", function(index)
-  --     local titles = QuestMapFrame.QuestsFrame.Contents.Titles;
-  --     if titles[index] and not titlebuttonshooked[index] then
-  --       titles[index]:HookScript("OnEnter", questhook)
-  --       titlebuttonshooked[index] = true
-  --     end
-  --   end)
-  -- end
+  -- Quests
+  do
+    local function questhook(self)
+      if self.questID then addLine(GameTooltip, self.questID, types.quest) end
+    end
+    local titlebuttonshooked = {}
+    hooksecurefunc("QuestLogQuests_GetTitleButton", function(index)
+      local titles = QuestMapFrame.QuestsFrame.Contents.Titles;
+      if titles[index] and not titlebuttonshooked[index] then
+        titles[index]:HookScript("OnEnter", questhook)
+        titlebuttonshooked[index] = true
+      end
+    end)
+  end
 
   hooksecurefunc("TaskPOI_OnEnter", function(self)
     if self and self.questID then addLine(WorldMapTooltip, self.questID, types.quest) end
@@ -1280,265 +1278,6 @@ function Misc:SafeQueue()
 			end
 		end
 	end)
-end
-
-function Misc:AFK()
-	-- Set Up AFK Camera
-	local AFKCamera = CreateFrame('Frame', nil, WorldFrame);
-	AFKCamera:SetAllPoints();
-	AFKCamera:SetAlpha(0);
-	AFKCamera.width, AFKCamera.height = AFKCamera:GetSize();
-	AFKCamera.hidden = true;
-
-	--[[
-	    Handles turning on and off the AFK Camera
-
-	    @ param boolean $spin Whether the spinning should be turned off
-	    @ return void
-	]]
-	local function ToggleSpin(spin)
-	    -- If the configuration is off or the player is in combat then just do nothing
-	    if (InCombatLockdown()) then return; end
-
-	    if (spin) then
-	    	self.AFKMode:Show()
-	        -- Refresh and Set the Player Model anims
-	        AFKCamera.playerModel:SetUnit('player');
-	        AFKCamera.playerModel:SetAnimation(69);
-	        AFKCamera.playerModel:SetRotation(math.rad(-15));
-	        AFKCamera.playerModel:SetCamDistanceScale(1.2);
-
-	        -- Refresh and Set the Pet Model anims
-	        AFKCamera.petModel:SetUnit('pet');
-	        AFKCamera.petModel:SetAnimation(0);
-	        AFKCamera.petModel:SetRotation(math.rad(45));
-	        AFKCamera.petModel:SetCamDistanceScale(1.7);
-
-	        -- Hide the PVE Frame if it is shown
-	        if(PVEFrame and PVEFrame:IsShown()) then
-	            AFKCamera.PvEIsOpen = true; -- Store that it was open so that we can automatically reopen it after
-	            PVEFrame_ToggleFrame();
-	        else
-	            AFKCamera.PvEIsOpen = false;
-	        end
-
-	        -- Hide the UI and begin the camera spinning
-	        UIParent:Hide();
-	        AFKCamera.fadeInAnim:Play();
-	        AFKCamera.hidden = false;
-	        MoveViewRightStart(0.05);
-	    else
-	        if(AFKCamera.hidden == false) then
-	        	self.AFKMode:Hide()
-	            MoveViewRightStop();
-	            UIParent:Show();
-	            AFKCamera.fadeOutAnim:Play();
-
-	            -- Reopen PVE Frame if it was open
-	            if(AFKCamera.PvEIsOpen) then
-	                PVEFrame_ToggleFrame();
-	            end
-
-	            AFKCamera.hidden = true;
-	        end
-	    end
-	end
-
-	self.AFKMode = CreateFrame("Frame", "ElvUIAFKFrame")
-	self.AFKMode:SetFrameLevel(1)
-	self.AFKMode:SetScale(UIParent:GetScale())
-	self.AFKMode:SetAllPoints(UIParent)
-	self.AFKMode:Hide()
-	self.AFKMode:EnableKeyboard(true)
-	self.AFKMode:SetScript("OnKeyDown", OnKeyDown)
-
-	self.AFKMode.chat = CreateFrame("ScrollingMessageFrame", nil, self.AFKMode)
-	self.AFKMode.chat:SetSize(500, 200)
-	self.AFKMode.chat:SetPoint("TOPLEFT", self.AFKMode, "TOPLEFT", 4, -4)
-	self.AFKMode.chat:SetJustifyH("LEFT")
-	self.AFKMode.chat:SetMaxLines(500)
-	self.AFKMode.chat:EnableMouseWheel(true)
-	self.AFKMode.chat:SetFading(false)
-	self.AFKMode.chat:SetMovable(true)
-	self.AFKMode.chat:EnableMouse(true)
-	self.AFKMode.chat:RegisterForDrag("LeftButton")
-	self.AFKMode.chat:SetScript("OnDragStart", self.AFKMode.chat.StartMoving)
-	self.AFKMode.chat:SetScript("OnDragStop", self.AFKMode.chat.StopMovingOrSizing)
-	self.AFKMode.chat:SetScript("OnMouseWheel", Chat_OnMouseWheel)
-	self.AFKMode.chat:SetScript("OnEvent", Chat_OnEvent)
-
-	self.AFKMode.bottom = CreateFrame("Frame", nil, self.AFKMode)
-	self.AFKMode.bottom:SetFrameLevel(0)
-	self.AFKMode.bottom:SetPoint("BOTTOM", self.AFKMode, "BOTTOM", 0, 0)
-	self.AFKMode.bottom:SetWidth(GetScreenWidth() + (1*2))
-	self.AFKMode.bottom:SetHeight(GetScreenHeight() * (1 / 10))
-
-	local factionGroup = UnitFactionGroup("player");
-	--factionGroup = "Alliance"
-	local size, offsetX, offsetY = 140, -20, -16
-	local nameOffsetX, nameOffsetY = -10, -28
-	if factionGroup == "Neutral" then
-		factionGroup = "Panda"
-		size, offsetX, offsetY = 90, 15, 10
-		nameOffsetX, nameOffsetY = 20, -5
-	end
-
-	local playername = UnitName("player")
-	local _, playerclass = UnitClass("player")
-	local classColor = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[playerclass] or RAID_CLASS_COLORS[playerclass]
-
-	self.AFKMode.bottom.name = self.AFKMode.bottom:CreateFontString(nil, 'OVERLAY')
-	self.AFKMode.bottom.name:SetFont("Fonts\\FRIZQT__.TTF", 90);
-	self.AFKMode.bottom.name:SetFormattedText("%s", playername)
-	self.AFKMode.bottom.name:SetPoint("TOPLEFT", self.AFKMode.bottom, "BOTTOMLEFT", nameOffsetX, nameOffsetY)
-	self.AFKMode.bottom.name:SetTextColor(classColor.r, classColor.g, classColor.b)
-
-	-- self.AFKMode.bottom.time = self.AFKMode.bottom:CreateFontString(nil, 'OVERLAY')
-	-- self.AFKMode.bottom.time:SetFont("Fonts\\FRIZQT__.TTF", 16, 'THINOUTLINE');
-	-- self.AFKMode.bottom.time:SetText("00:00")
-	-- self.AFKMode.bottom.time:SetPoint("TOPLEFT", self.AFKMode.bottom.name, "BOTTOMLEFT", 0, -6)
-	-- self.AFKMode.bottom.time:SetTextColor(0.7, 0.7, 0.7)
-
-	-- Set Up the Player Model
-	AFKCamera.playerModel = CreateFrame('PlayerModel', nil, AFKCamera);
-	AFKCamera.playerModel:SetSize(AFKCamera.height * 0.6, AFKCamera.height * 1.1);
-	AFKCamera.playerModel:SetPoint('BOTTOMRIGHT', AFKCamera.height * 0.1, -AFKCamera.height * 0.35);
-	AFKCamera.playerModel:SetFacing(6)
-
-	-- Pet model for Hunters, Warlocks etc
-	AFKCamera.petModel = CreateFrame('playerModel', nil, AFKCamera);
-	AFKCamera.petModel:SetSize(AFKCamera.height * 0.7, AFKCamera.height);
-	AFKCamera.petModel:SetPoint('BOTTOMLEFT', AFKCamera.height * 0.05, -AFKCamera.height * 0.3);
-
-	-- Initialise the fadein / out anims
-	AFKCamera.fadeInAnim = AFKCamera:CreateAnimationGroup();
-	AFKCamera.fadeIn = AFKCamera.fadeInAnim:CreateAnimation('Alpha');
-	AFKCamera.fadeIn:SetDuration(0.5);
-	AFKCamera.fadeIn:SetFromAlpha(0);
-	AFKCamera.fadeIn:SetToAlpha(1);
-	AFKCamera.fadeIn:SetOrder(1);
-	AFKCamera.fadeInAnim:SetScript('OnFinished', function() AFKCamera:SetAlpha(1) end );
-
-	AFKCamera.fadeOutAnim = AFKCamera:CreateAnimationGroup();
-	AFKCamera.fadeOut = AFKCamera.fadeOutAnim:CreateAnimation('Alpha');
-	AFKCamera.fadeOut:SetDuration(0);
-	AFKCamera.fadeOut:SetFromAlpha(1);
-	AFKCamera.fadeOut:SetToAlpha(0);
-	AFKCamera.fadeOut:SetOrder(1);
-	AFKCamera.fadeOutAnim:SetScript('OnFinished', function() AFKCamera:SetAlpha(0) end );
-
-	--[[
-	    Handles the WoW API Events Registered Below
-
-	    @ param Frame $self The Frame that is handling the event 
-	    @ param string $event The WoW API Event that has been triggered
-	    @ param arg $... The arguments of the Event
-	    @ return void
-	]]
-	local function HandleEvents (self, event, ...)
-	    if (event == 'PLAYER_FLAGS_CHANGED') then
-			if (... =='player') then
-				if (UnitIsAFK(...) and not UnitIsDead(...)) then
-					ToggleSpin(true);
-				else
-					ToggleSpin(false);
-				end
-			end
-		elseif (event == 'PLAYER_LEAVING_WORLD') then
-			ToggleSpin(false);
-		elseif (event == 'PLAYER_DEAD') then
-			if (UnitIsAFK('player')) then
-				ToggleSpin(false);
-			end
-	    end
-	end
-
-	-- Register the Modules Events
-	AFKCamera:SetScript('OnEvent', HandleEvents);
-	AFKCamera:RegisterEvent('PLAYER_FLAGS_CHANGED');
-	AFKCamera:RegisterEvent('PLAYER_LEAVING_WORLD');
-	AFKCamera:RegisterEvent('PLAYER_DEAD');
-end
-
-function Misc:Coords()
-
-	-- World Map Coords
-	local MapCoordsFrame = CreateFrame('Frame', nil, WorldMapFrame.ScrollContainer);
-
-	MapCoordsFrame:SetWidth(150);	
-	MapCoordsFrame:SetHeight(16);
-	MapCoordsFrame:SetPoint('BOTTOM', 0, 20);
-
-	MapCoordsFrame.text = MapCoordsFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal');
-	MapCoordsFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 16, 'THINOUTLINE');
-	MapCoordsFrame.text:SetAllPoints();
-
-	local function UpdateCoords(self, elapsed)
-	    if WorldMapFrame:IsVisible() then
-	        WorldMapFrameTitleText:SetFont("Fonts\\FRIZQT__.TTF", 14, 'THINOUTLINE');
-	        local scale = WorldMapFrame.ScrollContainer.Child:GetEffectiveScale();
-	        local width = WorldMapFrame.ScrollContainer.Child:GetWidth();
-	        local height = WorldMapFrame.ScrollContainer.Child:GetHeight();
-	        local cenx, ceny = WorldMapFrame.ScrollContainer.Child:GetCenter();
-	        local x, y = GetCursorPosition();
-	        local vmapx = (x / scale - (cenx - (width/2))) / width;
-	        local vmapy = (ceny + (height/2) - y / scale) / height;
-
-	        local inInstance, _ = IsInInstance();
-			if(inInstance ~= true) then
-
-		        local coords = string.format('(%d:%d)', (floor(vmapx * 1000 + 0.5)) / 10, (floor(vmapy * 1000 + 0.5)) / 10);
-		        local px, py = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player"):GetXY()
-		        local pcoords = string.format('(%i:%i)',px*100,py*100)
-
-		        if (vmapx >= 0  and vmapy >= 0 and vmapx <=1 and vmapy <=1) then
-		            MapCoordsFrame.text:SetFormattedText(coords.." / "..pcoords);
-		        else
-		            MapCoordsFrame.text:SetText('(0:0)'.." / "..pcoords);
-		        end
-	        end
-	    end
-	end
-
-	MapCoordsFrame:SetScript('OnUpdate', UpdateCoords)
-	MapCoordsFrame:Show();
-
-	-- Minimap Coords
-
-	local MapFrame = CreateFrame('Frame', nil, UIParent);
-
-	-- Co-ordinates Frame
-	local CoordsFrame = CreateFrame('Frame', nil, Minimap);
-	CoordsFrame.text = CoordsFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal');
-	CoordsFrame.delay = 0.5;
-	CoordsFrame.elapsed = 0;
-
-	-- Set the position and scale etc
-	CoordsFrame:SetFrameStrata('LOW');
-	CoordsFrame:SetWidth(32);
-	CoordsFrame:SetHeight(32);
-	CoordsFrame:SetPoint('TOP', 0, 0);
-	CoordsFrame.text:SetPoint('CENTER', 0, 0);
-	CoordsFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 10, 'OUTLINE');
-
-	-- Ticks every 0.5 seconds, purely to update the Co-ordinates display.
-	local function CoordsFrame_Tick(self, elapsed)
-		CoordsFrame.elapsed = CoordsFrame.elapsed + elapsed; -- Increment the tick timer
-		if(CoordsFrame.elapsed >= CoordsFrame.delay) then -- Matched tick delay?
-			-- 7.1 Restricted this so it only works in the outside world. Lame.
-			local inInstance, _ = IsInInstance();
-			if(inInstance ~= true) then
-				if(Minimap:IsVisible()) then
-					local x, y = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player"):GetXY()
-					if(x ~= 0 and y ~= 0) then
-						CoordsFrame.text:SetFormattedText('(%d:%d)', x * 100, y * 100);
-					end
-				end
-			end
-			CoordsFrame.elapsed = 0; -- Reset the timer
-		end
-	end
-	CoordsFrame:SetScript('OnUpdate', CoordsFrame_Tick); -- Begin the Core_Tick
 end
 
 -- Set Max Equipement Sets to 100.
