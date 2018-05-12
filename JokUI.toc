@@ -1,6 +1,6 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: |cffFF7D0AJok|rUI
-## Version: 1.0a
+## Version: 2.0
 ## Author: Tom
 ## Notes: All-in addon for UI, Nameplates, Mythic+ and more.
 ## SavedVariables: JokUIDB
@@ -44,5 +44,4 @@ Core\Misc.lua
 ## INTERFACE 
 
 Core\Interface.lua
-Core\Bfa.xml
 Core\Actionbars.lua
