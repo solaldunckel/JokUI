@@ -545,59 +545,60 @@ function Nameplates:Core()
 	
 	-- UPDATE HEALTH COLOR
 
-    hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
-        if ( frame:IsForbidden() ) then return end
-        if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+    -- hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
+    --     if ( frame:IsForbidden() ) then return end
+    --     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-        local r, g, b;
-        if ( not UnitIsConnected(frame.unit) ) then
-            r, g, b = 0.5, 0.5, 0.5;
-        else
-            if ( frame.optionTable.healthBarColorOverride ) then
-                local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
-                r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
-            else
-                local localizedClass, englishClass = UnitClass(frame.unit);
-                local classColor = RAID_CLASS_COLORS[englishClass];
-                if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
-                    r, g, b = classColor.r, classColor.g, classColor.b;
-                elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
-                    r, g, b = 0.9, 0.9, 0.9;
-                elseif ( frame.optionTable.colorHealthBySelection ) then
-                    if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
-                        local target = frame.displayedUnit.."target"
-                        local threat = UnitThreatSituation("player", frame.unit)                            
-                        if threat == 3 then --3 = Securely tanking; make borders red.
-                            r, g, b = 0.5, 0.75, 0.95
-                        elseif threat == 2 then
-                            r, g, b = 1, 0.5, 0
-                        elseif threat == 1 then
-                            r, g, b = 1, 1, 0.4
-                        else
-                            r, g, b = 1.0, 0.0, 0.0
-                        end
-                    elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
-                        r, g, b = 0.667, 0.667, 1.0;
-                    else
-                        r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
-                    end
-                elseif ( UnitIsFriend("player", frame.unit) ) then
-                    r, g, b = 0.0, 1.0, 0.0;
-                else
-                    r, g, b = 1.0, 0.0, 0.0;
-                end
-            end
-        end
-        if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
-            frame.healthBar:SetStatusBarColor(r, g, b);
+    --     local r, g, b;
+    --     if ( not UnitIsConnected(frame.unit) ) then
+    --         r, g, b = 0.5, 0.5, 0.5;
+    --     else
+    --         if ( frame.optionTable.healthBarColorOverride ) then
+    --             local healthBarColorOverride = frame.optionTable.healthBarColorOverride;
+    --             r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
+    --         else
+    --             local localizedClass, englishClass = UnitClass(frame.unit);
+    --             local classColor = RAID_CLASS_COLORS[englishClass];
+    --             if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) then
+    --                 r, g, b = classColor.r, classColor.g, classColor.b;
+    --             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
+    --                 r, g, b = 0.9, 0.9, 0.9;
+    --             elseif ( frame.optionTable.colorHealthBySelection ) then
+    --                 if ( frame.optionTable.considerSelectionInCombatAsHostile and CompactUnitFrame_IsOnThreatListWithPlayer(frame.displayedUnit) ) then
+    --                     local target = frame.displayedUnit.."target"
+    --                     local threat = UnitThreatSituation("player", frame.unit)                            
+    --                     if threat >= 3 then --3 = Securely tanking; make borders red.
+    --                         r, g, b = 0.5, 0.75, 0.95
+    --                     elseif threat == 2 then
+    --                         r, g, b = 1, 0.5, 0
+    --                     elseif threat == 1 then
+    --                         r, g, b = 1, 1, 0.4
+    --                     else
+    --                         r, g, b = 1.0, 0.0, 0.0
+    --                     end
+    --                 elseif ( UnitIsPlayer(frame.displayedUnit) and UnitIsFriend("player", frame.displayedUnit) ) then
+    --                     r, g, b = 0.667, 0.667, 1.0;
+    --                 else
+    --                     r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors);
+    --                 end
+    --             elseif ( UnitIsFriend("player", frame.unit) ) then
+    --                 r, g, b = 0.0, 1.0, 0.0;
+    --             else
+    --                 r, g, b = 1.0, 0.0, 0.0;
+    --             end
+    --         end
+    --     end
+    --     if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
+            
 
-            if (frame.optionTable.colorHealthWithExtendedColors) then
-                frame.selectionHighlight:SetVertexColor(r, g, b);
-            else
-                frame.selectionHighlight:SetVertexColor(1, 1, 1);
-            end
-        end
-    end)
+    --         if (frame.optionTable.colorHealthWithExtendedColors) then
+    --             frame.selectionHighlight:SetVertexColor(r, g, b);
+    --         else
+    --             frame.selectionHighlight:SetVertexColor(1, 1, 1);
+    --         end
+    --         frame.healthBar:SetStatusBarColor(r, g, b);
+    --     end
+    -- end)
 
     -- hooksecurefunc("CompactUnitFrame_UpdateHealthBorder", function(frame)
     --     local mouseoverFrame = CreateFrame("frame")
@@ -650,7 +651,7 @@ function Nameplates:Core()
     -- Friendly Nameplates in protected area
     if Nameplates.settings.friendlymotion then
         if (not InCombatLockdown()) then
-            C_NamePlate.SetNamePlateFriendlySize(100, 1)
+            C_NamePlate.SetNamePlateFriendlySize(80, 1)
             C_NamePlate.SetNamePlateFriendlyClickThrough(true)
         end
     end
@@ -668,7 +669,18 @@ function Nameplates:Core()
         
            -- Elite Icon
             
-        frame.ClassificationFrame:SetScale(1)
+        frame.ClassificationFrame:SetScale(0.9)
+
+        -- if not UnitIsEnemy("target", "player") then
+        -- 	NamePlateTargetResourceFrame:Hide()
+        -- else
+        -- 	NamePlateTargetResourceFrame:Show()
+        -- end
+
+        -- NamePlateTargetResourceFrame:SetScale(0.8)
+    	-- NamePlateTargetResourceFrame:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, -5)
+
+        -- frame.TargetResourceFrame:SetScale(0.5)
 
             -- Castbar.
 
