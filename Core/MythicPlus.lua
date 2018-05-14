@@ -1545,7 +1545,7 @@ function MythicPlus:Cooldowns()
         icon.cd:SetDrawEdge(false)
 		icon.cd:SetAlpha(.9)
 		icon.cd:SetScript("OnShow", function()
-			if not pab['Roster'][icon.player_name][icon.spellID] then return end
+			if not pab['Roster'][icon.player_name] or not pab['Roster'][icon.player_name][icon.spellID] then return end
 			if pab['Roster'][icon.player_name][icon.spellID]["charge"] then
 				icon:SetAlpha(1)
 			else
