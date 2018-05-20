@@ -39,7 +39,8 @@ local nameplates_defaults = {
         overlap = true,
         verticalOverlap = 0.7,
         horizontalOverlap = 0.7,
-        friendlymotion = true, 
+        friendlymotion = true,
+        clickthroughfriendly = true,  
         enemytotem = true,
         enemypets = false,
         enemyguardian = false,
@@ -123,6 +124,18 @@ local nameplates_config = {
                 Nameplates:ForceUpdate()
                 end,
                 get = function(info) return Nameplates.settings.friendlyName end
+            },
+            clickthroughfriendly = {
+                type = "toggle",
+                name = "Clickthrough Friendly Nameplates",
+                desc = "|cffaaaaaa Clickthrough Friendly Nameplates. |r",
+                descStyle = "inline",
+                width = "full",
+                order = 1,
+                set = function(info,val) Nameplates.settings.clickthroughfriendly = val
+                Nameplates:ForceUpdate()
+                end,
+                get = function(info) return Nameplates.settings.clickthroughfriendly end
             },
             hideHealth = {
                 type = "toggle",
@@ -271,6 +284,7 @@ local nameplates_config = {
                 descStyle = "inline",
                 width = "full",
                 order = 2,
+                disabled = function(info) return  not Nameplates.settings.overlap or not Nameplates.settings.enable end,
                 set = function(info,val) Nameplates.settings.friendlymotion = val
                 StaticPopup_Show ("ReloadUI_Popup")
                 end,
@@ -622,7 +636,6 @@ function Nameplates:Core()
     -- Nameplate Class Bar
 
     local _, class = UnitClass("player")
-    print(class)
     if class == "WARLOCK" or class == "DEATHKNIGHT" or class == "ROGUE" then
         SetCVar("nameplateResourceOnTarget", 1)
         SetCVar("nameplateShowSelf", 1)
@@ -681,11 +694,14 @@ function Nameplates:Core()
     NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
 
     -- Friendly Nameplates stacking fix
-    if Nameplates.settings.friendlymotion then
+    if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         if (not InCombatLockdown()) then
             C_NamePlate.SetNamePlateFriendlySize(80, 1)
-            C_NamePlate.SetNamePlateFriendlyClickThrough(true)
         end
+    end
+
+    if Nameplates.settings.clickthroughfriendly then
+        C_NamePlate.SetNamePlateFriendlyClickThrough(true)
     end
 
     	-- UPDATE NAMEPLATE

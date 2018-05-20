@@ -469,14 +469,30 @@ function RaidFrames:Misc()
 	end
 
 	-- BUFF/DEBUFF SIZE
-	hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
-		for _,d in pairs(f.debuffFrames) do 
-			d.baseSize = RaidFrames.settings.debuffscale 
-		end 
-		for _,d in pairs(f.buffFrames) do 
-			d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale) 
-		end 
-	end)
+
+	if CompactRaidFrameContainer.groupMode == "flush" then
+
+		hooksecurefunc("CompactUnitFrame_UpdateAll",function(f) 
+			for _,d in pairs(f.debuffFrames) do 
+				d.baseSize = RaidFrames.settings.debuffscale
+			end 
+			for _,d in pairs(f.buffFrames) do
+				d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale)
+			end 
+		end)
+
+	else
+
+		hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
+			for _,d in pairs(f.debuffFrames) do 
+				d.baseSize = RaidFrames.settings.debuffscale-3
+			end 
+			for _,d in pairs(f.buffFrames) do 
+				d:SetSize(RaidFrames.settings.buffscale-3,RaidFrames.settings.buffscale-3) 
+			end 
+		end)
+
+	end
 
 	-- RAID FRAMES SIZE DEFAULT SLIDER
 	local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
@@ -484,12 +500,4 @@ function RaidFrames:Misc()
 	_G[n.."WidthSlider"] 
 	h:SetMinMaxValues(1,200) 
 	w:SetMinMaxValues(1,200)
-
-	-- CompactRaidFrameManager:HookScript("OnEnter", function(self) if self:IsMouseOver() then self:SetAlpha(1) end end)
-	-- CompactRaidFrameManager:HookScript("OnLeave", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) end end)
-	-- CompactRaidFrameManager:HookScript("OnShow", function(self) if not self:IsMouseOver() then self:SetAlpha(0.5) else self:SetAlpha(1) end end)
-	-- CompactRaidFrameManagerToggleButton:HookScript("OnLeave", function(self) if not CompactRaidFrameManager:IsMouseOver() then CompactRaidFrameManager:SetAlpha(0.5) end end)
-
-	-- CompactRaidFrameManager:HookScript("OnHide", function(self) self:Show() end)
-	-- CompactRaidFrameManager:Show()
 end

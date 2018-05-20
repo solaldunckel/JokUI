@@ -114,7 +114,7 @@ local interface_defaults = {
     		formatHealth = true,
     	},
     	castbars = {
-    		player = { x = 0, y = 150},
+    		player = { x = 0, y = 170},
     		target = { x = 0, y = 550},
     	}     
     }
@@ -834,6 +834,443 @@ function Interface:UnitFrames()
     total = 0
     cf = CreateFrame("Frame")
 	cf:SetScript("OnUpdate", UpdateTimer)
+end
+
+function Interface:CastBars()
+	local max = math.max
+	local format = string.format
+
+	if not InCombatLockdown() then
+
+		UIPARENT_MANAGED_FRAME_POSITIONS["CastingBarFrame"] = nil
+
+		-- Player Castbar
+		CastingBarFrame:SetMovable(true)
+		CastingBarFrame:ClearAllPoints()
+		CastingBarFrame:SetScale(1)
+		CastingBarFrame:SetPoint("BOTTOM", UIParent,"BOTTOM", 0, Interface.settings.castbars.player.y)
+		CastingBarFrame:SetUserPlaced(true)
+		CastingBarFrame:SetMovable(false)
+		CastingBarFrame:SetScale(1)
+ 		CastingBarFrame.Icon:Show()
+		CastingBarFrame.Icon:ClearAllPoints()
+		CastingBarFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+		CastingBarFrame.Icon:SetSize(20, 20)
+    	CastingBarFrame.Icon:SetPoint("RIGHT", CastingBarFrame, "LEFT", -7, 0)
+  		CastingBarFrame.Text:ClearAllPoints()
+  		CastingBarFrame.Text:SetPoint("CENTER", 0, 1)
+  		CastingBarFrame.BorderShield:SetWidth(CastingBarFrame.BorderShield:GetWidth() + 4)
+  		CastingBarFrame.Border:SetPoint("TOP", 0, 26)
+ 		CastingBarFrame.Flash:SetPoint("TOP", 0, 26)
+		CastingBarFrame.BorderShield:SetPoint("TOP", 0, 26)
+		
+		-- Player Timer
+		CastingBarFrame.timer = CastingBarFrame:CreateFontString(nil)
+		CastingBarFrame.timer:SetFont(STANDARD_TEXT_FONT, 14,'THINOUTLINE')
+		CastingBarFrame.timer:SetPoint("LEFT", CastingBarFrame, "RIGHT", 7, 0)
+		CastingBarFrame.update = 0.1
+
+  		-- Target Castbar
+		TargetFrameSpellBar:SetMovable(true)
+  		TargetFrameSpellBar:ClearAllPoints()
+ 		TargetFrameSpellBar:SetScale(1.4)
+ 		TargetFrameSpellBar:SetPoint("CENTER",CastingBarFrame,"CENTER", 0, Interface.settings.castbars.target.y)
+		TargetFrameSpellBar:SetUserPlaced(true)
+		TargetFrameSpellBar:SetMovable(false)
+		TargetFrameSpellBar.Icon:SetTexCoord(.08, .92, .08, .92)
+  		TargetFrameSpellBar.Icon:SetPoint("RIGHT", TargetFrameSpellBar, "LEFT", -3, 0)
+  		TargetFrameSpellBar.SetPoint = function() end
+
+		-- Target Timer
+		TargetFrameSpellBar.timer = TargetFrameSpellBar:CreateFontString(nil)
+		TargetFrameSpellBar.timer:SetFont(STANDARD_TEXT_FONT, 11,'THINOUTLINE')
+		TargetFrameSpellBar.timer:SetPoint("LEFT", TargetFrameSpellBar, "RIGHT", 4, 0)
+		TargetFrameSpellBar.update = 0.1
+
+	end
+
+	-- CastBar timer function
+	local function CastingBarFrame_OnUpdate_Hook(self, elapsed)
+		if not self.timer then return end
+		if self.update and self.update < elapsed then
+			if self.casting then
+				self.timer:SetText(format("%.1f", max(self.maxValue - self.value, 0)))
+			elseif self.channeling then
+				self.timer:SetText(format("%.1f", max(self.value, 0)))
+			else
+				self.timer:SetText("")
+			end
+			self.update = .1
+		  else
+			self.update = self.update - elapsed
+		end
+	end
+
+	CastingBarFrame:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
+	TargetFrameSpellBar:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
+end
+
+function Interface:Buffs()
+
+	--rCreateDragFrame func
+	function rCreateDragFrame(self, dragFrameList, inset, clamp)
+	    if not self or not dragFrameList then return end
+	    self.defaultPoint = rGetPoint(self)
+	    table.insert(dragFrameList,self)
+
+	    local df = CreateFrame("Frame",nil,self)
+	    df:SetAllPoints(self)
+	    df:SetFrameStrata("HIGH")
+	    df:SetHitRectInsets(inset or 0,inset or 0,inset or 0,inset or 0)
+	    df:EnableMouse(true)
+	    df:RegisterForDrag("LeftButton")
+	    df:SetScript("OnDragStart", function(self) if IsAltKeyDown() and IsShiftKeyDown() then self:GetParent():StartMoving() end end)
+	    df:SetScript("OnDragStop", function(self) self:GetParent():StopMovingOrSizing() end)
+	    df:SetScript("OnEnter", function(self)
+	      GameTooltip:SetOwner(self, "ANCHOR_TOP")
+	      GameTooltip:AddLine(self:GetParent():GetName(), 0, 1, 0.5, 1, 1, 1)
+	      GameTooltip:AddLine("Hold down ALT+SHIFT to drag!", 1, 1, 1, 1, 1, 1)
+	      GameTooltip:Show()
+	    end)
+	    df:SetScript("OnLeave", function(s) GameTooltip:Hide() end)
+	    df:Hide()
+
+	    local t = df:CreateTexture(nil,"OVERLAY",nil,6)
+	    t:SetAllPoints(df)
+	    t:SetTexture(0,1,0)
+	    t:SetAlpha(0.2)
+	    df.texture = t
+
+	    self.dragFrame = df
+	    self:SetClampedToScreen(clamp or false)
+	    self:SetMovable(true)
+	    self:SetUserPlaced(true)
+	end
+
+	--rewrite the oneletter shortcuts
+
+	  if adjustOneletterAbbrev then
+	    HOUR_ONELETTER_ABBR = "%dh"
+	    DAY_ONELETTER_ABBR = "%dd"
+	    MINUTE_ONELETTER_ABBR = "%dm"
+	    SECOND_ONELETTER_ABBR = "%ds"
+	  end
+
+	--classcolor
+
+	  local classColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
+
+	--backdrop debuff
+
+	  local backdropDebuff = {
+	    bgFile = nil,
+	    edgeFile = debuffFrame.background.edgeFile,
+	    tile = false,
+	    tileSize = 32,
+	    edgeSize = debuffFrame.background.inset,
+	    insets = {
+	      left = debuffFrame.background.inset,
+	      right = debuffFrame.background.inset,
+	      top = debuffFrame.background.inset,
+	      bottom = debuffFrame.background.inset,
+	    },
+	  }
+
+	--backdrop buff
+
+	  local backdropBuff = {
+	    bgFile = nil,
+	    edgeFile = buffFrame.background.edgeFile,
+	    tile = false,
+	    tileSize = 32,
+	    edgeSize = buffFrame.background.inset,
+	    insets = {
+	      left = buffFrame.background.inset,
+	      right = buffFrame.background.inset,
+	      top = buffFrame.background.inset,
+	      bottom = buffFrame.background.inset,
+	    },
+	  }
+
+	  local ceil, min, max = ceil, min, max
+	  local ShouldShowConsolidatedBuffFrame = ShouldShowConsolidatedBuffFrame
+	  
+	  local buffFrameHeight = 0
+
+	--apply aura frame texture func
+
+	  local function applySkin(b)
+	    if not b or (b and b.styled) then return end
+
+	    local name = b:GetName()
+
+	    local tempenchant, consolidated, debuff, buff = false, false, false, false
+	    if (name:match("TempEnchant")) then
+	      tempenchant = true
+	    elseif (name:match("Consolidated")) then
+	      consolidated = true
+	    elseif (name:match("Debuff")) then
+	      debuff = true
+	    else
+	      buff = true
+	    end
+
+	    local cfg, backdrop
+	    if debuff then
+	      cfg = debuffFrame
+	      backdrop = backdropDebuff
+	    else
+	      cfg = buffFrame
+	      backdrop = backdropBuff
+	    end
+
+	--check class coloring options
+
+	    --button
+	    b:SetSize(buffFrame.button.size, buffFrame.button.size)
+
+	    --icon
+	    local icon = _G[name.."Icon"]
+	    if consolidated then
+	    if select(1,UnitFactionGroup("player")) == "Alliance" then  
+	        icon:SetTexture(select(3,GetSpellInfo(61573)))
+	    elseif select(1,UnitFactionGroup("player")) == "Horde" then
+	    icon:SetTexture(select(3,GetSpellInfo(61574)))
+	    end
+	    end
+	    icon:SetTexCoord(0.1,0.9,0.1,0.9)
+	    icon:ClearAllPoints()
+	    icon:SetPoint("TOPLEFT", b, "TOPLEFT", -buffFrame.icon.padding, buffFrame.icon.padding)
+	    icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", buffFrame.icon.padding, -buffFrame.icon.padding)
+	    icon:SetDrawLayer("BACKGROUND",-8)
+	    b.icon = icon
+
+	    --border
+	    local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
+	    border:SetTexture(border.texture)
+	    border:SetTexCoord(0,1,0,1)
+	    border:SetDrawLayer("BACKGROUND",-7)
+	    if tempenchant then
+	      border:SetVertexColor(0.7,0,1)
+	    elseif not debuff then
+	      border:SetVertexColor(buffFrame.border.color.r,buffFrame.border.color.g,buffFrame.border.color.b)
+	    end
+	    border:ClearAllPoints()
+	    border:SetAllPoints(b)
+	    b.border = border
+
+	    --duration
+	    b.duration:SetFont(buffFrame.duration.font, buffFrame.duration.size, "THINOUTLINE")
+	    b.duration:ClearAllPoints()
+	    b.duration:SetPoint(buffFrame.duration.pos.a1,buffFrame.duration.pos.x,buffFrame.duration.pos.y)
+
+	    --count
+	    b.count:SetFont(buffFrame.count.font, buffFrame.count.size, "THINOUTLINE")
+	    b.count:ClearAllPoints()
+	    b.count:SetPoint(buffFrame.count.pos.a1,buffFrame.count.pos.x,buffFrame.count.pos.y)
+
+	    --shadow
+	    if not buffFrame.background.show then
+	      local back = CreateFrame("Frame", nil, b)
+	      back:SetPoint("TOPLEFT", b, "TOPLEFT", -buffFrame.background.padding, buffFrame.background.padding)
+	      back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", buffFrame.background.padding, -buffFrame.background.padding)
+	      back:SetFrameLevel(b:GetFrameLevel() - 1)
+	      back:SetBackdrop(backdrop)
+	      back:SetBackdropBorderColor(buffFrame.background.color.r,buffFrame.background.color.g,buffFrame.background.color.b,buffFrame.background.color.a)
+	      b.bg = back
+	    end
+
+	    --set button styled variable
+	    b.styled = true
+	    end
+
+	--update debuff anchors
+
+	  local function updateDebuffAnchors(buttonName,index)
+	    local button = _G[buttonName..index]
+	    if not button then return end
+	    --apply skin
+	    if not button.styled then applySkin(button) end
+	    --position button
+	    button:ClearAllPoints()
+	    if index == 1 then
+	        --debuffs and buffs are not combined anchor the debuffs to its own frame
+	        button:SetPoint("TOPRIGHT", rBFS_DebuffDragFrame, "TOPRIGHT", 0, -60)      
+	    elseif index > 1 and mod(index, debuffFrame.buttonsPerRow) == 1 then
+	      button:SetPoint("TOPRIGHT", _G[buttonName..(index-debuffFrame.buttonsPerRow)], "BOTTOMRIGHT", 0, -debuffFrame.rowSpacing)
+	    else
+	      button:SetPoint("TOPRIGHT", _G[buttonName..(index-1)], "TOPLEFT", -debuffFrame.colSpacing, 0)
+	    end
+	  end
+
+	--update buff anchors
+
+	  local function updateAllBuffAnchors()
+	    --variables
+	    local buttonName  = "BuffButton"
+	    local numEnchants = BuffFrame.numEnchants
+	    local numBuffs    = BUFF_ACTUAL_DISPLAY
+	    local offset      = numEnchants
+	    local realIndex, previousButton, aboveButton
+
+	      TempEnchant1:ClearAllPoints()
+	      TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0)
+	    
+	    --calculate the previous button in case tempenchant or consolidated buff are loaded
+	    if BuffFrame.numEnchants > 0 then
+	      previousButton = _G["TempEnchant"..numEnchants]
+	    end
+
+	    if numEnchants > 0 then
+	      aboveButton = TempEnchant1
+	    end
+
+	    --loop on all active buff buttons
+	    local buffCounter = 0
+	    for index = 1, numBuffs do
+	      local button = _G[buttonName..index]
+	      if not button then return end
+	      if not button.consolidated then
+	        buffCounter = buffCounter + 1
+	        --apply skin
+	        if not button.styled then applySkin(button) end
+	        --position button
+	        button:ClearAllPoints()
+	        realIndex = buffCounter+offset
+	        if realIndex == 1 then
+	          button:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0)
+	          aboveButton = button
+	        elseif realIndex > 1 and mod(realIndex, buffFrame.buttonsPerRow) == 1 then
+	          button:SetPoint("TOPRIGHT", aboveButton, "BOTTOMRIGHT", 0, -buffFrame.rowSpacing)
+	          aboveButton = button
+	        else
+	          button:SetPoint("TOPRIGHT", previousButton, "TOPLEFT", -buffFrame.colSpacing, 0)
+	        end
+	        previousButton = button
+	        
+	      end
+	    end
+	    --calculate the height of the buff rows for the debuff frame calculation later
+	    local rows = ceil((buffCounter+offset)/buffFrame.buttonsPerRow)
+	    local height = buffFrame.button.size*rows + buffFrame.rowSpacing*rows + buffFrame.gap*min(1,rows)
+	    buffFrameHeight = height
+	  end
+
+	--buff drag frame
+
+	  local bf = CreateFrame("Frame", "rBFS_BuffDragFrame", UIParent)
+	  bf:SetSize(buffFrame.button.size,buffFrame.button.size)
+	  bf:SetPoint(buffFrame.pos.a1,buffFrame.pos.af,buffFrame.pos.a2,buffFrame.pos.x,buffFrame.pos.y)
+	  if buffFrame.userplaced then
+	    rCreateDragFrame(bf, dragFrameList, -2 , true) --frame, dragFrameList, inset, clamp
+	  end
+
+	--debuff drag frame
+
+	    local df = CreateFrame("Frame", "rBFS_DebuffDragFrame", UIParent)
+	    df:SetSize(debuffFrame.button.size,debuffFrame.button.size)
+	    df:SetPoint(debuffFrame.pos.a1,debuffFrame.pos.af,debuffFrame.pos.a2,debuffFrame.pos.x,debuffFrame.pos.y)
+	    if debuffFrame.userplaced then
+	      rCreateDragFrame(df, dragFrameList, -2 , true) --frame, dragFrameList, inset, clamp
+	    end
+
+	  --temp enchant stuff
+	  applySkin(TempEnchant1)
+	  applySkin(TempEnchant2)
+	  applySkin(TempEnchant3)
+
+	  --position the temp enchant buttons
+	  TempEnchant1:ClearAllPoints()
+	  TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0) --button will be repositioned later in case temp enchant and consolidated buffs are both available
+	  TempEnchant2:ClearAllPoints()
+	  TempEnchant2:SetPoint("TOPRIGHT", TempEnchant1, "TOPLEFT", -buffFrame.colSpacing, 0)
+	  TempEnchant3:ClearAllPoints()
+	  TempEnchant3:SetPoint("TOPRIGHT", TempEnchant2, "TOPLEFT", -buffFrame.colSpacing, 0)
+	  
+	  --hook Blizzard functions
+	  hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
+	  hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
+end
+
+function Interface:Minimap()
+	if not (IsAddOnLoaded("SexyMap")) then
+		for i,v in pairs({
+			MinimapBorder,
+			MiniMapMailBorder,
+			QueueStatusMinimapButtonBorder,
+			select(1, TimeManagerClockButton:GetRegions()),
+          		}) do
+             		v:SetVertexColor(.14, .14, .14)
+	    end
+		select(2, TimeManagerClockButton:GetRegions()):SetVertexColor(1,1,1)
+
+		hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
+			self:GetNormalTexture():SetTexture(nil)
+			self:GetPushedTexture():SetTexture(nil)
+			if not gb then
+				gb = CreateFrame("Frame", nil, GarrisonLandingPageMinimapButton)
+				gb:SetFrameLevel(GarrisonLandingPageMinimapButton:GetFrameLevel() - 1)
+				gb:SetPoint("CENTER", 0, 0)
+				gb:SetSize(36,36)
+
+				gb.icon = gb:CreateTexture(nil, "ARTWORK")
+				gb.icon:SetPoint("CENTER", 0, 0)
+				gb.icon:SetSize(36,36)
+		
+				gb.border = CreateFrame("Frame", nil, gb)
+				gb.border:SetFrameLevel(gb:GetFrameLevel() + 1)
+				gb.border:SetAllPoints()
+
+				gb.border.texture = gb.border:CreateTexture(nil, "ARTWORK")
+				gb.border.texture:SetTexture("Interface\\PlayerFrame\\UI-PlayerFrame-Deathknight-Ring")
+				gb.border.texture:SetVertexColor(.1,.1,.1)
+				gb.border.texture:SetPoint("CENTER", 1, -2)
+				gb.border.texture:SetSize(45,45)
+			end
+			if (C_Garrison.GetLandingPageGarrisonType() == 2) then
+				if select(1,UnitFactionGroup("player")) == "Alliance" then	
+					SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61573)))
+				elseif select(1,UnitFactionGroup("player")) == "Horde" then
+					SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61574)))
+				end
+			else
+				local t = CLASS_ICON_TCOORDS[select(2,UnitClass("player"))]
+            			gb.icon:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+            			gb.icon:SetTexCoord(unpack(t))
+			end
+		end)
+	
+		MinimapBorderTop:Hide()
+		MinimapZoomIn:Hide()
+		MinimapZoomOut:Hide()
+		MiniMapWorldMapButton:Hide()
+		MinimapZoneText:SetPoint("CENTER", Minimap, 0, 80)
+		MinimapCluster:SetScale(1.2)
+		GameTimeFrame:Hide()
+		GameTimeFrame:UnregisterAllEvents()
+		GameTimeFrame.Show = kill
+		MiniMapTracking:Hide()
+		MiniMapTracking.Show = kill
+		MiniMapTracking:UnregisterAllEvents()
+		Minimap:EnableMouseWheel(true)
+		Minimap:SetScript("OnMouseWheel", function(self, z)
+			local c = Minimap:GetZoom()
+			if(z > 0 and c < 5) then
+				Minimap:SetZoom(c + 1)
+			elseif(z < 0 and c > 0) then
+				Minimap:SetZoom(c - 1)
+			end
+		end)
+		Minimap:SetScript("OnMouseUp", function(self, btn)
+			if btn == "RightButton" then
+				_G.ToggleDropDownMenu(1, nil, _G.MiniMapTrackingDropDown, self)
+			elseif btn == "MiddleButton" then
+				_G.GameTimeFrame:Click()
+			else
+				_G.Minimap_OnClick(self)
+			end
+		end)
+	end
 end
 
 function Interface:Chat()
@@ -1593,443 +2030,6 @@ function Interface:Bfa()
 	for i = 0, 3 do --for loop, hides MainMenuBarTexture (0-3)
 	   _G["MainMenuBarTexture" .. i]:Hide()
 	end
-end
-
-function Interface:CastBars()
-	local max = math.max
-	local format = string.format
-
-	if not InCombatLockdown() then
-
-		UIPARENT_MANAGED_FRAME_POSITIONS["CastingBarFrame"] = nil
-
-		-- Player Castbar
-		CastingBarFrame:SetMovable(true)
-		CastingBarFrame:ClearAllPoints()
-		CastingBarFrame:SetScale(1)
-		-- CastingBarFrame:SetPoint("BOTTOM", UIParent,"BOTTOM", 0, Interface.settings.castbars.playery)
-		CastingBarFrame:SetUserPlaced(true)
-		CastingBarFrame:SetMovable(false)
-		CastingBarFrame:SetScale(1)
- 		CastingBarFrame.Icon:Show()
-		CastingBarFrame.Icon:ClearAllPoints()
-		CastingBarFrame.Icon:SetTexCoord(.08, .92, .08, .92)
-		CastingBarFrame.Icon:SetSize(20, 20)
-    	CastingBarFrame.Icon:SetPoint("RIGHT", CastingBarFrame, "LEFT", -7, 0)
-  		CastingBarFrame.Text:ClearAllPoints()
-  		CastingBarFrame.Text:SetPoint("CENTER", 0, 1)
-  		CastingBarFrame.BorderShield:SetWidth(CastingBarFrame.BorderShield:GetWidth() + 4)
-  		CastingBarFrame.Border:SetPoint("TOP", 0, 26)
- 		CastingBarFrame.Flash:SetPoint("TOP", 0, 26)
-		CastingBarFrame.BorderShield:SetPoint("TOP", 0, 26)
-		
-		-- Player Timer
-		CastingBarFrame.timer = CastingBarFrame:CreateFontString(nil)
-		CastingBarFrame.timer:SetFont(STANDARD_TEXT_FONT, 14,'THINOUTLINE')
-		CastingBarFrame.timer:SetPoint("LEFT", CastingBarFrame, "RIGHT", 7, 0)
-		CastingBarFrame.update = 0.1
-
-  		-- Target Castbar
-		TargetFrameSpellBar:SetMovable(true)
-  		TargetFrameSpellBar:ClearAllPoints()
- 		TargetFrameSpellBar:SetScale(1.4)
- 		TargetFrameSpellBar:SetPoint("CENTER",CastingBarFrame,"CENTER", 0, Interface.settings.castbars.target.y)
-		TargetFrameSpellBar:SetUserPlaced(true)
-		TargetFrameSpellBar:SetMovable(false)
-		TargetFrameSpellBar.Icon:SetTexCoord(.08, .92, .08, .92)
-  		TargetFrameSpellBar.Icon:SetPoint("RIGHT", TargetFrameSpellBar, "LEFT", -3, 0)
-  		TargetFrameSpellBar.SetPoint = function() end
-
-		-- Target Timer
-		TargetFrameSpellBar.timer = TargetFrameSpellBar:CreateFontString(nil)
-		TargetFrameSpellBar.timer:SetFont(STANDARD_TEXT_FONT, 11,'THINOUTLINE')
-		TargetFrameSpellBar.timer:SetPoint("LEFT", TargetFrameSpellBar, "RIGHT", 4, 0)
-		TargetFrameSpellBar.update = 0.1
-
-	end
-
-	-- CastBar timer function
-	local function CastingBarFrame_OnUpdate_Hook(self, elapsed)
-		if not self.timer then return end
-		if self.update and self.update < elapsed then
-			if self.casting then
-				self.timer:SetText(format("%.1f", max(self.maxValue - self.value, 0)))
-			elseif self.channeling then
-				self.timer:SetText(format("%.1f", max(self.value, 0)))
-			else
-				self.timer:SetText("")
-			end
-			self.update = .1
-		  else
-			self.update = self.update - elapsed
-		end
-	end
-
-	CastingBarFrame:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
-	TargetFrameSpellBar:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
-end
-
-function Interface:Minimap()
-	if not (IsAddOnLoaded("SexyMap")) then
-		for i,v in pairs({
-			MinimapBorder,
-			MiniMapMailBorder,
-			QueueStatusMinimapButtonBorder,
-			select(1, TimeManagerClockButton:GetRegions()),
-          		}) do
-             		v:SetVertexColor(.14, .14, .14)
-	    end
-		select(2, TimeManagerClockButton:GetRegions()):SetVertexColor(1,1,1)
-
-		hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
-			self:GetNormalTexture():SetTexture(nil)
-			self:GetPushedTexture():SetTexture(nil)
-			if not gb then
-				gb = CreateFrame("Frame", nil, GarrisonLandingPageMinimapButton)
-				gb:SetFrameLevel(GarrisonLandingPageMinimapButton:GetFrameLevel() - 1)
-				gb:SetPoint("CENTER", 0, 0)
-				gb:SetSize(36,36)
-
-				gb.icon = gb:CreateTexture(nil, "ARTWORK")
-				gb.icon:SetPoint("CENTER", 0, 0)
-				gb.icon:SetSize(36,36)
-		
-				gb.border = CreateFrame("Frame", nil, gb)
-				gb.border:SetFrameLevel(gb:GetFrameLevel() + 1)
-				gb.border:SetAllPoints()
-
-				gb.border.texture = gb.border:CreateTexture(nil, "ARTWORK")
-				gb.border.texture:SetTexture("Interface\\PlayerFrame\\UI-PlayerFrame-Deathknight-Ring")
-				gb.border.texture:SetVertexColor(.1,.1,.1)
-				gb.border.texture:SetPoint("CENTER", 1, -2)
-				gb.border.texture:SetSize(45,45)
-			end
-			if (C_Garrison.GetLandingPageGarrisonType() == 2) then
-				if select(1,UnitFactionGroup("player")) == "Alliance" then	
-					SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61573)))
-				elseif select(1,UnitFactionGroup("player")) == "Horde" then
-					SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61574)))
-				end
-			else
-				local t = CLASS_ICON_TCOORDS[select(2,UnitClass("player"))]
-            			gb.icon:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
-            			gb.icon:SetTexCoord(unpack(t))
-			end
-		end)
-	
-		MinimapBorderTop:Hide()
-		MinimapZoomIn:Hide()
-		MinimapZoomOut:Hide()
-		MiniMapWorldMapButton:Hide()
-		MinimapZoneText:SetPoint("CENTER", Minimap, 0, 80)
-		MinimapCluster:SetScale(1.2)
-		GameTimeFrame:Hide()
-		GameTimeFrame:UnregisterAllEvents()
-		GameTimeFrame.Show = kill
-		MiniMapTracking:Hide()
-		MiniMapTracking.Show = kill
-		MiniMapTracking:UnregisterAllEvents()
-		Minimap:EnableMouseWheel(true)
-		Minimap:SetScript("OnMouseWheel", function(self, z)
-			local c = Minimap:GetZoom()
-			if(z > 0 and c < 5) then
-				Minimap:SetZoom(c + 1)
-			elseif(z < 0 and c > 0) then
-				Minimap:SetZoom(c - 1)
-			end
-		end)
-		Minimap:SetScript("OnMouseUp", function(self, btn)
-			if btn == "RightButton" then
-				_G.ToggleDropDownMenu(1, nil, _G.MiniMapTrackingDropDown, self)
-			elseif btn == "MiddleButton" then
-				_G.GameTimeFrame:Click()
-			else
-				_G.Minimap_OnClick(self)
-			end
-		end)
-	end
-end
-
-function Interface:Buffs()
-
-	--rCreateDragFrame func
-	function rCreateDragFrame(self, dragFrameList, inset, clamp)
-	    if not self or not dragFrameList then return end
-	    self.defaultPoint = rGetPoint(self)
-	    table.insert(dragFrameList,self)
-
-	    local df = CreateFrame("Frame",nil,self)
-	    df:SetAllPoints(self)
-	    df:SetFrameStrata("HIGH")
-	    df:SetHitRectInsets(inset or 0,inset or 0,inset or 0,inset or 0)
-	    df:EnableMouse(true)
-	    df:RegisterForDrag("LeftButton")
-	    df:SetScript("OnDragStart", function(self) if IsAltKeyDown() and IsShiftKeyDown() then self:GetParent():StartMoving() end end)
-	    df:SetScript("OnDragStop", function(self) self:GetParent():StopMovingOrSizing() end)
-	    df:SetScript("OnEnter", function(self)
-	      GameTooltip:SetOwner(self, "ANCHOR_TOP")
-	      GameTooltip:AddLine(self:GetParent():GetName(), 0, 1, 0.5, 1, 1, 1)
-	      GameTooltip:AddLine("Hold down ALT+SHIFT to drag!", 1, 1, 1, 1, 1, 1)
-	      GameTooltip:Show()
-	    end)
-	    df:SetScript("OnLeave", function(s) GameTooltip:Hide() end)
-	    df:Hide()
-
-	    local t = df:CreateTexture(nil,"OVERLAY",nil,6)
-	    t:SetAllPoints(df)
-	    t:SetTexture(0,1,0)
-	    t:SetAlpha(0.2)
-	    df.texture = t
-
-	    self.dragFrame = df
-	    self:SetClampedToScreen(clamp or false)
-	    self:SetMovable(true)
-	    self:SetUserPlaced(true)
-	end
-
-	--rewrite the oneletter shortcuts
-
-	  if adjustOneletterAbbrev then
-	    HOUR_ONELETTER_ABBR = "%dh"
-	    DAY_ONELETTER_ABBR = "%dd"
-	    MINUTE_ONELETTER_ABBR = "%dm"
-	    SECOND_ONELETTER_ABBR = "%ds"
-	  end
-
-	--classcolor
-
-	  local classColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
-
-	--backdrop debuff
-
-	  local backdropDebuff = {
-	    bgFile = nil,
-	    edgeFile = debuffFrame.background.edgeFile,
-	    tile = false,
-	    tileSize = 32,
-	    edgeSize = debuffFrame.background.inset,
-	    insets = {
-	      left = debuffFrame.background.inset,
-	      right = debuffFrame.background.inset,
-	      top = debuffFrame.background.inset,
-	      bottom = debuffFrame.background.inset,
-	    },
-	  }
-
-	--backdrop buff
-
-	  local backdropBuff = {
-	    bgFile = nil,
-	    edgeFile = buffFrame.background.edgeFile,
-	    tile = false,
-	    tileSize = 32,
-	    edgeSize = buffFrame.background.inset,
-	    insets = {
-	      left = buffFrame.background.inset,
-	      right = buffFrame.background.inset,
-	      top = buffFrame.background.inset,
-	      bottom = buffFrame.background.inset,
-	    },
-	  }
-
-	  local ceil, min, max = ceil, min, max
-	  local ShouldShowConsolidatedBuffFrame = ShouldShowConsolidatedBuffFrame
-	  
-	  local buffFrameHeight = 0
-
-	--apply aura frame texture func
-
-	  local function applySkin(b)
-	    if not b or (b and b.styled) then return end
-
-	    local name = b:GetName()
-
-	    local tempenchant, consolidated, debuff, buff = false, false, false, false
-	    if (name:match("TempEnchant")) then
-	      tempenchant = true
-	    elseif (name:match("Consolidated")) then
-	      consolidated = true
-	    elseif (name:match("Debuff")) then
-	      debuff = true
-	    else
-	      buff = true
-	    end
-
-	    local cfg, backdrop
-	    if debuff then
-	      cfg = debuffFrame
-	      backdrop = backdropDebuff
-	    else
-	      cfg = buffFrame
-	      backdrop = backdropBuff
-	    end
-
-	--check class coloring options
-
-	    --button
-	    b:SetSize(buffFrame.button.size, buffFrame.button.size)
-
-	    --icon
-	    local icon = _G[name.."Icon"]
-	    if consolidated then
-	    if select(1,UnitFactionGroup("player")) == "Alliance" then  
-	        icon:SetTexture(select(3,GetSpellInfo(61573)))
-	    elseif select(1,UnitFactionGroup("player")) == "Horde" then
-	    icon:SetTexture(select(3,GetSpellInfo(61574)))
-	    end
-	    end
-	    icon:SetTexCoord(0.1,0.9,0.1,0.9)
-	    icon:ClearAllPoints()
-	    icon:SetPoint("TOPLEFT", b, "TOPLEFT", -buffFrame.icon.padding, buffFrame.icon.padding)
-	    icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", buffFrame.icon.padding, -buffFrame.icon.padding)
-	    icon:SetDrawLayer("BACKGROUND",-8)
-	    b.icon = icon
-
-	    --border
-	    local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-	    border:SetTexture(border.texture)
-	    border:SetTexCoord(0,1,0,1)
-	    border:SetDrawLayer("BACKGROUND",-7)
-	    if tempenchant then
-	      border:SetVertexColor(0.7,0,1)
-	    elseif not debuff then
-	      border:SetVertexColor(buffFrame.border.color.r,buffFrame.border.color.g,buffFrame.border.color.b)
-	    end
-	    border:ClearAllPoints()
-	    border:SetAllPoints(b)
-	    b.border = border
-
-	    --duration
-	    b.duration:SetFont(buffFrame.duration.font, buffFrame.duration.size, "THINOUTLINE")
-	    b.duration:ClearAllPoints()
-	    b.duration:SetPoint(buffFrame.duration.pos.a1,buffFrame.duration.pos.x,buffFrame.duration.pos.y)
-
-	    --count
-	    b.count:SetFont(buffFrame.count.font, buffFrame.count.size, "THINOUTLINE")
-	    b.count:ClearAllPoints()
-	    b.count:SetPoint(buffFrame.count.pos.a1,buffFrame.count.pos.x,buffFrame.count.pos.y)
-
-	    --shadow
-	    if not buffFrame.background.show then
-	      local back = CreateFrame("Frame", nil, b)
-	      back:SetPoint("TOPLEFT", b, "TOPLEFT", -buffFrame.background.padding, buffFrame.background.padding)
-	      back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", buffFrame.background.padding, -buffFrame.background.padding)
-	      back:SetFrameLevel(b:GetFrameLevel() - 1)
-	      back:SetBackdrop(backdrop)
-	      back:SetBackdropBorderColor(buffFrame.background.color.r,buffFrame.background.color.g,buffFrame.background.color.b,buffFrame.background.color.a)
-	      b.bg = back
-	    end
-
-	    --set button styled variable
-	    b.styled = true
-	    end
-
-	--update debuff anchors
-
-	  local function updateDebuffAnchors(buttonName,index)
-	    local button = _G[buttonName..index]
-	    if not button then return end
-	    --apply skin
-	    if not button.styled then applySkin(button) end
-	    --position button
-	    button:ClearAllPoints()
-	    if index == 1 then
-	        --debuffs and buffs are not combined anchor the debuffs to its own frame
-	        button:SetPoint("TOPRIGHT", rBFS_DebuffDragFrame, "TOPRIGHT", 0, -60)      
-	    elseif index > 1 and mod(index, debuffFrame.buttonsPerRow) == 1 then
-	      button:SetPoint("TOPRIGHT", _G[buttonName..(index-debuffFrame.buttonsPerRow)], "BOTTOMRIGHT", 0, -debuffFrame.rowSpacing)
-	    else
-	      button:SetPoint("TOPRIGHT", _G[buttonName..(index-1)], "TOPLEFT", -debuffFrame.colSpacing, 0)
-	    end
-	  end
-
-	--update buff anchors
-
-	  local function updateAllBuffAnchors()
-	    --variables
-	    local buttonName  = "BuffButton"
-	    local numEnchants = BuffFrame.numEnchants
-	    local numBuffs    = BUFF_ACTUAL_DISPLAY
-	    local offset      = numEnchants
-	    local realIndex, previousButton, aboveButton
-
-	      TempEnchant1:ClearAllPoints()
-	      TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0)
-	    
-	    --calculate the previous button in case tempenchant or consolidated buff are loaded
-	    if BuffFrame.numEnchants > 0 then
-	      previousButton = _G["TempEnchant"..numEnchants]
-	    end
-
-	    if numEnchants > 0 then
-	      aboveButton = TempEnchant1
-	    end
-
-	    --loop on all active buff buttons
-	    local buffCounter = 0
-	    for index = 1, numBuffs do
-	      local button = _G[buttonName..index]
-	      if not button then return end
-	      if not button.consolidated then
-	        buffCounter = buffCounter + 1
-	        --apply skin
-	        if not button.styled then applySkin(button) end
-	        --position button
-	        button:ClearAllPoints()
-	        realIndex = buffCounter+offset
-	        if realIndex == 1 then
-	          button:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0)
-	          aboveButton = button
-	        elseif realIndex > 1 and mod(realIndex, buffFrame.buttonsPerRow) == 1 then
-	          button:SetPoint("TOPRIGHT", aboveButton, "BOTTOMRIGHT", 0, -buffFrame.rowSpacing)
-	          aboveButton = button
-	        else
-	          button:SetPoint("TOPRIGHT", previousButton, "TOPLEFT", -buffFrame.colSpacing, 0)
-	        end
-	        previousButton = button
-	        
-	      end
-	    end
-	    --calculate the height of the buff rows for the debuff frame calculation later
-	    local rows = ceil((buffCounter+offset)/buffFrame.buttonsPerRow)
-	    local height = buffFrame.button.size*rows + buffFrame.rowSpacing*rows + buffFrame.gap*min(1,rows)
-	    buffFrameHeight = height
-	  end
-
-	--buff drag frame
-
-	  local bf = CreateFrame("Frame", "rBFS_BuffDragFrame", UIParent)
-	  bf:SetSize(buffFrame.button.size,buffFrame.button.size)
-	  bf:SetPoint(buffFrame.pos.a1,buffFrame.pos.af,buffFrame.pos.a2,buffFrame.pos.x,buffFrame.pos.y)
-	  if buffFrame.userplaced then
-	    rCreateDragFrame(bf, dragFrameList, -2 , true) --frame, dragFrameList, inset, clamp
-	  end
-
-	--debuff drag frame
-
-	    local df = CreateFrame("Frame", "rBFS_DebuffDragFrame", UIParent)
-	    df:SetSize(debuffFrame.button.size,debuffFrame.button.size)
-	    df:SetPoint(debuffFrame.pos.a1,debuffFrame.pos.af,debuffFrame.pos.a2,debuffFrame.pos.x,debuffFrame.pos.y)
-	    if debuffFrame.userplaced then
-	      rCreateDragFrame(df, dragFrameList, -2 , true) --frame, dragFrameList, inset, clamp
-	    end
-
-	  --temp enchant stuff
-	  applySkin(TempEnchant1)
-	  applySkin(TempEnchant2)
-	  applySkin(TempEnchant3)
-
-	  --position the temp enchant buttons
-	  TempEnchant1:ClearAllPoints()
-	  TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0) --button will be repositioned later in case temp enchant and consolidated buffs are both available
-	  TempEnchant2:ClearAllPoints()
-	  TempEnchant2:SetPoint("TOPRIGHT", TempEnchant1, "TOPLEFT", -buffFrame.colSpacing, 0)
-	  TempEnchant3:ClearAllPoints()
-	  TempEnchant3:SetPoint("TOPRIGHT", TempEnchant2, "TOPLEFT", -buffFrame.colSpacing, 0)
-	  
-	  --hook Blizzard functions
-	  hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
-	  hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
 end
 
 function Interface:ItemLevel()
