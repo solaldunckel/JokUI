@@ -472,25 +472,27 @@ function RaidFrames:Misc()
 
 	if CompactRaidFrameContainer.groupMode == "flush" then
 
-		hooksecurefunc("CompactUnitFrame_UpdateAll",function(f) 
-			for _,d in pairs(f.debuffFrames) do 
-				d.baseSize = RaidFrames.settings.debuffscale
-			end 
-			for _,d in pairs(f.buffFrames) do
-				d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale)
-			end 
-		end)
+	-- 	hooksecurefunc("CompactUnitFrame_UpdateAll",function(f) 
+	-- 		for _,d in pairs(f.debuffFrames) do 
+	-- 			d.baseSize = RaidFrames.settings.debuffscale
+	-- 		end 
+	-- 	end)
+	-- 	hooksecurefunc("CompactUnitFrame_UpdateAll",function(f) 
+	-- 		for _,d in pairs(f.buffFrames) do
+	-- 			d:SetSize(RaidFrames.settings.buffscale,RaidFrames.settings.buffscale)
+	-- 		end 
+	-- 	end)	
 
-	else
+	-- else
 
-		hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
-			for _,d in pairs(f.debuffFrames) do 
-				d.baseSize = RaidFrames.settings.debuffscale-3
-			end 
-			for _,d in pairs(f.buffFrames) do 
-				d:SetSize(RaidFrames.settings.buffscale-3,RaidFrames.settings.buffscale-3) 
-			end 
-		end)
+	-- 	hooksecurefunc("DefaultCompactUnitFrameSetup",function(f) 
+	-- 		for _,d in pairs(f.debuffFrames) do 
+	-- 			d.baseSize = RaidFrames.settings.debuffscale-3
+	-- 		end 
+	-- 		for _,d in pairs(f.buffFrames) do 
+	-- 			d:SetSize(RaidFrames.settings.buffscale-3,RaidFrames.settings.buffscale-3) 
+	-- 		end 
+	-- 	end)
 
 	end
 

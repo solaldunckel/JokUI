@@ -457,11 +457,16 @@ function Nameplates:OnInitialize()
     SetCVar("nameplateShowAll", 1)
 
     if self.settings.enable then
-        -- SetCVar("nameplateGlobalScale", val)
-        -- SetCVar("nameplateTargetScale", val)
-        -- SetCVar("nameplateImportantScale", val)
-        -- SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
-        -- SetCVar("nameplateMotion", Nameplates.settings.overlap)
+        SetCVar("nameplateGlobalScale", Nameplates.settings.globalScale)
+        SetCVar("nameplateSelectedScale", Nameplates.settings.targetScale)
+        SetCVar("nameplateLargerScale", Nameplates.settings.importantScale)
+        SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
+        SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)
+        SetCVar("nameplateHorizontalScale", Nameplates.settings.healthWidth)        
+        SetCVar("nameplateMotion", Nameplates.settings.overlap)
+
+        SetCVar("NameplatePersonalShowAlways", 0)
+        SetCVar("NameplatePersonalShowInCombat", 0)
     end
 end
 
@@ -545,7 +550,7 @@ function Nameplates:Core()
     local z = CreateFrame("FRAME")
     z:RegisterEvent("PLAYER_ENTERING_WORLD")
     z:SetScript("OnEvent", function()
-        NamePlateTargetResourceFrame:SetScale(0.75)
+        NamePlateTargetResourceFrame:SetScale(0.8)
         local _, type = IsInInstance()
         if type == "party" or type == "raid" then
             NameplateTaint = true
@@ -695,8 +700,11 @@ function Nameplates:Core()
 
     -- Friendly Nameplates stacking fix
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
-        if (not InCombatLockdown()) then
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
+        local _, type = IsInInstance()
+        if (not InCombatLockdown()) and type == "party" or type == "raid" then
+            C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
+        else
+            C_NamePlate.SetNamePlateFriendlySize(80, 15)
         end
     end
 
@@ -722,8 +730,8 @@ function Nameplates:Core()
 
             -- Castbar.
 
-        -- frame.castBar:SetHeight(8)
-        -- frame.castBar:SetStatusBarTexture(statusBar)
+        frame.castBar:SetHeight(9)
+        frame.castBar:SetStatusBarTexture(statusBar)
         -- frame.castBar.BorderShield:Hide()
         -- frame.castBar.BorderShield:ClearAllPoints()       
         frame.castBar.Text:SetShadowOffset(.5, -.5)

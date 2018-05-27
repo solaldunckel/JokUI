@@ -256,11 +256,12 @@ end
 
 function Interface:UnitFrames()
 	local unit = {}
-	local AURA_START_X = 6;
-	local AURA_START_Y = 28;
-	local AURA_OFFSET_Y = 3;
-	local LARGE_AURA_SIZE = 23
-	local SMALL_AURA_SIZE = 21
+	local AURA_START_X = 5;
+	local AURA_START_Y = 30;
+	local AURA_OFFSET_Y = 2;
+	local AURA_OFFSET_X = 0;
+	local LARGE_AURA_SIZE = 20
+	local SMALL_AURA_SIZE = 18
 	local AURA_ROW_WIDTH = 122;
 
 	local function ClassColor(statusbar, unit)
@@ -718,43 +719,43 @@ function Interface:UnitFrames()
 
 	--apply aura frame texture func
 
-    local function applySkin(b)
-	if not b or (b and b.styled) then return end
-	--button name
-	local name = b:GetName()
-	if (name:match("Debuff")) then
-		b.debuff = true
-   	else
-   		b.buff = true
-	end
-	--icon
-	local icon = _G[name.."Icon"]
-	icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-	icon:SetDrawLayer("BACKGROUND",-8)
-	b.icon = icon
-	--border
-	local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-	border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
-	border:SetTexCoord(0, 1, 0, 1)
-	border:SetDrawLayer("BACKGROUND",- 7)
-	if b.buff then
-		border:SetVertexColor(0.4, 0.35, 0.35)
-	end
-	border:ClearAllPoints()
-	border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
-	border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
-	b.border = border
-	--shadow
-	local back = CreateFrame("Frame", nil, b)
-	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-	back:SetFrameLevel(b:GetFrameLevel() - 1)
-	back:SetBackdrop(backdrop)
-	back:SetBackdropBorderColor(0, 0, 0, 0.9)
-	b.bg = back
-	--set button styled variable
-	b.styled = true
-    end
+ --    local function applySkin(b)
+	-- if not b or (b and b.styled) then return end
+	-- --button name
+	-- local name = b:GetName()
+	-- if (name:match("Debuff")) then
+	-- 	b.debuff = true
+ --   	else
+ --   		b.buff = true
+	-- end
+	-- --icon
+	-- local icon = _G[name.."Icon"]
+	-- icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+	-- icon:SetDrawLayer("BACKGROUND",-8)
+	-- b.icon = icon
+	-- --border
+	-- local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
+	-- border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
+	-- border:SetTexCoord(0, 1, 0, 1)
+	-- border:SetDrawLayer("BACKGROUND",- 7)
+	-- if b.buff then
+	-- 	border:SetVertexColor(0.4, 0.35, 0.35)
+	-- end
+	-- border:ClearAllPoints()
+	-- border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
+	-- border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
+	-- b.border = border
+	-- --shadow
+	-- local back = CreateFrame("Frame", nil, b)
+	-- back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+	-- back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+	-- back:SetFrameLevel(b:GetFrameLevel() - 1)
+	-- back:SetBackdrop(backdrop)
+	-- back:SetBackdropBorderColor(0, 0, 0, 0.9)
+	-- b.bg = back
+	-- --set button styled variable
+	-- b.styled = true
+ --    end
 
 	--apply castbar texture
 
@@ -812,24 +813,24 @@ function Interface:UnitFrames()
 	end
     end
   
-    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
-	for i = 1, MAX_TARGET_BUFFS do
-		b = _G["TargetFrameBuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_DEBUFFS do
-		b = _G["TargetFrameDebuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_BUFFS do
-		b = _G["FocusFrameBuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_DEBUFFS do
-		b = _G["FocusFrameDebuff"..i]
-		applySkin(b)
-	end
-    end)
+ --    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
+	-- for i = 1, MAX_TARGET_BUFFS do
+	-- 	b = _G["TargetFrameBuff"..i]
+	-- 	applySkin(b)
+	-- end
+	-- for i = 1, MAX_TARGET_DEBUFFS do
+	-- 	b = _G["TargetFrameDebuff"..i]
+	-- 	applySkin(b)
+	-- end
+	-- for i = 1, MAX_TARGET_BUFFS do
+	-- 	b = _G["FocusFrameBuff"..i]
+	-- 	applySkin(b)
+	-- end
+	-- for i = 1, MAX_TARGET_DEBUFFS do
+	-- 	b = _G["FocusFrameDebuff"..i]
+	-- 	applySkin(b)
+	-- end
+ --    end)
 
     total = 0
     cf = CreateFrame("Frame")
@@ -1565,6 +1566,7 @@ function Interface:Colors()
 		_G["PartyMemberFrame"..i.."NotPresentIcon"]:Hide()
 		_G["PartyMemberFrame"..i.."NotPresentIcon"].Show = function() end
 	end
+
 	PlayerFrameGroupIndicator:SetAlpha(0)
 	PlayerHitIndicator:SetText(nil) 
 	PlayerHitIndicator.SetText = function() end
