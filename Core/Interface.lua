@@ -256,13 +256,13 @@ end
 
 function Interface:UnitFrames()
 	local unit = {}
-	local AURA_START_X = 5;
+	local AURA_START_X = 6;
 	local AURA_START_Y = 30;
-	local AURA_OFFSET_Y = 2;
-	local AURA_OFFSET_X = 0;
-	local LARGE_AURA_SIZE = 20
-	local SMALL_AURA_SIZE = 18
-	local AURA_ROW_WIDTH = 122;
+	local AURA_OFFSET_Y = 4;
+	local AURA_OFFSET_X = 4;
+	local LARGE_AURA_SIZE = 19
+	local SMALL_AURA_SIZE = 17
+	local AURA_ROW_WIDTH = 110;
 
 	local function ClassColor(statusbar, unit)
 			local _, class, c
@@ -560,7 +560,9 @@ function Interface:UnitFrames()
 	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
 		local size
 		local offsetY = AURA_OFFSET_Y
+		local offsetX = AURA_OFFSET_X
 		local rowWidth = 0
+		local maxRowWidth = AURA_ROW_WIDTH
 		local firstBuffOnRow = 1
 		for i=1, numAuras do
 			if ( largeAuraList[i] ) then
@@ -717,23 +719,23 @@ function Interface:UnitFrames()
 	},
     }
 
-	--apply aura frame texture func
+	-- apply aura frame texture func
 
- --    local function applySkin(b)
-	-- if not b or (b and b.styled) then return end
-	-- --button name
-	-- local name = b:GetName()
-	-- if (name:match("Debuff")) then
-	-- 	b.debuff = true
- --   	else
- --   		b.buff = true
-	-- end
-	-- --icon
-	-- local icon = _G[name.."Icon"]
-	-- icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-	-- icon:SetDrawLayer("BACKGROUND",-8)
-	-- b.icon = icon
-	-- --border
+    local function applySkin(b)
+	if not b or (b and b.styled) then return end
+	--button name
+	local name = b:GetName()
+	if (name:match("Debuff")) then
+		b.debuff = true
+   	else
+   		b.buff = true
+	end
+	--icon
+	local icon = _G[name.."Icon"]
+	icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+	icon:SetDrawLayer("BACKGROUND",-8)
+	b.icon = icon
+	--border
 	-- local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
 	-- border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
 	-- border:SetTexCoord(0, 1, 0, 1)
@@ -745,17 +747,17 @@ function Interface:UnitFrames()
 	-- border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
 	-- border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
 	-- b.border = border
-	-- --shadow
-	-- local back = CreateFrame("Frame", nil, b)
-	-- back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-	-- back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-	-- back:SetFrameLevel(b:GetFrameLevel() - 1)
-	-- back:SetBackdrop(backdrop)
-	-- back:SetBackdropBorderColor(0, 0, 0, 0.9)
-	-- b.bg = back
-	-- --set button styled variable
-	-- b.styled = true
- --    end
+	--shadow
+	local back = CreateFrame("Frame", nil, b)
+	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+	back:SetFrameLevel(b:GetFrameLevel() - 1)
+	back:SetBackdrop(backdrop)
+	back:SetBackdropBorderColor(0, 0, 0, 0.9)
+	b.bg = back
+	--set button styled variable
+	b.styled = true
+    end
 
 	--apply castbar texture
 
@@ -813,24 +815,24 @@ function Interface:UnitFrames()
 	end
     end
   
- --    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
-	-- for i = 1, MAX_TARGET_BUFFS do
-	-- 	b = _G["TargetFrameBuff"..i]
-	-- 	applySkin(b)
-	-- end
-	-- for i = 1, MAX_TARGET_DEBUFFS do
-	-- 	b = _G["TargetFrameDebuff"..i]
-	-- 	applySkin(b)
-	-- end
-	-- for i = 1, MAX_TARGET_BUFFS do
-	-- 	b = _G["FocusFrameBuff"..i]
-	-- 	applySkin(b)
-	-- end
-	-- for i = 1, MAX_TARGET_DEBUFFS do
-	-- 	b = _G["FocusFrameDebuff"..i]
-	-- 	applySkin(b)
-	-- end
- --    end)
+    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
+	for i = 1, MAX_TARGET_BUFFS do
+		b = _G["TargetFrameBuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_DEBUFFS do
+		b = _G["TargetFrameDebuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_BUFFS do
+		b = _G["FocusFrameBuff"..i]
+		applySkin(b)
+	end
+	for i = 1, MAX_TARGET_DEBUFFS do
+		b = _G["FocusFrameDebuff"..i]
+		applySkin(b)
+	end
+    end)
 
     total = 0
     cf = CreateFrame("Frame")
@@ -1369,6 +1371,13 @@ function Interface:Colors()
 					end
 				end
 			end
+			-- Groups Title
+			local group = _G["CompactRaidGroup"..g.."Title"]
+			if group then
+				for _, region in pairs({group:GetRegions()}) do
+					region:SetText(g)
+				end
+			end
 			for m = 1, 5 do
 				local frame = _G["CompactRaidGroup"..g.."Member"..m]
 				if frame then
@@ -1401,6 +1410,7 @@ function Interface:Colors()
 		ColorRaid()
 		CF:SetScript("OnUpdate", function()
 			if CompactRaidGroup1 and not groupcolored == true then
+				print("test1")
 				ColorRaid()
 			end
 			if CompactRaidFrame1 and not singlecolored == true then

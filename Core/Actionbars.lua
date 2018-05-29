@@ -208,8 +208,8 @@ end
     ic:SetPoint("TOPLEFT", bu, "TOPLEFT", 2, -2)
     ic:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -2, 2)
     --adjust the cooldown frame
-    cd:SetPoint("TOPLEFT", bu, "TOPLEFT", cooldown.spacing, -cooldown.spacing)
-    cd:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -cooldown.spacing, cooldown.spacing)
+    cd:SetPoint("TOPLEFT", bu, "TOPLEFT", 0, 0)
+    cd:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", 0, 0)
     --apply the normaltexture
     if action and  IsEquippedAction(action) then
       --bu:SetNormalTexture(textures.equipped)
