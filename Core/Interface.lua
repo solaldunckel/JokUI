@@ -13,10 +13,10 @@ font = STANDARD_TEXT_FONT
 	-- buff frame settings
 
 buffFrame = {
-    pos                 = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = 0 },
+    pos                 = { a1 = "TOPRIGHT", af = "MinimapCluster", a2 = "TOPLEFT", x = 0, y = -20 },
     gap                 = 30, --gap between buff and debuff rows
     userplaced          = true, --want to place the bar somewhere else?
-    rowSpacing          = 10,
+    rowSpacing          = 12,
     colSpacing          = 7,
     buttonsPerRow       = 10,
     button = {
@@ -58,7 +58,7 @@ buffFrame = {
 -- debuff frame settings
 
 debuffFrame = {    
-	pos             = { a1 = "TOPRIGHT", af = "Minimap", a2 = "TOPLEFT", x = -40, y = -85 },
+	pos             = { a1 = "TOPRIGHT", af = "MinimapCluster", a2 = "TOPLEFT", x = 0, y = -105 },
     gap                 = 10, --gap between buff and debuff rows
     userplaced          = true, --want to place the bar somewhere else?
     rowSpacing          = 10,
@@ -257,71 +257,71 @@ end
 function Interface:UnitFrames()
 	local unit = {}
 	local AURA_START_X = 6;
-	local AURA_START_Y = 30;
-	local AURA_OFFSET_Y = 4;
+	local AURA_START_Y = 28;
+	local AURA_OFFSET_Y = 3;
 	local AURA_OFFSET_X = 4;
-	local LARGE_AURA_SIZE = 19
-	local SMALL_AURA_SIZE = 17
+	local LARGE_AURA_SIZE = 18
+	local SMALL_AURA_SIZE = 18
 	local AURA_ROW_WIDTH = 110;
 
 	local function ClassColor(statusbar, unit)
-			local _, class, c
-			if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
-					_, class = UnitClass(unit);
-					c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class];
-					statusbar:SetStatusBarColor(c.r, c.g, c.b);
-			end
-			if not UnitIsPlayer("target") then
-				color = FACTION_BAR_COLORS[UnitReaction("target", "player")]
-				if ( not UnitPlayerControlled("target") and UnitIsTapDenied("target") ) then
-					TargetFrameHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
-				else
-					if color then
-						TargetFrameHealthBar:SetStatusBarColor(color.r, color.g, color.b)
-						TargetFrameHealthBar.lockColor = true
-					end
-				end
-			end
-			if not UnitIsPlayer("focus") then
-				color = FACTION_BAR_COLORS[UnitReaction("focus", "player")]
-				if ( not UnitPlayerControlled("focus") and UnitIsTapDenied("focus") ) then
-					FocusFrameHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
-				else
-					if color then
-						FocusFrameHealthBar:SetStatusBarColor(color.r, color.g, color.b)
-						FocusFrameHealthBar.lockColor = true
-					end
-				end
-			end
-			if not UnitIsPlayer("targettarget") then
-				color = FACTION_BAR_COLORS[UnitReaction("targettarget", "player")]
-				if ( not UnitPlayerControlled("targettarget") and UnitIsTapDenied("targettarget") ) then
-					TargetFrameToTHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
-				else
-					if color then
-						TargetFrameToTHealthBar:SetStatusBarColor(color.r, color.g, color.b)
-						TargetFrameToTHealthBar.lockColor = true
-					end
-				end
-			end
-			if not UnitIsPlayer("focustarget") then
-				color = FACTION_BAR_COLORS[UnitReaction("focustarget", "player")]
-				if ( not UnitPlayerControlled("focustarget") and UnitIsTapDenied("focustarget") ) then
-					FocusFrameToTHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
-				else
-					if color then
-						FocusFrameToTHealthBar:SetStatusBarColor(color.r, color.g, color.b)
-						FocusFrameToTHealthBar.lockColor = true
-					end
+		local _, class, c
+		if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
+				_, class = UnitClass(unit);
+				c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class];
+				statusbar:SetStatusBarColor(c.r, c.g, c.b);
+		end
+		if not UnitIsPlayer("target") then
+			color = FACTION_BAR_COLORS[UnitReaction("target", "player")]
+			if ( not UnitPlayerControlled("target") and UnitIsTapDenied("target") ) then
+				TargetFrameHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
+			else
+				if color then
+					TargetFrameHealthBar:SetStatusBarColor(color.r, color.g, color.b)
+					TargetFrameHealthBar.lockColor = true
 				end
 			end
 		end
-		hooksecurefunc("UnitFrameHealthBar_Update", ClassColor)
-		hooksecurefunc("HealthBar_OnValueChanged", function(self)
-			ClassColor(self, self.unit)
-		end)
+		if not UnitIsPlayer("focus") then
+			color = FACTION_BAR_COLORS[UnitReaction("focus", "player")]
+			if ( not UnitPlayerControlled("focus") and UnitIsTapDenied("focus") ) then
+				FocusFrameHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
+			else
+				if color then
+					FocusFrameHealthBar:SetStatusBarColor(color.r, color.g, color.b)
+					FocusFrameHealthBar.lockColor = true
+				end
+			end
+		end
+		if not UnitIsPlayer("targettarget") then
+			color = FACTION_BAR_COLORS[UnitReaction("targettarget", "player")]
+			if ( not UnitPlayerControlled("targettarget") and UnitIsTapDenied("targettarget") ) then
+				TargetFrameToTHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
+			else
+				if color then
+					TargetFrameToTHealthBar:SetStatusBarColor(color.r, color.g, color.b)
+					TargetFrameToTHealthBar.lockColor = true
+				end
+			end
+		end
+		if not UnitIsPlayer("focustarget") then
+			color = FACTION_BAR_COLORS[UnitReaction("focustarget", "player")]
+			if ( not UnitPlayerControlled("focustarget") and UnitIsTapDenied("focustarget") ) then
+				FocusFrameToTHealthBar:SetStatusBarColor(0.5, 0.5, 0.5)
+			else
+				if color then
+					FocusFrameToTHealthBar:SetStatusBarColor(color.r, color.g, color.b)
+					FocusFrameToTHealthBar.lockColor = true
+				end
+			end
+		end
+	end
+	hooksecurefunc("UnitFrameHealthBar_Update", ClassColor)
+	hooksecurefunc("HealthBar_OnValueChanged", function(self)
+		ClassColor(self, self.unit)
+	end)
 
-		function unit_ToVehicleArt(self, vehicleType)
+	function unit_ToVehicleArt(self, vehicleType)
 		
 		PlayerFrame.state = "vehicle";
 
@@ -722,57 +722,57 @@ function Interface:UnitFrames()
 	-- apply aura frame texture func
 
     local function applySkin(b)
-	if not b or (b and b.styled) then return end
-	--button name
-	local name = b:GetName()
-	if (name:match("Debuff")) then
-		b.debuff = true
-   	else
-   		b.buff = true
-	end
-	--icon
-	local icon = _G[name.."Icon"]
-	icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-	icon:SetDrawLayer("BACKGROUND",-8)
-	b.icon = icon
-	--border
-	-- local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-	-- border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
-	-- border:SetTexCoord(0, 1, 0, 1)
-	-- border:SetDrawLayer("BACKGROUND",- 7)
-	-- if b.buff then
-	-- 	border:SetVertexColor(0.4, 0.35, 0.35)
-	-- end
-	-- border:ClearAllPoints()
-	-- border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
-	-- border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
-	-- b.border = border
-	--shadow
-	local back = CreateFrame("Frame", nil, b)
-	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-	back:SetFrameLevel(b:GetFrameLevel() - 1)
-	back:SetBackdrop(backdrop)
-	back:SetBackdropBorderColor(0, 0, 0, 0.9)
-	b.bg = back
-	--set button styled variable
-	b.styled = true
+		if not b or (b and b.styled) then return end
+		--button name
+		local name = b:GetName()
+		if (name:match("Debuff")) then
+			b.debuff = true
+	   	else
+	   		b.buff = true
+		end
+		--icon
+		local icon = _G[name.."Icon"]
+		icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+		icon:SetDrawLayer("BACKGROUND",-8)
+		b.icon = icon
+		--border
+		-- local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
+		-- border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
+		-- border:SetTexCoord(0, 1, 0, 1)
+		-- border:SetDrawLayer("BACKGROUND",- 7)
+		-- if b.buff then
+		-- 	border:SetVertexColor(0.4, 0.35, 0.35)
+		-- end
+		-- border:ClearAllPoints()
+		-- border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
+		-- border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
+		-- b.border = border
+		--shadow
+		local back = CreateFrame("Frame", nil, b)
+		back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+		back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+		back:SetFrameLevel(b:GetFrameLevel() - 1)
+		back:SetBackdrop(backdrop)
+		back:SetBackdropBorderColor(0, 0, 0, 0.9)
+		b.bg = back
+		--set button styled variable
+		b.styled = true
     end
 
 	--apply castbar texture
 
     local function applycastSkin(b)
-	if not b or (b and b.styled) then return end
-	-- parent
-	if b == CastingBarFrame.Icon then
-		b.parent = CastingBarFrame
-	elseif b == FocusFrameSpellBar.Icon then
-		b.parent = FocusFrameSpellBar
-	else
-		b.parent = TargetFrameSpellBar
-	end
-	-- frame
-	frame = CreateFrame("Frame", nil, b.parent)
+		if not b or (b and b.styled) then return end
+		-- parent
+		if b == CastingBarFrame.Icon then
+			b.parent = CastingBarFrame
+		elseif b == FocusFrameSpellBar.Icon then
+			b.parent = FocusFrameSpellBar
+		else
+			b.parent = TargetFrameSpellBar
+		end
+		-- frame
+		frame = CreateFrame("Frame", nil, b.parent)
     	--icon
     	b:SetTexCoord(0.1, 0.9, 0.1, 0.9)
     	--border
@@ -785,53 +785,53 @@ function Interface:UnitFrames()
 	    border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
       	border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
     	b.border = border
-	--shadow
-	local back = CreateFrame("Frame", nil, b.parent)
-	back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-	back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-	back:SetFrameLevel(frame:GetFrameLevel() - 1)
-	back:SetBackdrop(backdrop)
-	back:SetBackdropBorderColor(0, 0, 0, 0.9)
-	b.bg = back
-	--set button styled variable
-	b.styled = true
+		--shadow
+		local back = CreateFrame("Frame", nil, b.parent)
+		back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+		back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+		back:SetFrameLevel(frame:GetFrameLevel() - 1)
+		back:SetBackdrop(backdrop)
+		back:SetBackdropBorderColor(0, 0, 0, 0.9)
+		b.bg = back
+		--set button styled variable
+		b.styled = true
     end
 
     -- setting timer for castbar icons
 
     function UpdateTimer(self, elapsed)
 	total = total + elapsed
-	if CastingBarFrame.Icon then
-		applycastSkin(CastingBarFrame.Icon)
-	end
-	if TargetFrameSpellBar.Icon then
-		applycastSkin(TargetFrameSpellBar.Icon)
-	end
-	if FocusFrameSpellBar.Icon then
-		applycastSkin(FocusFrameSpellBar.Icon)
-	end
-	if CastingBarFrame.Icon.styled and TargetFrameSpellBar.Icon.styled then
-		cf:SetScript("OnUpdate", nil)
-	end
+		if CastingBarFrame.Icon then
+			applycastSkin(CastingBarFrame.Icon)
+		end
+		if TargetFrameSpellBar.Icon then
+			applycastSkin(TargetFrameSpellBar.Icon)
+		end
+		if FocusFrameSpellBar.Icon then
+			applycastSkin(FocusFrameSpellBar.Icon)
+		end
+		if CastingBarFrame.Icon.styled and TargetFrameSpellBar.Icon.styled then
+			cf:SetScript("OnUpdate", nil)
+		end
     end
   
     hooksecurefunc("TargetFrame_UpdateAuras", function(self)
-	for i = 1, MAX_TARGET_BUFFS do
-		b = _G["TargetFrameBuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_DEBUFFS do
-		b = _G["TargetFrameDebuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_BUFFS do
-		b = _G["FocusFrameBuff"..i]
-		applySkin(b)
-	end
-	for i = 1, MAX_TARGET_DEBUFFS do
-		b = _G["FocusFrameDebuff"..i]
-		applySkin(b)
-	end
+		for i = 1, MAX_TARGET_BUFFS do
+			b = _G["TargetFrameBuff"..i]
+			applySkin(b)
+		end
+		for i = 1, MAX_TARGET_DEBUFFS do
+			b = _G["TargetFrameDebuff"..i]
+			applySkin(b)
+		end
+		for i = 1, MAX_TARGET_BUFFS do
+			b = _G["FocusFrameBuff"..i]
+			applySkin(b)
+		end
+		for i = 1, MAX_TARGET_DEBUFFS do
+			b = _G["FocusFrameDebuff"..i]
+			applySkin(b)
+		end
     end)
 
     total = 0
@@ -1410,7 +1410,6 @@ function Interface:Colors()
 		ColorRaid()
 		CF:SetScript("OnUpdate", function()
 			if CompactRaidGroup1 and not groupcolored == true then
-				print("test1")
 				ColorRaid()
 			end
 			if CompactRaidFrame1 and not singlecolored == true then
