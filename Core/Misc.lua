@@ -44,6 +44,8 @@ function Misc:OnInitialize()
 	self:HoverBind()
 	self:TooltipID()
 	self:SafeQueue()
+	self:Specialization()
+	self:EquipmentSets()
 end
 
 function Misc:OnEnable()
@@ -616,6 +618,293 @@ function Misc:ShowStats()
 		end
 	end)
 	StatsFrame:RegisterEvent("PLAYER_LOGIN")
+end
+
+function Misc:Specialization()
+	local menuList = {
+		{ text = SELECT_LOOT_SPECIALIZATION, isTitle = true, notCheckable = true },
+		{ notCheckable = true, func = function() SetLootSpecialization(0) end },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true }
+	}
+
+	local specList = {
+		{ text = SPECIALIZATION, isTitle = true, notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true }
+	}
+
+	local menuFrame = CreateFrame("Frame", "LootSpecializationDatatextClickMenu", SpecFrame, "UIDropDownMenuTemplate")
+	local format, join = string.format, string.join
+	local displayString = '';
+	local activeString = join("", "|cff00FF00" , ACTIVE_PETS, "|r")
+	local inactiveString = join("", "|cffFF0000", FACTION_INACTIVE, "|r")
+	local lastPanel, active
+	local lastUpdate = 0
+	local color = RAID_CLASS_COLORS[select(2, UnitClass("player"))].colorStr
+
+	local SpecFrame = CreateFrame('Frame', 'Spec', UIParent)
+	SpecFrame:SetPoint("TOPLEFT", LynStats, "TOPRIGHT", 25, -1)
+	SpecFrame:SetWidth(140)
+	SpecFrame:SetHeight(13)
+	SpecFrame:EnableMouse(true)
+
+	SpecFrame.text = SpecFrame:CreateFontString(nil, 'BACKGROUND')
+	SpecFrame.text:SetPoint("CENTER", SpecFrame)
+	SpecFrame.text:SetFont(font, 13, "OUTLINE")
+	SpecFrame.text:SetShadowOffset(1, -1)
+	SpecFrame.text:SetShadowColor(0, 0, 0)
+
+	local function update(self)		
+		local specIndex = GetSpecialization();
+		if not specIndex then
+			SpecFrame.text:SetText('N/A')
+			return
+		end
+
+		local talent, loot = '', 'N/A'
+		local i = GetSpecialization(false, false, active)
+		if i then
+			i = select(4, GetSpecializationInfo(i))
+			if(i) then
+				talent = format('|T%s:14:14:0:0:64:64:4:60:4:60|t', i)
+			end
+		end
+
+		local specialization = GetLootSpecialization()
+		if specialization == 0 then
+			local specIndex = GetSpecialization();
+
+			if specIndex then
+				local _, _, _, texture = GetSpecializationInfo(specIndex);
+				if texture then
+					loot = format('|T%s:14:14:0:0:64:64:4:60:4:60|t', texture)
+				end
+			end
+		else
+			local _, _, _, texture = GetSpecializationInfoByID(specialization);
+			if texture then
+				loot = format('|T%s:14:14:0:0:64:64:4:60:4:60|t', texture)
+			end
+		end
+
+		SpecFrame.text:SetFormattedText('%s: %s %s: %s', "|c"..color.."SPEC ", talent," - ".. " LOOT ", loot)		
+	end
+
+	SpecFrame:SetScript("OnEvent", function(self, event)
+		if (event=="PLAYER_LOOT_SPEC_UPDATED") or (event=="PLAYER_ENTERING_WORLD") or (event=="PLAYER_TALENT_UPDATE") then
+			self:SetScript("OnUpdate", update)
+		end
+	end)
+
+	SpecFrame:SetScript("OnMouseDown", function(self, button)
+		local specIndex = GetSpecialization();
+		if not specIndex then return end
+
+		if button == "LeftButton" then
+			GameTooltip:Hide()
+			if IsShiftKeyDown() then
+				ToggleTalentFrame(2)
+			else
+				for index = 1, 4 do
+					local id, name, _, texture = GetSpecializationInfo(index);
+					if ( id ) then
+						specList[index + 1].text = format('|T%s:14:14:0:0:64:64:4:60:4:60|t  %s', texture, name)
+						specList[index + 1].func = function() SetSpecialization(index) end
+					else
+						specList[index + 1] = nil
+					end
+				end
+				EasyMenu(specList, menuFrame, SpecFrame, -4, -7, "MENU", 2)
+				DropDownList1:SetScale(0.9)
+			end
+		elseif button == "RightButton" then
+
+			GameTooltip:Hide()
+			for index = 1, 4 do
+				local id, name, _, texture = GetSpecializationInfo(index);
+				if ( id ) then
+					menuList[index + 2].text = format('|T%s:14:14:0:0:64:64:4:60:4:60|t  %s', texture, name)
+					menuList[index + 2].func = function() SetLootSpecialization(id) end
+				else
+					menuList[index + 2] = nil
+				end
+			end
+
+			EasyMenu(menuList, menuFrame, SpecFrame, -4, -7, "MENU", 2)
+			DropDownList1:SetScale(0.9)
+		end	
+	end)
+
+	-- TargetFrame:SetScript("OnMouseDown", function(self, button)
+
+	-- 	if button == "LeftButton" and IsShiftKeyDown() then
+	-- 	end	
+	-- end)
+	
+	local function addonTooltip(self)
+		GameTooltip:ClearLines()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+
+		local specialization = GetLootSpecialization()
+		if specialization == 0 then
+			local specIndex = GetSpecialization();
+
+			if specIndex then
+				local _, name = GetSpecializationInfo(specIndex);
+				GameTooltip:AddLine(format('|cffFFFFFF%s:|r %s', SELECT_LOOT_SPECIALIZATION, format(LOOT_SPECIALIZATION_DEFAULT, name)))
+			end
+		else
+			local specID, name = GetSpecializationInfoByID(specialization);
+			if specID then
+				GameTooltip:AddLine(format('|cffFFFFFF%s:|r %s', SELECT_LOOT_SPECIALIZATION, name))
+			end
+		end
+
+		GameTooltip:AddLine(' ')
+		GameTooltip:AddLine("|cffFFFFFFLeft Click:|r Change Talent Specialization")
+		GameTooltip:AddLine("|cffFFFFFFRight Click:|r Change Loot Specialization")
+		GameTooltip:AddLine("|cffFFFFFFMAJ + Left Click:|r Show Talent Panel")
+
+		GameTooltip:Show()
+	end
+
+	SpecFrame:SetScript("OnEnter", function()
+		addonTooltip(SpecFrame)
+	end)
+	SpecFrame:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
+	SpecFrame:RegisterEvent("PLAYER_LOOT_SPEC_UPDATED")
+	SpecFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+	SpecFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+end
+
+function Misc:EquipmentSets()
+	UIDROPDOWNMENU_BORDER_HEIGHT = 12;
+	UIDROPDOWNMENU_BUTTON_HEIGHT = 18;
+	local menuList = {
+		{ text = "Equipment Sets\n\n", isTitle = true, notCheckable = true, justifyH = "CENTER"  },
+		{ notCheckable = true, func = function() C_EquipmentSet.UseEquipmentSet(0) end },
+		{ notCheckable = true, minWidth = 100},
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true },
+		{ notCheckable = true }
+	}
+
+	local menuFrame = CreateFrame("Frame", "SetManagerDatatextClickMenu", SetFrame, "UIDropDownMenuTemplate")
+	local color = RAID_CLASS_COLORS[select(2, UnitClass("player"))].colorStr
+
+	local SetFrame = CreateFrame('Frame', nil, UIParent)
+	SetFrame:SetPoint("TOPLEFT", Spec, "TOPRIGHT", 28, 0)
+	SetFrame:SetWidth(140)
+	SetFrame:SetHeight(14)
+	SetFrame:EnableMouse(true)
+
+	SetFrame.text = SetFrame:CreateFontString(nil, 'BACKGROUND')
+	SetFrame.text:SetPoint("CENTER", SetFrame)
+	SetFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+	SetFrame.text:SetShadowOffset(1, -1)
+	SetFrame.text:SetShadowColor(0, 0, 0)
+
+	local function update(self)		
+		local equipmentSetIDs = C_EquipmentSet.GetEquipmentSetIDs()
+		for i = 1, C_EquipmentSet.GetNumEquipmentSets() do
+			local name, icon, _, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(equipmentSetIDs[i]);
+			if isEquipped then
+				equippedIcon = '|T'..icon..':21:21:0:0:64:64:4:60:4:60|t'
+				equippedName = name
+			end
+		end	
+		if equippedName then
+			SetFrame.text:SetFormattedText('%s %s %s', "|c"..color.."SET :|r", equippedIcon, "|r|cfff4c300"..equippedName)
+			SetFrame:SetWidth(SetFrame.text:GetStringWidth())
+		else
+			SetFrame.text:SetFormattedText('%s', "|c"..color.."SET : |r|cfff4c300 N/A")
+			SetFrame:SetWidth(SetFrame.text:GetStringWidth())		
+		end
+	end
+
+	SetFrame:SetScript("OnMouseDown", function(self, button)
+
+		if button == "LeftButton" then
+			GameTooltip:Hide()
+			if IsShiftKeyDown() then
+				if PaperDollFrame:IsShown() then 
+					ToggleCharacter("PaperDollFrame")
+					PaperDollSidebarTab3:Click() 
+				end
+			else
+				for i = 1, C_EquipmentSet.GetNumEquipmentSets() do
+					local equipmentSetIDs = C_EquipmentSet.GetEquipmentSetIDs()
+					local name, icon, _, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(equipmentSetIDs[i]);
+					menuList[i + 1].text = string.format('|T%s:20:20:0:0:64:64:4:60:4:60|t  %s', icon, name)
+					menuList[i + 1].func = function() if not InCombatLockdown() then C_EquipmentSet.UseEquipmentSet(equipmentSetIDs[i]) end end
+				end
+				EasyMenu(menuList, menuFrame, SetFrame, -4, -8, "MENU", 2)
+
+				-- DropDownList1MenuBackdrop:Hide()
+				-- DropDownList1Button3:SetPoint("TOPLEFT", DropDownList1, "TOPLEFT", 15, -50)
+				DropDownList1:SetScale(0.9)
+				-- for _, region in pairs({DropDownList1MenuBackdrop:GetRegions()}) do					
+				-- 	if region:IsObjectType("Texture") then
+				-- 		region:SetScale(1.2)
+				-- 	end
+				-- end
+				local button, dropDownList;
+				-- for i = 1, UIDROPDOWNMENU_MAXLEVELS, 1 do
+				-- 	dropDownList = _G["DropDownList"..i];
+				-- 	if ( i >= UIDROPDOWNMENU_MENU_LEVEL or frame ~= UIDROPDOWNMENU_OPEN_MENU ) then
+				-- 		for j=1, UIDROPDOWNMENU_MAXBUTTONS, 1 do
+				-- 			button = _G["DropDownList"..i.."Button"..j];
+				-- 			button:SetScale(1.3)
+				-- 		end
+				-- 	end
+				-- end
+				
+			end
+		end	
+
+	end)
+
+	local function addonTooltip(self)
+		GameTooltip:ClearLines()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+
+		GameTooltip:AddLine("|cffFFFFFFLeft Click:|r Change Equipment Set")
+
+		GameTooltip:Show()
+	end
+
+	SetFrame:SetScript("OnEnter", function()
+		addonTooltip(SetFrame)
+	end)
+	SetFrame:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
+	SetFrame:SetScript("OnEvent", function(self, event)
+		if (event=="EQUIPMENT_SWAP_FINISHED") or (event=="PLAYER_ENTERING_WORLD") then
+			self:SetScript("OnUpdate", update)
+		end
+	end)
+
+	SetFrame:RegisterEvent("EQUIPMENT_SWAP_FINISHED")
+	SetFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 end
 
 function Misc:HoverBind()

@@ -334,7 +334,7 @@ function MythicPlus:ADDON_LOADED(event, addon)
 		self:SyncFeature("MythicTalkingHead")
 	end
 	if addon == "Blizzard_ChallengesUI" then
-		self:Blizzard_ChallengesUI()
+		-- self:Blizzard_ChallengesUI()
 	end
 end
 
@@ -1606,7 +1606,23 @@ function MythicPlus:Cooldowns()
 			local hasAltzUI = _G["Altz_HealerRaid"] and _G["Altz_HealerRaid"]:IsVisible()
 			
 			for i=1, 40 do
-					local uf = _G["CompactRaidFrame"..i]
+				local uf = _G["CompactRaidFrame"..i]
+				if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
+					if MythicPlus.settings.cooldowns.position == "RIGHT" then
+						f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "LEFT" then
+						f:SetPoint("LEFT", uf, "RIGHT", -MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
+						f:SetPoint("BOTTOM", uf, "TOP", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "TOP" then
+						f:SetPoint("TOP", uf, "BOTTOM", MythicPlus.settings.cooldowns.x, -MythicPlus.settings.cooldowns.y)
+					end
+					break
+				end
+			end
+			for i=1, 4 do
+				for j=1, 5 do
+					local uf = _G["CompactRaidGroup"..i.."Member"..j]
 					if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
 						if MythicPlus.settings.cooldowns.position == "RIGHT" then
 							f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
@@ -1620,24 +1636,25 @@ function MythicPlus:Cooldowns()
 						break
 					end
 				end
-				for i=1, 4 do
-					for j=1, 5 do
-						local uf = _G["CompactRaidGroup"..i.."Member"..j]
-						if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
-							if MythicPlus.settings.cooldowns.position == "RIGHT" then
-								f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
-							elseif MythicPlus.settings.cooldowns.position == "LEFT" then
-								f:SetPoint("LEFT", uf, "RIGHT", -MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
-							elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
-								f:SetPoint("BOTTOM", uf, "TOP", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
-							elseif MythicPlus.settings.cooldowns.position == "TOP" then
-								f:SetPoint("TOP", uf, "BOTTOM", MythicPlus.settings.cooldowns.x, -MythicPlus.settings.cooldowns.y)
-							end
-							break
-						end
+			end
+
+			for j=1, 5 do
+				local uf = _G["CompactPartyFrameMember"..j]
+				if uf and uf.unitExists and uf.unit and UnitIsUnit(uf.unit, unit) then
+					if MythicPlus.settings.cooldowns.position == "RIGHT" then
+						f:SetPoint("RIGHT", uf, "LEFT", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "LEFT" then
+						f:SetPoint("LEFT", uf, "RIGHT", -MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "BOTTOM" then
+						f:SetPoint("BOTTOM", uf, "TOP", MythicPlus.settings.cooldowns.x, MythicPlus.settings.cooldowns.y)
+					elseif MythicPlus.settings.cooldowns.position == "TOP" then
+						f:SetPoint("TOP", uf, "BOTTOM", MythicPlus.settings.cooldowns.x, -MythicPlus.settings.cooldowns.y)
 					end
+					break
 				end
 			end
+			
+		end
 		
 		
 		f.reset = function()
@@ -1795,6 +1812,8 @@ function MythicPlus:Cooldowns()
 			
 			if tag == "show" then
 				if not IsInRaid() then
+					f:Show()
+				elseif IsActiveBattlefieldArena() then
 					f:Show()
 				else
 					f:Hide()
