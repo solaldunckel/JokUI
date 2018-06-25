@@ -625,23 +625,18 @@ function Nameplates:Core()
 
     -- Friendly Nameplates stacking fix
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
-        local _, type = IsInInstance()
-        if (not InCombatLockdown()) and type == "party" or type == "raid" then
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
-        elseif (not InCombatLockdown()) then
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
-        end
+        C_NamePlate.SetNamePlateFriendlySize(80, 1)
     end
 
     if Nameplates.settings.clickthroughfriendly then
         C_NamePlate.SetNamePlateFriendlyClickThrough(true)
     end
-
+        
     -- UPDATE NAMEPLATE
     hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
         if ( frame:IsForbidden() ) then return end
         if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-        
+
            -- Name
 
         frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
@@ -655,7 +650,7 @@ function Nameplates:Core()
 
             -- Only Name Fix 
 
-         if not UnitIsPlayer(frame.displayedUnit) then
+        if not UnitIsPlayer(frame.displayedUnit) then
             frame.healthBar:Show()
          end
 
@@ -712,7 +707,7 @@ function Nameplates:Core()
 
     hooksecurefunc("DefaultCompactNamePlateFrameSetup", function(frame, options)
         if ( frame:IsForbidden() ) then return end
-       
+
         -- HealthBar
 
         frame.healthBar:SetHeight(Nameplates.settings.healthHeight)

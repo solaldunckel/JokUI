@@ -153,30 +153,6 @@ local interface_config = {
                 end,
                 get = function(info) return Interface.settings.unitframes.scale end
             },
-            righttext = {
-                type = "range",
-                name = "Right Text",
-                desc = "",
-                min = 8,
-                max = 20,
-                step = 1,
-                order = 2,
-                set = function(info,val) 
-                    Interface.settings.unitframes.righttext = val
-                end,
-                get = function(info) return Interface.settings.unitframes.righttext end
-            },
-            formatHealth = {
-				type = "toggle",
-				name = "Format Health",
-				width = "full",
-				desc = "|cffaaaaaa Show health in M |r",
-		        descStyle = "inline",
-				order = 3,
-				set = function(info,val) Interface.settings.unitframes.formatHealth = val
-				end,
-				get = function(info) return Interface.settings.unitframes.formatHealth end
-			},
         },
     },
 }
@@ -201,7 +177,8 @@ function Interface:AfterEnable()
 	self:Minimap()
 	self:Buffs()
 	self:CastBars()
-	self:ItemLevel()
+	self:BossFrame()
+	-- self:ItemLevel()
 end
 
 do
@@ -246,6 +223,19 @@ do
 				MicroMenuArt:Hide()
 				ActionBarArtTexture:Hide()
 				ActionBarArtSmallTexture:Hide() 
+			end
+		end)
+end
+
+do
+	Interface:RegisterFeature("AutoQuest",
+		"Automatically pick and turn in quests. (Use SHIFT to bypass)",
+		"Automatically pick and turn in quests. (Use SHIFT to bypass)",
+		false,
+		true,
+		function(state)
+			if state then
+				Interface:AutoQuest()
 			end
 		end)
 end
@@ -369,19 +359,6 @@ function Interface:UnitFrames()
 	 	self.RightText:SetText( (value>1e3 and  value<1e5 and  format("%1.3f",value/k))  or (value>=1e5 and  value<1e6 and  format("%1.0f K",value/k))  or (value>=1e6 and  value<1e9 and  format("%1.1f M",value/m))  or (value>=1e9 and  format("%1.1f M",value/m))  or value )
 		end
 	end)
-
-	-- -- Hide
-	-- hooksecurefunc("PlayerFrame_UpdateStatus",function()
-	-- 	PlayerStatusTexture:Hide()
-	-- 	PlayerRestGlow:Hide()
-	--     PlayerStatusGlow:Hide() 
-	--     PlayerPrestigeBadge:SetAlpha(0)
-	--     PlayerPrestigePortrait:SetAlpha(0)
-	--     TargetFrameTextureFramePrestigeBadge:SetAlpha(0)
-	--     TargetFrameTextureFramePrestigePortrait:SetAlpha(0)
-	--     FocusFrameTextureFramePrestigeBadge:SetAlpha(0)
-	--     FocusFrameTextureFramePrestigePortrait:SetAlpha(0)
-	-- end)
 
 	--PLAYER
 	function wPlayerFrame_ToPlayerArt(self)
@@ -1353,6 +1330,33 @@ function Interface:Chat()
 	end
 
 	EnableURLCopy()
+
+	----------------------------------------------------------------------
+	-- Unclamp chat frame
+	----------------------------------------------------------------------
+
+	-- Process normal and existing chat frames on startup
+	for i = 1, 50 do
+		if _G["ChatFrame" .. i] then 
+			_G["ChatFrame" .. i]:SetClampRectInsets(0, 0, 0, 0);
+		end
+	end
+
+	----------------------------------------------------------------------
+	-- Use class colors in chat
+	----------------------------------------------------------------------
+
+	-- Set local channel colors
+	for i = 1, 18 do
+		if _G["ChatConfigChatSettingsLeftCheckBox" .. i .. "Check"] then
+			ToggleChatColorNamesByClassGroup(true, _G["ChatConfigChatSettingsLeftCheckBox" .. i .. "Check"]:GetParent().type)
+		end
+	end
+
+	-- Set global channel colors
+	for i = 1, 50 do
+		ToggleChatColorNamesByClassGroup(true, "CHANNEL" .. i)
+	end
 end
 
 function Interface:Colors()
@@ -1458,12 +1462,23 @@ function Interface:Colors()
 		Boss3TargetFrameSpellBar.Border,
 		Boss4TargetFrameSpellBar.Border,
 		Boss5TargetFrameSpellBar.Border,
+
 		CastingBarFrame.Border,
 		FocusFrameSpellBar.Border,
 		TargetFrameSpellBar.Border,
 
 	}) do
         v:SetVertexColor(.15, .15, .15)
+	end
+
+	for i,v in pairs({
+		Boss1TargetFrameSpellBar.BorderShield,
+		Boss2TargetFrameSpellBar.BorderShield,
+		Boss3TargetFrameSpellBar.BorderShield,
+		Boss4TargetFrameSpellBar.BorderShield,
+		Boss5TargetFrameSpellBar.BorderShield,
+	}) do
+        v:SetAlpha(0)
 	end
 
 	for i,v in pairs({
@@ -2215,4 +2230,660 @@ function Interface:ItemLevel()
 	        SetContainerItemLevel(button, GetContainerItemLink(self:GetID(), button:GetID()));
 	    end;
 	end);
+end
+
+function Interface:BossFrame()
+	-- initialize addon table
+	Interface.events = Interface.events or {}
+	Interface.commands = Interface.commands or {}
+
+	local db
+
+	local BF = {
+		scale = 1.125,
+		scale_delta = 0.005,
+		space = 0, -- vertical space
+		backdrop = {
+			edgeFile = [[Interface\DialogFrame\UI-DialogBox-Border]],	-- Dialog style
+	--		edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],		-- Tooltip style
+			edgeSize = 17,
+			tile = true
+		},
+		bordercolor = {1, 1, 0.3, 1}, -- Red, Green, Blue, Alpha (0.0-1.0)
+		texture = "Otravi", -- Name of texture of Health and Mana in Shared Media.
+		raidicon = {
+			pos = "Left",
+			anchors = {
+				Top = {"CENTER", nil, "TOP", 0, 3},	-- Top
+				Left = {"CENTER", nil, "LEFT", -3, 0},	-- Left
+				Right = {"CENTER", nil, "TOPRIGHT", 20, -2},	-- Right
+				Bottom = {"CENTER", nil, "BOTTOM", 0, -3}-- Bottom
+			}
+		},
+		percent = {
+			enabled = false, -- If true, Percent Frame is displayed.
+			pos = "Right", -- Position of Percent Frame. This should be one of the following anchors.
+			anchors = {
+				Top = {"BOTTOM", nil, "TOP", 10, -5},	-- Top
+				Right = {"LEFT", nil, "RIGHT", -3, 0},	-- Right
+				Bottom = {"TOP", nil, "BOTTOM", 15, 3}	-- Bottom
+			},
+			textcolor = {
+				{0.4, 0.8, 1},	-- boss1
+				{1, 0.75, 0.3},	-- boss2
+				{0.75, 1, 0.3},	-- boss3
+				{1, 1, 1},	-- boss4
+				{0.9, 0.5, 0.9}	-- boss5
+			}
+		},
+		buff = {
+			-- enabled = true,
+			offset = {x = 0, y = 2},
+			size = {W = 26, H = 18},
+			borderSize = 1,
+			filterEnemy = "HARMFUL|PLAYER",
+			filterFriendly = "HELPFUL|RAID",
+		},
+	}
+
+	Interface.anchorFrame = Interface.anchorFrame or CreateFrame("Frame", nil, _G.UIParent)
+
+	local events = Interface.events
+	local commands = Interface.commands
+	local anchorFrame = Interface.anchorFrame
+	local frames = {}
+
+	local buff_prototype = {}
+	local buff_MT = {__index = buff_prototype}
+
+	local function InterfaceSpellBar_OnSetPoint(self)
+		if self.boss then
+			self:SetPoint("TOP", self:GetParent(), "BOTTOM", 5.5, 26.5)
+		end
+	end
+
+	local function FrameBorder_OnUpdate(self)
+		self:SetScript("OnUpdate", nil)
+		if self.buffs then
+			for i = 1, #self.buffs do
+				self.buffs[i]:SetStyle()
+			end
+		end
+	end
+
+	local UpdateBuffs do
+
+		local function ShouldShowBuff(id, nameplate, caster, isBoss, duration)
+			return id and (caster == "player" and duration <= 40 or isBoss)
+		end
+
+		local function ShouldShowDebuff(id, nameplate, caster, isBoss, duration)
+			return id and duration ~= 0 and (nameplate or isBoss)
+		end
+
+		local BUFF_MAX_DISPLAY, CooldownFrame_Set = BUFF_MAX_DISPLAY, CooldownFrame_Set
+		local _, filter, ShouldShowFunc, unit, index, buff, name, texture, count, duration, expire, caster, nameplatePersonal, spellID, isBoss, nameplateAll
+
+		UpdateBuffs = function(frame)
+			unit = frame.unit
+			if frame.reaction <= 4 then
+				filter = BF.buff.filterEnemy
+				ShouldShowFunc = ShouldShowDebuff
+			else
+				filter = BF.buff.filterFriendly
+				ShouldShowFunc = ShouldShowBuff
+			end
+			-- unit = "player"
+			-- filter = "HELPFUL"
+			index = 1
+			for i = 1, BUFF_MAX_DISPLAY do
+				name, _, texture, count, _, duration, expire, caster, _, nameplatePersonal, spellID, _, isBoss, _, nameplateAll = UnitAura(unit, i, filter)
+				if ShouldShowFunc(spellID, nameplatePersonal or nameplateAll, caster, isBoss, duration) then
+					if not frame.buffs[index] then
+						frame.buffs[index] = buff_prototype:New(frame, index)
+					end
+					buff = frame.buffs[index]
+					if buff.spellID ~= spellID or buff.expire ~= expire or buff.count ~= count or buff.duration ~= duration then
+						buff.spellID = spellID
+						buff.expire = expire
+						buff.count = count
+						buff.duration = duration
+						buff:SetIcon(texture)
+						buff:SetCount(count)
+						CooldownFrame_Set(buff.cooldown, expire - duration, duration, true, true)
+					end
+					buff:Show()
+					index = index + 1
+					if index > 5 then break end
+				end
+			end
+			for i = index, #frame.buffs do
+				frame.buffs[i]:Hide()
+			end
+		end
+	end
+
+	local function FrameBorder_OnEvent(self, event)
+		if event == "UNIT_AURA" then
+			UpdateBuffs(self)
+		elseif event == "UNIT_FACTION" then
+			self.reaction = UnitReaction(self.unit, "player") or 0
+		elseif self:IsVisible() then
+			self:RegisterUnitEvent("UNIT_AURA", self.unit)
+			self.reaction = UnitReaction(self.unit, "player") or 0
+			UpdateBuffs(self)
+		else
+			self:UnregisterEvent("UNIT_AURA")
+			self.reaction = 0
+		end
+	end
+
+	Boss1TargetFrameSpellBar.BorderShield:Hide()
+	local function Interfaces_SetStyle()
+		local p
+		for i = 1, MAX_BOSS_FRAMES do
+			local boss = _G["Boss"..i.."TargetFrame"]
+			local b = "Boss"..i.."TargetFrame"
+			local castbar = "Boss"..i.."TargetFrameSpellBar"
+
+			if BF.scale then boss:SetScale(BF.scale) end
+
+			boss.highLevelTexture:SetTexture(nil)
+			boss.threatIndicator:SetTexture(nil)
+
+			if BF.space and i > 1 and boss:GetNumPoints() > 0 then
+				p = {boss:GetPoint(1)}
+				p[5] = BF.space
+				boss:ClearAllPoints()
+				boss:SetPoint(unpack(p))
+			end
+
+			if BF.raidicon.pos then
+				p = {unpack(BF.raidicon.anchors[BF.raidicon.pos])}
+				boss.raidTargetIcon:ClearAllPoints()
+				p[2] = frameBorder
+				boss.raidTargetIcon:SetPoint(unpack(p))
+			end
+
+			local frameBorder = CreateFrame("Frame", nil, boss)
+			local borderFrameLevel = frameBorder:GetFrameLevel()
+			boss.textureFrame:SetFrameLevel(borderFrameLevel + 1)
+			_G["Boss"..i.."TargetFrameDropDown"]:SetFrameLevel(borderFrameLevel + 1)
+			frameBorder:SetPoint("TOPLEFT", boss.Background, "TOPLEFT", -4, 3)
+			frameBorder:SetPoint("BOTTOMRIGHT", boss.Background, "BOTTOMRIGHT", 4, -5)
+
+			local highlight = frameBorder:CreateTexture(nil, "OVERLAY")
+			frameBorder.highlight = highlight
+			frameBorder.unit = "boss"..i
+			frameBorder:SetScript("OnEvent", FrameBorder_OnEvent)
+			frameBorder:RegisterEvent("PLAYER_TARGET_CHANGED")
+			frameBorder:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+			frameBorder:RegisterEvent("ENCOUNTER_START")
+			frameBorder:RegisterEvent("PLAYER_REGEN_DISABLED")
+
+			frameBorder:RegisterUnitEvent("UNIT_FACTION", frameBorder.unit)
+			frameBorder.buffs = {}
+		end
+		wipe(p)
+		hooksecurefunc("Target_Spellbar_AdjustPosition", InterfaceSpellBar_OnSetPoint)
+	end
+
+	local function Interfaces_SetScale(scale)
+		for i = 1, MAX_BOSS_FRAMES do
+			_G["Boss"..i.."TargetFrame"]:SetScale(scale)
+		end
+	end
+
+	function Interface:Enable()
+		Interfaces_SetStyle()
+
+		self.bossFrame = _G["Boss1TargetFrame"]
+		self.defaultAnchor = {"TOPLEFT", nil, "TOPLEFT", 1340, -300}
+		self.defaultScale = self.bossFrame:GetScale()
+		self.bossFrame.OrgSetPoint = self.bossFrame.SetPoint
+		self.bossFrame.SetPoint = function() end
+		self.bossFrame:HookScript("OnHide", function() anchorFrame:Hide() end)
+
+		anchorFrame:SetMovable(true)
+		anchorFrame:SetScale(self.defaultScale)
+		anchorFrame:SetSize(self.bossFrame:GetWidth(), self.bossFrame:GetHeight() * 5 - (BF.space * 4))
+		anchorFrame:SetScript("OnMouseDown", anchorFrame.OnMouseDown)
+		anchorFrame:SetScript("OnMouseUp", anchorFrame.OnMouseUp)
+		anchorFrame:SetScript("OnDragStop", anchorFrame.OnMouseUp)
+		anchorFrame:SetScript("OnUpdate", anchorFrame.OnUpdate)
+		anchorFrame:SetScript("OnMouseWheel", anchorFrame.OnMouseWheel)
+		anchorFrame:SetScript("OnShow", anchorFrame.OnShow)
+		anchorFrame:Hide()
+		if JokUIDB["anchor"] and JokUIDB["anchor"][1] and JokUIDB["anchor"][4] and JokUIDB["anchor"][5] then
+			anchorFrame:ClearAllPoints()
+			anchorFrame:SetPoint(unpack(JokUIDB.anchor))
+			self.bossFrame:ClearAllPoints()
+			self.bossFrame:OrgSetPoint(unpack(JokUIDB.anchor))
+		else
+			anchorFrame:ClearAllPoints()
+			anchorFrame:SetPoint(unpack(self.defaultAnchor))
+		end
+
+		self.testMode = false
+	end
+
+	function Interface:UnregisterEvent(...)
+		anchorFrame:UnregisterEvent(...)
+	end
+
+	function Interface:SetMode(mode, index)
+		mode = mode or "Health"
+		for i = 1, #frames do
+			if not index or i == index then
+				frames[i].mode = mode
+				Text_Refresh(frames[i])
+			end
+		end
+	end
+
+	function anchorFrame:OnMouseDown(button)
+		if button == "LeftButton" then
+			self.moving = true
+			self:StartMoving()
+		end
+	end
+
+	function anchorFrame:OnMouseUp(button)
+		if button == "LeftButton" then
+			self.moving = false
+			self:StopMovingOrSizing()
+		end
+	end
+
+	function anchorFrame:OnUpdate(elapsed)
+		if not InCombatLockdown() and self.moving then
+			JokUIDB["anchor"] = {self:GetPoint(1)}
+			Interface.bossFrame:ClearAllPoints()
+			Interface.bossFrame:OrgSetPoint(unpack(JokUIDB.anchor))
+		end
+	end
+
+	function anchorFrame:OnShow()
+		if not self.bkgndFrame then
+			self.bkgndFrame = CreateFrame("Frame", nil, self)
+			self.bkgndFrame:SetFrameStrata("BACKGROUND")
+			self.bkgndFrame:SetBackdrop({
+				bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+			})
+			self.bkgndFrame:SetAllPoints(self)
+			self.bkgndFrame:SetBackdropColor(0, 0.75, 0, 0.5)
+		end
+		self:EnableMouse(true)
+		self:EnableMouseWheel(true)
+		self:SetBackdrop({
+			edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
+			tile = true,
+			edgeSize = 14,
+			tileSize = 16,
+			insets = {left = 3, right = 3, top = 3, bottom = 3},
+		})
+		self:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+	end
+
+	function events:PLAYER_LOGIN(...)
+		self:UnregisterEvent("PLAYER_LOGIN")
+		self:UnregisterEvent("SPELLS_CHANGED")
+
+		self:Enable()
+	end
+	events.SPELLS_CHANGED = events.PLAYER_LOGIN
+
+	function events:PLAYER_REGEN_DISABLED()
+		if anchorFrame:IsShown() then
+			anchorFrame:Hide()
+		end
+		Interface.testMode = false
+	end
+
+	function events:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		events:PLAYER_REGEN_DISABLED()
+		for i = 1, #frames do
+			frames[i].value = nil
+			frames[i].elapsed = 1
+		end
+	end
+
+	function buff_prototype:New(parent, index)
+		local buff = setmetatable({}, buff_MT)
+		buff.index = index
+		buff.cooldown = CreateFrame("Cooldown", nil, parent, "CooldownFrameTemplate")
+		buff.cooldown:SetHideCountdownNumbers(true)
+		buff.cooldown:SetReverse(true)
+		buff.cooldown:SetDrawEdge(true)
+		buff.cooldown:SetDrawBling(false)
+		buff.bg = buff.cooldown:CreateTexture(nil, "BACKGROUND", nil, 2)
+		buff.bg:SetColorTexture(0, 0, 0, 1)
+		buff.icon = buff.cooldown:CreateTexture(nil, "BACKGROUND", nil, 3)
+		buff.icon:SetTexCoord(0.05, 0.95, 0.15, 0.75)
+		buff.counter = buff.cooldown:CreateFontString(nil, "ARTWORK", "NumberFontNormalSmall")
+		buff.counter:SetJustifyH("LEFT")
+		buff:SetStyle()
+		return buff
+	end
+
+	function buff_prototype:SetStyle()
+		self.cooldown:SetScale(1 / BF.scale)
+		self.cooldown:ClearAllPoints()
+		self.cooldown:SetPoint("TOPLEFT", self.cooldown:GetParent(), "BOTTOMLEFT", BF.buff.offset.x + (0 * BF.scale) + (self.index - 1) * (BF.buff.size.W + 2), BF.buff.offset.y)
+		self.cooldown:SetSize(BF.buff.size.W, BF.buff.size.H)
+		self.bg:SetAllPoints()
+		self.icon:SetPoint("TOPLEFT", BF.buff.borderSize, -BF.buff.borderSize)
+		self.icon:SetPoint("BOTTOMRIGHT", -BF.buff.borderSize, BF.buff.borderSize)
+		self.counter:SetPoint("BOTTOMRIGHT", 3, -3)
+	end
+
+	function buff_prototype:Hide()
+		self.cooldown:Hide()
+		self.spellID = nil
+		self.expire = nil
+		self.count = nil
+		self.duration = nil
+	end
+
+	function buff_prototype:Show()
+		self.cooldown:Show()
+	end
+
+	function buff_prototype:SetIcon(texture)
+		self.icon:SetTexture(texture)
+	end
+
+	function buff_prototype:SetCount(count)
+		if count > 1 then
+			self.counter:SetText(count)
+			self.counter:Show()
+		else
+			self.counter:Hide()
+		end
+	end
+
+	function commands:hide(arg)
+		local index = tonumber(arg) or nil
+		for i = 1, #frames do
+			if not index or i == index then
+				frames[i]:Hide()
+			end
+		end
+	end
+
+	function commands:show(arg)
+		local index = tonumber(arg) or nil
+		for i = 1, #frames do
+			if not index or i == index then
+				frames[i]:Show()
+			end
+		end
+	end
+
+	local function RandomFactionColor()
+		local colors = {
+			RED_FONT_COLOR,
+			GREEN_FONT_COLOR,
+			YELLOW_FONT_COLOR,
+			ORANGE_FONT_COLOR
+		}
+		local c = colors[random(1, 4)]
+		return c.r, c.g, c.b
+	end
+
+	function commands:bossframe(arg)
+		if InCombatLockdown() then return end
+		local shown = anchorFrame:IsShown()
+		Interface.testMode = not shown
+		for i = 1, MAX_BOSS_FRAMES do
+			local b = "Boss"..i.."TargetFrame"
+			if shown then
+				_G[b]:Hide()
+				anchorFrame:Hide()
+			else
+				_G[b.."TextureFrameName"]:SetText("Boss"..i.."Name")
+				_G[b.."NameBackground"]:SetVertexColor(RandomFactionColor())
+				_G[b.."HealthBar"]:SetMinMaxValues(1, 99999999)
+				_G[b.."HealthBar"]:SetValue(random(11111111, 88888888))
+				_G[b.."ManaBar"]:SetMinMaxValues(1, 100)
+				_G[b.."ManaBar"]:SetValue(random(15, 85))
+				-- _G[b.."ManaBar"]:SetStatusBarColor(0.2, 0.2, 1)
+				_G[b]:Show()
+				anchorFrame:Show()
+			end
+		end
+		for i = 1, #frames do
+			Text_Refresh(frames[i])
+		end
+	end
+
+	do
+		SLASH_BOSSFRAME1 = "/bossframe"
+		SlashCmdList.BOSSFRAME = function(msg)
+			local cmd, arg = msg:match("^(%w*)%s*(.-)$")
+			cmd = strlower(cmd)
+			if not commands[cmd] then cmd = "bossframe" end
+			commands[cmd](Interface, arg)
+		end
+
+		anchorFrame:SetScript("OnEvent", function(self, event, ...)
+			events[event](Interface, event, ...)
+		end)
+		for event, func in pairs(events) do
+			if type(func) == "function" then anchorFrame:RegisterEvent(event) end
+		end
+	end
+end
+
+function Interface:AutoQuest()
+
+	----------------------------------------------------------------------
+	--	Automate quests
+	----------------------------------------------------------------------
+
+	-- Function to show quest dialog for popup quests in the objective tracker
+	local function PopupQuestComplete()
+		if GetNumAutoQuestPopUps() > 0 then
+			local questId, questType = GetAutoQuestPopUp(1)
+			if questType == "COMPLETE" then
+				local index = GetQuestLogIndexByID(questId)
+				ShowQuestComplete(index)
+			end
+		end
+	end
+
+	-- Funcion to ignore specific NPCs
+	local function isNpcBlocked(actionType)
+		local npcGuid = UnitGUID("target") or nil
+		if npcGuid then
+			local void, void, void, void, void, npcID = strsplit("-", npcGuid)
+			if npcID then
+				-- Ignore specific NPCs for selecting, accepting and turning-in quests (required if automation has consequences)
+				if npcID == "45400" 	-- Fiona's Caravan (Eastern Plaguelands)
+				or npcID == "18166" 	-- Khadgar (Allegiance to Aldor/Scryer, Shattrath)
+				or npcID == "114719" 	-- Trader Caelen (Obliterum Forge, Dalaran, Broken Isles)
+				or npcID == "6294" 		-- Krom Stoutarm (Heirloom Curator, Ironforge)
+				or npcID == "6566" 		-- Estelle Gendry (Heirloom Curator, Undercity)
+				then
+					return true
+				end
+				-- Ignore specific NPCs for selecting quests only (required if incomplete quest turn-ins are selected automatically)
+				if actionType == "Select" then
+					if npcID == "15192" 	-- Anachronos (Caverns of Time)
+					or npcID == "111243" 	-- Archmage Lan'dalock (Seal quest, Dalaran)
+					or npcID == "119388" 	-- Chieftain Hatuun (Krokul Hovel, Krokuun)
+					or npcID == "87391" 	-- Fate-Twister Seress (Seal quest, Stormshield)
+					or npcID == "88570"		-- Fate-Twister Tiklal (Seal quest, Horde)
+					or npcID == "87706" 	-- Gazmolf Futzwangler (Reputation quests, Nagrand, Draenor)
+					or npcID == "55402" 	-- Korgol Crushskull (Darkmoon Faire, Pit Master)
+					or npcID == "70022" 	-- Ku'ma (Isle of Giants, Pandaria)
+					or npcID == "12944" 	-- Lokhtos Darkbargainer (Thorium Brotherhood, Blackrock Depths)
+					or npcID == "109227" 	-- Meliah Grayfeather (Tradewind Roost, Highmountain)
+					or npcID == "99183" 	-- Renegade Ironworker (Tanaan Jungle, repeatable quest)
+					or npcID == "87393" 	-- Sallee Silverclamp (Reputation quests, Nagrand, Draenor)
+					then
+						return true
+					end
+				end
+			end
+		end
+	end
+
+	-- Function to check if quest requires currency
+	local function QuestRequiresCurrency()
+		for i = 1, 6 do
+			local progItem = _G["QuestProgressItem" ..i] or nil
+			if progItem and progItem:IsShown() and progItem.type == "required" and progItem.objectType == "currency" then
+				return true
+			end
+		end
+	end
+
+	-- Function to check if quest requires gold
+	local function QuestRequiresGold()
+		local goldRequiredAmount = GetQuestMoneyToGet()
+		if goldRequiredAmount and goldRequiredAmount > 0 then
+			return true
+		end
+	end
+
+	-- Register events
+	local qFrame = CreateFrame("FRAME")
+	qFrame:RegisterEvent("QUEST_DETAIL")
+	qFrame:RegisterEvent("QUEST_ACCEPT_CONFIRM")
+	qFrame:RegisterEvent("QUEST_PROGRESS")
+	qFrame:RegisterEvent("QUEST_COMPLETE")
+	qFrame:RegisterEvent("QUEST_GREETING")
+	qFrame:RegisterEvent("QUEST_AUTOCOMPLETE")
+	qFrame:RegisterEvent("GOSSIP_SHOW")
+	qFrame:RegisterEvent("QUEST_FINISHED")
+	qFrame:SetScript("OnEvent", function(self, event)
+
+		-- Clear progress items when quest interaction has ceased
+		if event == "QUEST_FINISHED" then
+			for i = 1, 6 do
+				local progItem = _G["QuestProgressItem" ..i] or nil
+				if progItem and progItem:IsShown() then
+					progItem:Hide()
+				end
+			end
+			return
+		end
+
+		-- Do nothing if SHIFT key is being held
+		if IsShiftKeyDown() then return end
+
+		----------------------------------------------------------------------
+		-- Accept quests automatically
+		----------------------------------------------------------------------
+
+		-- Accept quests with a quest detail window
+		if event == "QUEST_DETAIL" then
+			-- Don't accept blocked quests
+			if isNpcBlocked("Accept") then return end
+			-- Accept quest
+			if QuestGetAutoAccept() then
+				-- Quest has already been accepted by Wow so close the quest detail window
+				CloseQuest()
+			else
+				-- Quest has not been accepted by Wow so accept it
+				AcceptQuest()
+				HideUIPanel(QuestFrame)
+			end
+		end
+
+		-- Accept quests which require confirmation (such as sharing escort quests)
+		if event == "QUEST_ACCEPT_CONFIRM" then
+			ConfirmAcceptQuest() 
+			StaticPopup_Hide("QUEST_ACCEPT")
+		end
+
+		----------------------------------------------------------------------
+		-- Turn-in quests automatically
+		----------------------------------------------------------------------
+
+		-- Turn-in progression quests
+		if event == "QUEST_PROGRESS" and IsQuestCompletable() then
+			-- Don't continue quests for blocked NPCs
+			if isNpcBlocked("Complete") then return end
+			-- Don't continue if quest requires currency
+			if QuestRequiresCurrency() then return end
+			-- Don't continue if quest requires gold
+			if QuestRequiresGold() then return end
+			-- Continue quest
+			CompleteQuest()
+		end
+
+		-- Turn in completed quests if only one reward item is being offered
+		if event == "QUEST_COMPLETE" then
+			-- Don't complete quests for blocked NPCs
+			if isNpcBlocked("Complete") then return end
+			-- Don't complete if quest requires currency
+			if QuestRequiresCurrency() then return end
+			-- Don't complete if quest requires gold
+			if QuestRequiresGold() then return end
+			-- Complete quest
+			if GetNumQuestChoices() <= 1 then
+				GetQuestReward(GetNumQuestChoices())
+			end
+		end
+
+		-- Show quest dialog for quests that use the objective tracker (it will be completed automatically)
+		if event == "QUEST_AUTOCOMPLETE" then
+			LeaPlusLC.PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
+		end
+
+		----------------------------------------------------------------------
+		-- Select quests automatically
+		----------------------------------------------------------------------
+
+		if event == "GOSSIP_SHOW" or event == "QUEST_GREETING" then
+
+			-- Select quests
+			if UnitExists("npc") or QuestFrameGreetingPanel:IsShown() or GossipFrameGreetingPanel:IsShown() then
+
+				-- Don't select quests for blocked NPCs
+				if isNpcBlocked("Select") then return end
+
+				-- Select quests
+				if event == "QUEST_GREETING" then
+					-- Quest greeting
+					local availableCount = GetNumAvailableQuests() + GetNumActiveQuests()
+					if availableCount >= 1 then
+						for i = 1, availableCount do
+							if _G["QuestTitleButton" .. i].isActive == 0 then
+								-- Select available quests
+								C_Timer.After(0.01, function() SelectAvailableQuest(_G["QuestTitleButton" .. i]:GetID()) end)
+							else
+								-- Select completed quests
+								local void, isComplete = GetActiveTitle(i)
+								if isComplete then
+									SelectActiveQuest(_G["QuestTitleButton" .. i]:GetID())
+								end
+							end
+						end
+					end
+				else
+					-- Gossip frame
+					local availableCount = GetNumGossipAvailableQuests() + GetNumGossipActiveQuests()
+					if availableCount >= 1 then
+						for i = 1, availableCount do
+							if _G["GossipTitleButton" .. i].type == "Available" then
+								-- Select available quests
+								C_Timer.After(0.01, function() SelectGossipAvailableQuest(i) end)
+							else
+								-- Select completed quests
+								local isComplete = select(i * 6 - 5 + 3, GetGossipActiveQuests()) -- 4th argument of 6 argument line
+								if isComplete then
+									if _G["GossipTitleButton" .. i].type == "Active" then
+										SelectGossipActiveQuest(_G["GossipTitleButton" .. i]:GetID())
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end)
 end

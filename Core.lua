@@ -27,7 +27,6 @@ function Core:OnEnable()
 	self:RegisterChatCommand("rl", "ReloadUI")
 
 	self:Skins()
-	self:Test()
 end
 
 function Core:OpenGUI(cmd)
@@ -60,58 +59,6 @@ function Core:RegisterCallback(key, func)
 			callbacks[key] = { func }
 		end
 	end
-end
-
-function Core:Test()
-
-	-- JokUI.createborder = function(f, r, g, b)
-	-- 	if f.style then return end
-		
-	-- 	f.sd = CreateFrame("Frame", nil, f)
-	-- 	local lvl = f:GetFrameLevel()
-	-- 	f.sd:SetFrameLevel(lvl == 0 and 1 or lvl - 1)
-	-- 	f.sd:SetBackdrop({
-	-- 		bgFile = "Interface\\Buttons\\WHITE8x8",
-	-- 		edgeFile = "Interface\\AddOns\\SMT\\media\\glow",
-	-- 		edgeSize = 3,
-	-- 			insets = { left = 3, right = 3, top = 3, bottom = 3,}
-	-- 		})
-	-- 	f.sd:SetPoint("TOPLEFT", f, -3, 3)
-	-- 	f.sd:SetPoint("BOTTOMRIGHT", f, 3, -3)
-	-- 	if not (r and g and b) then
-	-- 		f.sd:SetBackdropColor(.05, .05, .05, .5)
-	-- 		f.sd:SetBackdropBorderColor(0, 0, 0)
-	-- 	else
-	-- 		f.sd:SetBackdropColor(r, g, b, .5)
-	-- 		f.sd:SetBackdropBorderColor(r, g, b)
-	-- 	end
-	-- 	f.style = true
-	-- end
-
-	-- local myFrame = CreateFrame("Frame", nil, UIParent)
-	-- myFrame:SetSize(80, 80)
-	-- myFrame:SetPoint("CENTER")
-	-- myFrame:EnableMouse(true)
-	-- myFrame:SetMovable(true)
-	-- myFrame:RegisterForDrag("LeftButton")
-	-- myFrame:SetScript("OnDragStart", myFrame.StartMoving)
-	-- myFrame:SetScript("OnDragStop", myFrame.StopMovingOrSizing)
-	-- JokUI.createborder(myFrame)
-
-	-- local myTexture = myFrame:CreateTexture()
-	-- myTexture:SetAllPoints()
-	-- myTexture:SetTexture("Interface\\Icons\\Ability_Druid_TreeofLife")
-
-	-- myTexture:SetTexCoord(.1, .9, .1, .9)
-
-	-- local myCooldown = CreateFrame("Cooldown", "myCooldown", myFrame, "CooldownFrameTemplate")
-	-- myCooldown:SetAllPoints()
-	-- myCooldown:SetDrawEdge(false)
-	-- myCooldown:SetDrawSwipe(true)
-	-- myCooldown:SetAlpha(1)
-
-	-- myCooldown:SetCooldown(GetTime(), 30)
-
 end
 
 function Core:Skins()

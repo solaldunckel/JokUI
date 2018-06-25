@@ -334,7 +334,7 @@ function MythicPlus:ADDON_LOADED(event, addon)
 		self:SyncFeature("MythicTalkingHead")
 	end
 	if addon == "Blizzard_ChallengesUI" then
-		-- self:Blizzard_ChallengesUI()
+		self:Blizzard_ChallengesUI()
 	end
 end
 
@@ -567,7 +567,6 @@ function MythicPlus:Timer()
 	function MythicPlus:CHALLENGE_MODE_START()
 		keystoneWasCompleted = false
 		challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()
-		-- self:HideQuestModule()
 	end
 
 	function MythicPlus:CHALLENGE_MODE_RESET()
@@ -593,10 +592,7 @@ function MythicPlus:Timer()
 			print( format("|cff33ff99<%s>|r |cffeda55f%s|r", "JokUI", format("Beat the timer for %s in %s. You were %s ahead of the timer, and missed +2 by %s.", name, timeFormatMS(time), timeFormatMS(timeLimit - time), timeFormatMS(time - timeLimit2))) )
 		else
 			print( format("|cff33ff99<%s>|r |cffff2020%s|r", "JokUI", format("Timer expired for %s with %s, you were %s over the time limit.", name, timeFormatMS(time), timeFormatMS(time - timeLimit))) )
-		end
-
-		-- ScenarioTimer_CheckTimers(GetWorldElapsedTimers())
-		-- ObjectiveTracker_Update()		
+		end	
 	end
 
 	local function SkinProgressBars(self, _, line)
@@ -617,13 +613,11 @@ function MythicPlus:Timer()
 			if bar.BorderRight then bar.BorderRight:SetAlpha(0.5) end
 			if bar.BorderMid then bar.BorderMid:SetAlpha(0.5) end
 
-			-- bar:CreateBackdrop("Transparent")
-			ObjectiveTrackerFrame:SetScale(1.2)
 			bar:SetWidth(210)
 			bar:SetHeight(20)
 			bar:SetStatusBarTexture("Interface\\Addons\\JokUI\\media\\mythicplus\\normTex2")
 			
-			ObjectiveTrackerBlocksFrame.ScenarioHeader.Background:Hide()
+			--ObjectiveTrackerBlocksFrame.ScenarioHeader.Background:Hide()
 			ObjectiveTrackerBlocksFrame.ScenarioHeader.Text:SetFont("Fonts\\FRIZQT__.TTF", 13)
 
 			progressBar.isSkinned = true
@@ -632,50 +626,6 @@ function MythicPlus:Timer()
 		end
 	end
 	hooksecurefunc(SCENARIO_TRACKER_MODULE,"AddProgressBar",SkinProgressBars)
-end
-
-function MythicPlus:HideQuestModule()
-	ObjectiveTracker_Update_Old = ObjectiveTracker_Update
-	function ObjectiveTracker_Update(...)
-		if IsInActiveInstance() then
-			local tracker = ObjectiveTrackerFrame
-			local modules_old = tracker.MODULES
-			local modules_ui_old = tracker.MODULES_UI_ORDER
-
-			tracker.MODULES = { SCENARIO_CONTENT_TRACKER_MODULE }
-			tracker.MODULES_UI_ORDER = { SCENARIO_CONTENT_TRACKER_MODULE }
-
-			for i = 1, #modules_old do
-				local module = modules_old[i]
-				if module ~= SCENARIO_CONTENT_TRACKER_MODULE then
-					module:BeginLayout()
-					module:EndLayout()
-					module.Header:Hide()
-					if module.Header.animating then
-						module.Header.animating = nil
-						module.Header.HeaderOpenAnim:Stop()
-					end
-				end
-			end
-
-			ObjectiveTracker_Update_Old(...)
-
-			tracker.MODULES = modules_old
-			tracker.MODULES_UI_ORDER = modules_ui_old
-		else
-			ObjectiveTracker_Update_Old(...)
-		end
-	end
-
-	ObjectiveTracker_ReorderModules_Old = ObjectiveTracker_ReorderModules
-	function ObjectiveTracker_ReorderModules()
-		if IsInActiveInstance() then
-			local modules = ObjectiveTrackerFrame.MODULES;
-			local modulesUIOrder = ObjectiveTrackerFrame.MODULES_UI_ORDER;
-		else
-			ObjectiveTracker_ReorderModules_Old()
-		end
-	end
 end
 
 function MythicPlus:Schedule()

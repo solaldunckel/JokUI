@@ -154,9 +154,9 @@ do
 		true,
 		false,
 		function(state)		
-				hooksecurefunc(StaticPopupDialogs["DELETE_GOOD_ITEM"],"OnShow",function(s) 
-					if state then s.editBox:SetText(DELETE_ITEM_CONFIRM_STRING) end
-				end)
+			hooksecurefunc(StaticPopupDialogs["DELETE_GOOD_ITEM"],"OnShow",function(s) 
+				if state then s.editBox:SetText(DELETE_ITEM_CONFIRM_STRING) end
+			end)
 		end)
 end
 
@@ -171,6 +171,42 @@ do
 				LossOfControlFrame:ClearAllPoints() LossOfControlFrame:SetPoint("CENTER",UIParent,"CENTER",0,0)
 				select(1,LossOfControlFrame:GetRegions()):SetAlpha(0)
 				select(2,LossOfControlFrame:GetRegions()):SetAlpha(0) select(3,LossOfControlFrame:GetRegions()):SetAlpha(0)
+			end
+		end)
+end
+
+do
+	Misc:RegisterFeature("FastLooting",
+		"Fast Auto-Looting",
+		"Increase looting speed when you have autoloot enabled.",
+		true,
+		true,
+		function(state)
+			if state then
+				----------------------------------------------------------------------
+				--	Faster looting
+				----------------------------------------------------------------------
+
+				-- Time delay
+				local tDelay = 0
+
+				-- Fast loot function
+				local function FastLoot()
+					if GetTime() - tDelay >= 0.3 then
+						tDelay = GetTime()
+							if GetCVarBool("autoLootDefault") ~= IsModifiedClick("AUTOLOOTTOGGLE") then
+							for i = GetNumLootItems(), 1, -1 do
+								LootSlot(i)
+							end
+							tDelay = GetTime()
+						end
+					end
+				end
+
+				-- Event frame
+				local faster = CreateFrame("Frame")
+				faster:RegisterEvent("LOOT_READY")
+				faster:SetScript("OnEvent", FastLoot)
 			end
 		end)
 end
