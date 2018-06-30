@@ -36,6 +36,7 @@ function Misc:OnInitialize()
 	JokUI.Config:Register("Miscellaneous", misc_config, 14)
 
 	self:RegisterEvent("ADDON_LOADED")
+	self:RegisterEvent("MERCHANT_SHOW")
 
 	self:AutoRep()
 	self:RangeSpell()
@@ -822,8 +823,8 @@ function Misc:Specialization()
 end
 
 function Misc:EquipmentSets()
-	UIDROPDOWNMENU_BORDER_HEIGHT = 12;
-	UIDROPDOWNMENU_BUTTON_HEIGHT = 18;
+	-- UIDROPDOWNMENU_BORDER_HEIGHT = 12;
+	-- UIDROPDOWNMENU_BUTTON_HEIGHT = 18;
 	local menuList = {
 		{ text = "Equipment Sets\n\n", isTitle = true, notCheckable = true, justifyH = "CENTER"  },
 		{ notCheckable = true, func = function() C_EquipmentSet.UseEquipmentSet(0) end },
@@ -1603,6 +1604,10 @@ function Misc:SafeQueue()
 			end
 		end
 	end)
+end
+
+function Misc:MERCHANT_SHOW()
+	for i=0,4 do for j=1,40 do local id = GetContainerItemID(i,j) if id and IsArtifactPowerItem(id) then UseContainerItem(i,j) end end end
 end
 
 -- Set Max Equipement Sets to 100.

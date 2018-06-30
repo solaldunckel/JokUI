@@ -178,7 +178,7 @@ function Interface:AfterEnable()
 	self:Buffs()
 	self:CastBars()
 	self:BossFrame()
-	-- self:ItemLevel()
+	self:ItemLevel()
 end
 
 do
@@ -2209,10 +2209,10 @@ function Interface:ItemLevel()
 	        count, level, _, _, quality, _, _, class, subclass, _, _ = LibItemLevel:GetItemInfo(ItemLink);
 	        name, _ = GetItemSpell(ItemLink);
 	        _, equipped, _ = GetAverageItemLevel();
-	        if level >= (98 * equipped / 100) then
-	            button.levelString:SetTextColor(0, 1, 0);
+	        if level >= (90 * equipped / 100) then
+	            button.levelString:SetTextColor(1, 0.82, 0);
 	        else
-	            button.levelString:SetTextColor(1, 1, 1);
+	            button.levelString:SetTextColor(0.5, 0.5, 0.5);
 	        end;
 	        if count == 0 and level > 0 and quality > 1 then
 	            button.levelString:SetText(level);
@@ -2304,6 +2304,7 @@ function Interface:BossFrame()
 
 	local function FrameBorder_OnUpdate(self)
 		self:SetScript("OnUpdate", nil)
+		self.highlight:SetShown(UnitIsUnit("target", self.unit))
 		if self.buffs then
 			for i = 1, #self.buffs do
 				self.buffs[i]:SetStyle()
@@ -2830,7 +2831,7 @@ function Interface:AutoQuest()
 
 		-- Show quest dialog for quests that use the objective tracker (it will be completed automatically)
 		if event == "QUEST_AUTOCOMPLETE" then
-			LeaPlusLC.PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
+			PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
 		end
 
 		----------------------------------------------------------------------
