@@ -1446,6 +1446,12 @@ function MythicPlus:Cooldowns()
 		
 	}
 
+    for _,c in pairs(Cooldowns) do
+        if IsActiveBattlefieldArena() then
+            c["208683"] = {spellID = 208683, cd = 120, spec = "all", talent = "all"}
+        end
+    end
+
 	JokUI.createborder = function(f, r, g, b)
 		if f.style then return end
 		

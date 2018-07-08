@@ -438,7 +438,6 @@ function Core:Skins()
 		FriendsFrameFriendsScrollFrameScrollBarThumbTexture,
 	}) do
 		v:SetVertexColor(.50, .50, .50)
-		FriendsTabHeaderRecruitAFriendButton.Icon:Hide()
 	end 
 
 	--Map

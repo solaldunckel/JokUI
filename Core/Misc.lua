@@ -1613,3 +1613,15 @@ end
 -- Set Max Equipement Sets to 100.
 	
 setglobal("MAX_EQUIPMENT_SETS_PER_PLAYER",100)
+
+-- function Misc:OBLITERUM_FORGE_SHOW()
+-- 	for bag=0,4,1 do 
+-- 	for slot=1,GetContainerNumSlots(bag),1 do 
+-- 		local name=GetContainerItemLink(bag,slot) 
+-- 		if name and string.find(name,"Silkweave Cinch") then 
+-- 			UseContainerItem(bag,slot) 
+-- 		end 
+-- 	end 
+-- end
+-- end
+

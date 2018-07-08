@@ -245,6 +245,13 @@ end
 -------------------------------------------------------------------------------
 
 function Interface:UnitFrames()
+
+	-- function wPetFrame_Update(self, override)
+	-- 	self:ClearAllPoints()
+	-- 	self:SetPoint("CENTER", PlayerFrame, "CENTER", -70, -45);
+	-- end
+ --    hooksecurefunc("PetFrame_Update", wPetFrame_Update)
+
 	local unit = {}
 	local AURA_START_X = 6;
 	local AURA_START_Y = 28;
@@ -359,10 +366,11 @@ function Interface:UnitFrames()
 	 	self.RightText:SetText( (value>1e3 and  value<1e5 and  format("%1.3f",value/k))  or (value>=1e5 and  value<1e6 and  format("%1.0f K",value/k))  or (value>=1e6 and  value<1e9 and  format("%1.1f M",value/m))  or (value>=1e9 and  format("%1.1f M",value/m))  or value )
 		end
 	end)
-
+	
+	PlayerFrame:SetScale(Interface.settings.unitframes.scale)
 	--PLAYER
 	function wPlayerFrame_ToPlayerArt(self)
-		PlayerFrame:SetScale(Interface.settings.unitframes.scale) -- Scale
+		 -- Scale
 		PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
 		PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame");
 		PlayerFrameGroupIndicatorText:ClearAllPoints();
@@ -1992,21 +2000,13 @@ function Interface:Bfa()
 				VehicleSeatIndicator:SetPoint(point3,relativeTo3,relativePoint3,xOffset3,yOffset3)
 				print("ArenaEnemyFrames visible")
 			elseif ObjectiveTrackerFrame.HeaderMenu:IsShown() then --active Objectives (minimize button shown):
-				if ObjectiveTrackerFrame.collapsed then --minimized Objectives:
-					point1 = "TOPRIGHT"
-					relativeTo1 = ObjectiveTrackerBlocksFrame
-					relativePoint1 = "TOPLEFT"
-					xOffset1 = 160
-					yOffset1 = 0
-					VehicleSeatIndicator:SetPoint(point1,relativeTo1,relativePoint1,xOffset1,yOffset1)
-				else --expanded Objectives:
-					point2 = "TOPRIGHT"
-					relativeTo2 = ObjectiveTrackerBlocksFrame
+
+					point2 = "TOPLEFT"
+					relativeTo2 = UIParent
 					relativePoint2 = "TOPLEFT"
-					xOffset2 = -15
-					yOffset2 = 0
+					xOffset2 = 5
+					yOffset2 = -20
 					VehicleSeatIndicator:SetPoint(point2,relativeTo2,relativePoint2,xOffset2,yOffset2)
-				end
 			else --no active Objectives (minimize button not shown):
 				VehicleSeatIndicator:SetPoint(point3,relativeTo3,relativePoint3,xOffset3,yOffset3)
 			end
@@ -2233,6 +2233,7 @@ function Interface:ItemLevel()
 end
 
 function Interface:BossFrame()
+	VehicleSeatIndicator:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 5, -20)
 	-- initialize addon table
 	Interface.events = Interface.events or {}
 	Interface.commands = Interface.commands or {}
@@ -2240,7 +2241,7 @@ function Interface:BossFrame()
 	local db
 
 	local BF = {
-		scale = 1.125,
+		scale = 1.1,
 		scale_delta = 0.005,
 		space = 0, -- vertical space
 		backdrop = {
@@ -2258,22 +2259,6 @@ function Interface:BossFrame()
 				Left = {"CENTER", nil, "LEFT", -3, 0},	-- Left
 				Right = {"CENTER", nil, "TOPRIGHT", 20, -2},	-- Right
 				Bottom = {"CENTER", nil, "BOTTOM", 0, -3}-- Bottom
-			}
-		},
-		percent = {
-			enabled = false, -- If true, Percent Frame is displayed.
-			pos = "Right", -- Position of Percent Frame. This should be one of the following anchors.
-			anchors = {
-				Top = {"BOTTOM", nil, "TOP", 10, -5},	-- Top
-				Right = {"LEFT", nil, "RIGHT", -3, 0},	-- Right
-				Bottom = {"TOP", nil, "BOTTOM", 15, 3}	-- Bottom
-			},
-			textcolor = {
-				{0.4, 0.8, 1},	-- boss1
-				{1, 0.75, 0.3},	-- boss2
-				{0.75, 1, 0.3},	-- boss3
-				{1, 1, 1},	-- boss4
-				{0.9, 0.5, 0.9}	-- boss5
 			}
 		},
 		buff = {
@@ -2384,8 +2369,8 @@ function Interface:BossFrame()
 		local p
 		for i = 1, MAX_BOSS_FRAMES do
 			local boss = _G["Boss"..i.."TargetFrame"]
-			local b = "Boss"..i.."TargetFrame"
-			local castbar = "Boss"..i.."TargetFrameSpellBar"
+			local bossPortrait = _G["Boss"..i.."TargetFramePortrait"]
+			local bossTexture = _G["Boss"..i.."TargetFrameTextureFrameTexture"]
 
 			if BF.scale then boss:SetScale(BF.scale) end
 
@@ -2406,9 +2391,36 @@ function Interface:BossFrame()
 				boss.raidTargetIcon:SetPoint(unpack(p))
 			end
 
+			boss.healthbar:SetPoint("TOPLEFT", boss, "TOPLEFT", 6, -24)
+			boss.healthbar:SetHeight(26)
+			boss.healthbar:SetStatusBarColor(1,1,1)
+			--boss.healthbar:SetStatusBarTexture("Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+			boss.name:SetPoint("BOTTOM", boss.healthbar, "TOP", 0, 4)
+			boss.healthbar.LeftText:SetPoint("LEFT", boss.healthbar, "LEFT", 6, 0);
+
+			boss.healthbar.RightText:SetPoint("RIGHT", boss.healthbar, "RIGHT", -5, 0);
+			boss.healthbar.RightText:SetFont(font, 14, "OUTLINE")
+			boss.manabar.LeftText:SetPoint("LEFT", boss.manabar, "LEFT", 6, 0);
+			boss.deadText:SetPoint("CENTER", boss.healthbar, "CENTER", 0, 0);
+			boss.unconsciousText:SetPoint("CENTER", boss.healthbar, "CENTER", 0, 0);
+			boss.nameBackground:Hide()
+			--local color = boss.nameBackground:GetStatusBarColor()
+			--boss.nameBackground:SetPoint("BOTTOM", boss.healthbar, "TOP", 0, 20)
+
+			local frame = CreateFrame("Frame", nil, boss)
+			frame:SetHeight(64)
+			frame:SetWidth(64)
+			frame:SetPoint("TOPRIGHT", boss, "TOPRIGHT", -42, -12)
+
+			portrait = frame:CreateTexture(nil, "BACKGROUND")
+			portrait:SetHeight(64)
+			portrait:SetWidth(64)
+			portrait:SetPoint("TOPLEFT", 0, 0)
+
 			local frameBorder = CreateFrame("Frame", nil, boss)
 			local borderFrameLevel = frameBorder:GetFrameLevel()
 			boss.textureFrame:SetFrameLevel(borderFrameLevel + 1)
+			bossTexture:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
 			_G["Boss"..i.."TargetFrameDropDown"]:SetFrameLevel(borderFrameLevel + 1)
 			frameBorder:SetPoint("TOPLEFT", boss.Background, "TOPLEFT", -4, 3)
 			frameBorder:SetPoint("BOTTOMRIGHT", boss.Background, "BOTTOMRIGHT", 4, -5)
@@ -2543,11 +2555,40 @@ function Interface:BossFrame()
 
 	function events:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 		events:PLAYER_REGEN_DISABLED()
+		-- -- --
+		for i = 1, MAX_BOSS_FRAMES do
+			local portrait = _G["Boss"..i.."TargetFramePortrait"]
+
+			SetPortraitTexture(portrait, "boss"..i)
+			
+		end
 		for i = 1, #frames do
 			frames[i].value = nil
 			frames[i].elapsed = 1
 		end
 	end
+
+	-- --- ---
+	local function BossColor()
+		for i = 1, MAX_BOSS_FRAMES do
+			local boss = _G["Boss"..i.."TargetFrame"]
+			local healthBar = _G["Boss"..i.."TargetFrameHealthBar"]
+			local level = _G["Boss"..i.."TargetFrameTextureFrameLevelText"]
+
+			level:SetPoint("CENTER", boss, "CENTER", 61, -17)
+			if not UnitIsFriend("player", "boss"..i) then
+				healthBar:SetStatusBarColor(0.8, 0.3, 0.22)
+			else
+				healthBar:SetStatusBarColor(0, 1, 0)
+			end
+		end
+	end
+
+	hooksecurefunc("HealthBar_OnValueChanged", function(self)
+		if Boss1TargetFrame:IsShown() then
+			BossColor()
+		end
+	end)
 
 	function buff_prototype:New(parent, index)
 		local buff = setmetatable({}, buff_MT)
@@ -2642,12 +2683,14 @@ function Interface:BossFrame()
 				_G[b]:Hide()
 				anchorFrame:Hide()
 			else
+				SetPortraitTexture(_G[b.."Portrait"], "player")
 				_G[b.."TextureFrameName"]:SetText("Boss"..i.."Name")
 				_G[b.."NameBackground"]:SetVertexColor(RandomFactionColor())
 				_G[b.."HealthBar"]:SetMinMaxValues(1, 99999999)
 				_G[b.."HealthBar"]:SetValue(random(11111111, 88888888))
 				_G[b.."ManaBar"]:SetMinMaxValues(1, 100)
 				_G[b.."ManaBar"]:SetValue(random(15, 85))
+				_G[b.."TextureFrameLevelText"]:SetText(112)
 				-- _G[b.."ManaBar"]:SetStatusBarColor(0.2, 0.2, 1)
 				_G[b]:Show()
 				anchorFrame:Show()
