@@ -1,6 +1,6 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: |cffFF7D0AJok|rUI
-## Version: 1.0a
+## Version: 2.0
 ## Author: Tom
 ## Notes: All-in addon for UI, Nameplates, Mythic+ and more.
 ## SavedVariables: JokUIDB
@@ -12,24 +12,12 @@ libs\Ace3\CallbackHandler-1.0\CallbackHandler-1.0.xml
 libs\Ace3\AceAddon-3.0\AceAddon-3.0.xml
 libs\Ace3\AceEvent-3.0\AceEvent-3.0.xml
 libs\Ace3\AceTimer-3.0\AceTimer-3.0.xml
-libs\Ace3\AceBucket-3.0\AceBucket-3.0.xml
-libs\Ace3\AceHook-3.0\AceHook-3.0.xml
 libs\Ace3\AceDB-3.0\AceDB-3.0.xml
 libs\Ace3\AceDBOptions-3.0\AceDBOptions-3.0.xml
-libs\Ace3\AceLocale-3.0\AceLocale-3.0.xml
 libs\Ace3\AceConsole-3.0\AceConsole-3.0.xml
 libs\Ace3\AceGUI-3.0\AceGUI-3.0.xml
 libs\Ace3\AceConfig-3.0\AceConfig-3.0.xml
-libs\Ace3\AceComm-3.0\AceComm-3.0.xml
-libs\Ace3\AceTab-3.0\AceTab-3.0.xml
-libs\Ace3\AceSerializer-3.0\AceSerializer-3.0.xml
-libs\LibSharedMedia-3.0\lib.xml
-libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 libs\LibGroupInSpecT-1.1\lib.xml
-libs\LibDualSpec-1.0\LibDualSpec-1.0.lua
-libs\LibCompress\lib.xml
-libs\LibArtifactData-1.0.lua
-libs\indents.lua
 
 ## CORE
 
@@ -40,9 +28,4 @@ Core\Nameplates.lua
 Core\RaidFrames.lua
 Core\MythicPlus.lua
 Core\Misc.lua
-
-## INTERFACE 
-
 Core\Interface.lua
-Core\Bfa.xml
-Core\Actionbars.lua

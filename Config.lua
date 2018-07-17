@@ -2,7 +2,6 @@ local _, JokUI = ...
 local Config = JokUI:RegisterModule("Config")
 
 local AceConfig = LibStub("AceConfig-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 
 local options = {
 	type = "group",
@@ -20,7 +19,7 @@ local options = {
 				},
 				desc = {
 					type = "description",
-					name = "Nameplates, Raid Frames and various useful options.",
+					name = "Interface, Nameplates, Raid Frames and various useful options.",
 					fontSize = "medium",
 					order = 1
 				},
@@ -51,6 +50,18 @@ local options = {
 					name = " |cffffd100/sgrid 64 : |r Show a grid on your screen.",
 					fontSize = "medium",
 					order = 6
+				},
+				space = {
+					type = "description",
+					name = " \n",
+					fontSize = "medium",
+					order = 7
+				},
+				command3 = {
+					type = "description",
+					name = " |cffffd100/move : |r Move and preview boss frames, player power bar and extra action button.",
+					fontSize = "medium",
+					order = 8
 				},
 			}
 		}
