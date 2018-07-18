@@ -142,7 +142,7 @@ function MythicPlus:OnEnable()
 	end
 
 	self:Timer()
-	self:Schedule()
+	--self:Schedule()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 	self:RegisterEvent("CHALLENGE_MODE_START")
