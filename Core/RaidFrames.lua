@@ -251,7 +251,7 @@ do
 		true,
 		function(state)
 			if state then
-				--RaidFrames:ShowAbsorb()
+				RaidFrames:ShowAbsorb()
 			end
 		end)
 end
@@ -277,7 +277,7 @@ function RaidFrames:ShowAbsorb()
 	hooksecurefunc("UnitFrame_Update", function(frame)
 		local absorbBar = frame.totalAbsorbBar;
 		if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-		
+
 		local absorbOverlay = frame.totalAbsorbBarOverlay;
 		if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
 		
