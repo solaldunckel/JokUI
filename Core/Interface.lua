@@ -322,6 +322,61 @@ function Interface:UnitFrames()
 
 	end
 	hooksecurefunc("TargetFrame_CheckClassification", original_CheckClassification)
+
+	local function Kill(frame)
+	    if type(frame) == 'table' and frame.SetScript then
+	        frame:UnregisterAllEvents()
+	        frame:SetScript('OnEvent',nil)
+	        frame:SetScript('OnUpdate',nil)
+	        frame:SetScript('OnHide',nil)
+	        frame:Hide()
+	        frame.SetScript = null
+	        frame.RegisterEvent = null
+	        frame.RegisterAllEvents = null
+	        frame.Show = null
+	    end
+	end
+
+	Kill(ReputationWatchBar)
+
+	function StyleVehicle(self, vehicleType)
+		-- PlayerFrame.state = "vehicle"
+
+		-- UnitFrame_SetUnit(self, "vehicle", PlayerFrameHealthBar, PlayerFrameManaBar)
+		-- UnitFrame_SetUnit(PetFrame, "player", PetFrameHealthBar, PetFrameManaBar)
+		-- PetFrame_Update(PetFrame)
+		-- PlayerFrame_Update()
+		-- BuffFrame_Update()
+		-- ComboFrame_Update(ComboFrame)
+
+		-- PlayerFrameTexture:Hide()
+		if (vehicleType == "Natural") then
+			PlayerFrameVehicleTexture:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Organic")
+			PlayerFrameFlash:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Organic-Flash")
+			PlayerFrameFlash:SetTexCoord(-0.02, 1, 0.07, 0.86)
+			PlayerFrameHealthBar:SetSize(103, 12)
+			PlayerFrameHealthBar:SetPoint("TOPLEFT", 116, -41)
+			PlayerFrameManaBar:SetSize(103, 12)
+			PlayerFrameManaBar:SetPoint("TOPLEFT", 116, -52)
+		else
+			PlayerFrameVehicleTexture:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame")
+			PlayerFrameFlash:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Flash")
+			PlayerFrameFlash:SetTexCoord(-0.02, 1, 0.07, 0.86)
+			PlayerFrameHealthBar:SetSize(100, 12)
+			PlayerFrameHealthBar:SetPoint("TOPLEFT", 119, -41)
+			PlayerFrameManaBar:SetSize(100, 12)
+			PlayerFrameManaBar:SetPoint("TOPLEFT", 119, -52)
+		end
+		-- PlayerFrame_ShowVehicleTexture()
+
+		-- PlayerName:SetPoint("CENTER", 50, 23)
+		-- PlayerLeaderIcon:SetPoint("TOPLEFT", 40, -12)
+		-- PlayerFrameGroupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOPLEFT", 97, -13)
+
+		-- PlayerFrameBackground:SetWidth(114)
+		-- PlayerLevelText:Hide()
+	end
+	hooksecurefunc("PlayerFrame_ToVehicleArt", StyleVehicle)
 		
 	--BUFFS
 	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
@@ -1256,6 +1311,53 @@ function Interface:CastBars()
 end
 
 function Interface:Minimap()
+	hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
+		self:GetNormalTexture():SetTexture(nil)
+		self:GetPushedTexture():SetTexture(nil)
+		if not gb then
+			gb = CreateFrame("Frame", nil, GarrisonLandingPageMinimapButton)
+			gb:SetFrameLevel(GarrisonLandingPageMinimapButton:GetFrameLevel() - 1)
+			gb:SetPoint("CENTER", 0, 0)
+			gb:SetSize(36,36)
+
+			gb.icon = gb:CreateTexture(nil, "ARTWORK")
+			gb.icon:SetPoint("CENTER", 0, 0)
+			gb.icon:SetSize(36,36)
+	
+			gb.border = CreateFrame("Frame", nil, gb)
+			gb.border:SetFrameLevel(gb:GetFrameLevel() + 1)
+			gb.border:SetAllPoints()
+
+			gb.border.texture = gb.border:CreateTexture(nil, "ARTWORK")
+			gb.border.texture:SetTexture("Interface\\PlayerFrame\\UI-PlayerFrame-Deathknight-Ring")
+			gb.border.texture:SetVertexColor(.1,.1,.1)
+			gb.border.texture:SetPoint("CENTER", 1, -2)
+			gb.border.texture:SetSize(45,45)
+		end
+		if (C_Garrison.GetLandingPageGarrisonType() == 2) then
+			if select(1,UnitFactionGroup("player")) == "Alliance" then	
+				SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61573)))
+			elseif select(1,UnitFactionGroup("player")) == "Horde" then
+				SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61574)))
+			end
+		else
+			local t = CLASS_ICON_TCOORDS[select(2,UnitClass("player"))]
+        	gb.icon:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+        	gb.icon:SetTexCoord(unpack(t))
+		end
+	end)
+
+	-- GarrisonLandingPageMinimapButton:SetScript("OnMouseUp", function(self, button)
+	-- 	if button == "RightButton" then
+	-- 		if (GarrisonLandingPage and GarrisonLandingPage:IsShown()) then
+	-- 			HideUIPanel(GarrisonLandingPage);
+	-- 			print("test")
+	-- 		else
+	-- 			ShowGarrisonLandingPage(LE_GARRISON_TYPE_6_0)
+	-- 		end
+	-- 	end	
+	-- end)
+
 	MinimapBorderTop:Hide()	
 	MinimapZoomIn:Hide()
 	MinimapZoomOut:Hide()
@@ -1637,8 +1739,11 @@ function Interface:ReAnchor()
   	end
 
   	-- ETC
-  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -145)
+  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -100)
 	DurabilityFrame:SetPoint("BOTTOMRIGHT", VerticalMultiBarsContainer, "TOPRIGHT", 0, 0)
+	DurabilityFrame:SetScale(0.5)
+	MainMenuBarArtFrame.RightEndCap:Hide()
+	MainMenuBarArtFrame.LeftEndCap:Hide()
 end
 
 function Interface:BossFrame()

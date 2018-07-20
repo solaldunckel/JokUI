@@ -776,7 +776,7 @@ hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
             if ( frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit) and classColor ) then
                 r, g, b = classColor.r, classColor.g, classColor.b
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
-                r, g, b = 0.1, 0.1, 0.1
+                r, g, b = 0.5, 0.5, 0.5
             elseif raidMarker then
                 local markerColor = markerColors[tostring(raidMarker)]
                 r, g, b = markerColor.r, markerColor.g, markerColor.b
@@ -953,7 +953,7 @@ function Nameplates:ExtraAuras()
 
     local function CreateText(frame, layer, fontsize, flag, justifyh, shadow)
         local text = frame:CreateFontString(nil, layer)
-        text:SetFont(font, fontsize, flag)
+        text:SetFont("Fonts\\FRIZQT__.TTF", fontsize, flag)
         text:SetJustifyH(justifyh)
         
         if shadow then

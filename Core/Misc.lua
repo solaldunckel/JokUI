@@ -1562,7 +1562,6 @@ function Misc:SafeQueue()
 	end
 
 	local function PrintTime()
-		local announce = SafeQueueDB.announce
 		if announce == "off" then return end
 		local secs, str, mins = floor(GetTime() - queueTime), "Queue popped "
 		if secs < 1 then
@@ -1596,7 +1595,7 @@ function Misc:SafeQueue()
 				if not queueTime then queueTime = GetTime() end
 			elseif status == "confirm" then
 				if queueTime then
-					PrintTime()
+					--PrintTime()
 					queueTime = nil
 					remaining = 0
 					queue = i
@@ -2397,6 +2396,8 @@ function Misc:ExtraActionButton()
 		self:RegisterEvent('QUEST_POI_UPDATE')
 		self:RegisterEvent('QUEST_WATCH_LIST_CHANGED')
 		self:RegisterEvent('QUEST_ACCEPTED')
+		self:RegisterEvent('ZONE_CHANGED')
+		self:RegisterEvent('ZONE_CHANGED_NEW_AREA')
 	end
 
 	local worldQuests = {}
