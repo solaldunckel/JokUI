@@ -1991,7 +1991,7 @@ function Misc:ItemLevel()
 	        count, level, _, _, quality, _, _, class, subclass, _, _ = LibItemLevel:GetItemInfo(ItemLink);
 	        name, _ = GetItemSpell(ItemLink);
 	        _, equipped, _ = GetAverageItemLevel();
-	        if level >= (90 * equipped / 100) then
+	        if level >= (80 * equipped / 100) then
 	            button.levelString:SetTextColor(1, 0.82, 0);
 	        else
 	            button.levelString:SetTextColor(0.5, 0.5, 0.5);
@@ -2082,6 +2082,7 @@ function Misc:TeleportCloak()
 			51559, -- Runed Ring of the Kirin Tor
 			51560, -- Runed Band of the Kirin Tor
 			95050, -- Brassiest Knuckle (Horde)
+			144392, -- Brawler's Guild Ring
 			95051, -- Brassiest Knuckle (Alliance)
 		},
 		Feet = {

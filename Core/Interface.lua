@@ -1739,7 +1739,15 @@ function Interface:ReAnchor()
   	end
 
   	-- ETC
-  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -100)
+  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -58)
+  	
+  	MainMenuBarBackpackButton:Hide()
+  	CharacterBag0Slot:Hide()
+  	CharacterBag1Slot:Hide()
+  	CharacterBag2Slot:Hide()
+  	CharacterBag3Slot:Hide()
+  	MicroButtonAndBagsBar.MicroBagBar:Hide()
+
 	DurabilityFrame:SetPoint("BOTTOMRIGHT", VerticalMultiBarsContainer, "TOPRIGHT", 0, 0)
 	DurabilityFrame:SetScale(0.5)
 	MainMenuBarArtFrame.RightEndCap:Hide()
@@ -2379,9 +2387,9 @@ function Interface:AutoQuest()
 		end
 
 		-- Show quest dialog for quests that use the objective tracker (it will be completed automatically)
-		if event == "QUEST_AUTOCOMPLETE" then
-			LeaPlusLC.PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
-		end
+		-- if event == "QUEST_AUTOCOMPLETE" then
+		-- 	LeaPlusLC.PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
+		-- end
 
 		----------------------------------------------------------------------
 		-- Select quests automatically

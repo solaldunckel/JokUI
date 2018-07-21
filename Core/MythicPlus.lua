@@ -159,9 +159,9 @@ function MythicPlus:ADDON_LOADED(event, addon)
 	if addon == "Blizzard_TalkingHeadUI" then
 		self:SyncFeature("MythicTalkingHead")
 	end
-	if addon == "Blizzard_ChallengesUI" then
-		self:Blizzard_ChallengesUI()
-	end
+	-- if addon == "Blizzard_ChallengesUI" then
+	-- 	self:Blizzard_ChallengesUI()
+	-- end
 end
 
 do
