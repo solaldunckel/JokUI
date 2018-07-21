@@ -186,8 +186,8 @@ function Interface:UnitFrames()
 	local AURA_START_Y = 28;
 	local AURA_OFFSET_Y = 3;
 	local AURA_OFFSET_X = 4;
-	local LARGE_AURA_SIZE = 22
-	local SMALL_AURA_SIZE = 18
+	local LARGE_AURA_SIZE = 23
+	local SMALL_AURA_SIZE = 20
 	local AURA_ROW_WIDTH = 110;
 
 	local function ClassColor(statusbar, unit)
@@ -272,8 +272,6 @@ function Interface:UnitFrames()
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 	--TARGET
 	function original_CheckClassification (self, forceNormalTexture)
-		
-
 		self.name:SetPoint("LEFT", self, 15, 36);
 		self.deadText:ClearAllPoints();
 		TargetFrameTextureFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
@@ -319,37 +317,20 @@ function Interface:UnitFrames()
 		FocusFrameToTManaBar:SetPoint("TOPLEFT", 45, -25)
 		FocusFrameToTManaBar:SetHeight(3)
 		FocusFrameToT.deadText:SetWidth(0.01)
-
 	end
 	hooksecurefunc("TargetFrame_CheckClassification", original_CheckClassification)
 
-	local function Kill(frame)
-	    if type(frame) == 'table' and frame.SetScript then
-	        frame:UnregisterAllEvents()
-	        frame:SetScript('OnEvent',nil)
-	        frame:SetScript('OnUpdate',nil)
-	        frame:SetScript('OnHide',nil)
-	        frame:Hide()
-	        frame.SetScript = null
-	        frame.RegisterEvent = null
-	        frame.RegisterAllEvents = null
-	        frame.Show = null
-	    end
-	end
-
-	Kill(ReputationWatchBar)
-
 	function StyleVehicle(self, vehicleType)
-		-- PlayerFrame.state = "vehicle"
+		PlayerFrame.state = "vehicle"
 
-		-- UnitFrame_SetUnit(self, "vehicle", PlayerFrameHealthBar, PlayerFrameManaBar)
-		-- UnitFrame_SetUnit(PetFrame, "player", PetFrameHealthBar, PetFrameManaBar)
-		-- PetFrame_Update(PetFrame)
-		-- PlayerFrame_Update()
-		-- BuffFrame_Update()
-		-- ComboFrame_Update(ComboFrame)
+		UnitFrame_SetUnit(self, "vehicle", PlayerFrameHealthBar, PlayerFrameManaBar)
+		UnitFrame_SetUnit(PetFrame, "player", PetFrameHealthBar, PetFrameManaBar)
+		PetFrame_Update(PetFrame)
+		PlayerFrame_Update()
+		BuffFrame_Update()
+		ComboFrame_Update(ComboFrame)
 
-		-- PlayerFrameTexture:Hide()
+		PlayerFrameTexture:Hide()
 		if (vehicleType == "Natural") then
 			PlayerFrameVehicleTexture:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Organic")
 			PlayerFrameFlash:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Organic-Flash")
@@ -367,14 +348,14 @@ function Interface:UnitFrames()
 			PlayerFrameManaBar:SetSize(100, 12)
 			PlayerFrameManaBar:SetPoint("TOPLEFT", 119, -52)
 		end
-		-- PlayerFrame_ShowVehicleTexture()
+		PlayerFrame_ShowVehicleTexture()
 
-		-- PlayerName:SetPoint("CENTER", 50, 23)
-		-- PlayerLeaderIcon:SetPoint("TOPLEFT", 40, -12)
-		-- PlayerFrameGroupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOPLEFT", 97, -13)
+		PlayerName:SetPoint("CENTER", 50, 23)
+		PlayerLeaderIcon:SetPoint("TOPLEFT", 40, -12)
+		PlayerFrameGroupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOPLEFT", 97, -13)
 
-		-- PlayerFrameBackground:SetWidth(114)
-		-- PlayerLevelText:Hide()
+		PlayerFrameBackground:SetWidth(114)
+		PlayerLevelText:Hide()
 	end
 	hooksecurefunc("PlayerFrame_ToVehicleArt", StyleVehicle)
 		
@@ -566,15 +547,15 @@ function Interface:UnitFrames()
 		border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
 		b.border = border
 		--shadow
-		local back = CreateFrame("Frame", nil, b)
-		back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-		back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-		back:SetFrameLevel(b:GetFrameLevel() - 1)
-		back:SetBackdrop(backdrop)
-		back:SetBackdropBorderColor(0, 0, 0, 0.9)
-		b.bg = back
-		--set button styled variable
-		b.styled = true
+		-- local back = CreateFrame("Frame", nil, b)
+		-- back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
+		-- back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
+		-- back:SetFrameLevel(b:GetFrameLevel() - 1)
+		-- back:SetBackdrop(backdrop)
+		-- back:SetBackdropBorderColor(0, 0, 0, 0.9)
+		-- b.bg = back
+		-- --set button styled variable
+		-- b.styled = true
     end
   
     hooksecurefunc("TargetFrame_UpdateAuras", function(self)
@@ -785,10 +766,6 @@ function Interface:ActionBars()
 	    if not bu.bg then applyBackground(bu) end
 	    bu.rabs_styled = true
 	  end
-
-	  PetActionBarFrame:ClearAllPoints()
-	  PetActionBarFrame:SetPoint("BOTTOM",MultiBarBottomLeft,"TOP",12,3)
-	  PetActionBarFrame.SetPoint = function() end
 
 	  --style pet buttons
 	  local function stylePetButton(bu)
