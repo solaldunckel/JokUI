@@ -335,18 +335,18 @@ function Misc:AutoRep()
 end
 
 function Misc:RangeSpell()
-	hooksecurefunc("ActionButton_UpdateRangeIndicator",function(self, checksRange, inRange)
-		local icon = self.icon
-		if not ( self.HotKey:GetText() == RANGE_INDICATOR ) then
-			if ( checksRange ) then
-				if ( inRange ) then
-					icon:SetVertexColor(1, 1, 1)
-				else
-					icon:SetVertexColor(1, 0.2, 0.1)
-				end
-			end
-		end
-	end)
+	-- hooksecurefunc("ActionButton_UpdateRangeIndicator",function(self, checksRange, inRange)
+	-- 	local icon = self.icon
+	-- 	if not ( self.HotKey:GetText() == RANGE_INDICATOR ) then
+	-- 		if ( checksRange ) then
+	-- 			if ( inRange ) then
+	-- 				icon:SetVertexColor(1, 1, 1)
+	-- 			else
+	-- 				icon:SetVertexColor(1, 0.2, 0.1)
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end)
 end
 
 function Misc:SGrid()
@@ -1548,7 +1548,7 @@ function Misc:SafeQueue()
 	LFGDungeonReadyDialog.leaveButton:Hide()
 	LFGDungeonReadyDialog.leaveButton.Show = function() end
 	LFGDungeonReadyDialog.enterButton:ClearAllPoints()
-	LFGDungeonReadyDialog.enterButton:SetPoint("BOTTOM", PVPReadyDialog, "BOTTOM", 0, 25)
+	LFGDungeonReadyDialog.enterButton:SetPoint("BOTTOM", LFGDungeonReadyDialog, "BOTTOM", 0, 25)
 	LFGDungeonReadyDialog.label:SetPoint("TOP", 0, -22)
 
 	PVPReadyDialog.leaveButton:Hide()

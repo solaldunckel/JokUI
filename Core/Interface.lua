@@ -188,7 +188,7 @@ function Interface:UnitFrames()
 	local AURA_OFFSET_X = 4;
 	local LARGE_AURA_SIZE = 23
 	local SMALL_AURA_SIZE = 20
-	local AURA_ROW_WIDTH = 110;
+	local AURA_ROW_WIDTH = 119;
 
 	local function ClassColor(statusbar, unit)
 		local _, class, c
@@ -531,8 +531,8 @@ function Interface:UnitFrames()
 		end
 		--icon
 		local icon = _G[name.."Icon"]
-		icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-		icon:SetDrawLayer("BACKGROUND",-8)
+		icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+		icon:SetDrawLayer("BACKGROUND",-7)
 		b.icon = icon
 		--border
 		local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
