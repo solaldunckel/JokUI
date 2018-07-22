@@ -15,11 +15,86 @@ local texturePath = "Interface\\AddOns\\JokUI\\media\\nameplates\\"
 local statusBar = texturePath.."UI-StatusBar"
 
 local nameplates_aura_spells = {
-    -- [339] = true,
-    -- [980] = true,
-    -- [164812] = true,
-    -- [164815] = true,
-    -- [197277] = true,
+    -- Mythic+
+        [277242] = true, -- Infested (G'huun)
+
+    -- Death Knight
+        [47568] = true, -- Empower Runic Weapon
+        [51271] = true, -- Pillar of Frost
+        [48707] = true, -- AMS
+        [48792] = true, -- IBF
+
+    -- Demon Hunter
+        [212800] = true, -- Blur
+
+    -- Druid
+        [194223] = true, -- Celestial Alignment
+        [22812] = true, -- Barskin
+        [61336] = true, -- Survival Instincts
+        [102342] = true, -- Ironbark
+        [102560] = true, -- Incarn (MK)
+        [102543] = true, -- Incarn (Feral)
+
+    -- Hunter
+        [193526] = true, -- Trueshot
+        [19574] = true, -- Bestial Wrath
+        [186265] = true, -- Turtle
+
+    -- Mage
+        [12472] = true, -- Icy Veins
+        [190319] = true, -- Combustion
+        [12042] = true, -- Arcane Power
+        [45438] = true, -- Ice Block
+        [198111] = true, -- Temporal Shield
+
+    -- Monk
+        [201318] = true, -- Fortifying Brew
+        [122470] = true, -- Touch of Karma
+        [122783] = true, -- Diffuse Magic
+        [216113] = true, -- Way of the Crane
+
+    -- Paladin
+        [31884] = true, -- Avenging Wrath
+        [210294] = true, -- Divine Favor
+        [1022] = true, -- Blessing of Protection
+        [6940] = true, -- Sacrifice
+        [498] = true, -- Divine Protection
+        [642] = true, -- Divine Shield
+        [184662] = true, -- Shield of Vengeance
+
+    -- Priest
+        [200183] = true, -- Apotheosis
+        [33206] = true, -- Pain Suppression
+        [47788] = true, -- Guardian Spirit
+        [47536] = true, -- Rapture
+        [47585] = true, -- Dispersion
+        [197862] = true, -- Archangel
+
+    -- Rogue
+        [199754] = true, -- Riposte
+        [5277] = true, -- Evasion
+        [31224] = true, -- Cloak of Shadows
+        [13750] = true, -- Adrenaline Rush
+        [121471] = true, -- Shadow Blades
+        [79140] = true, -- Vendetta
+
+    -- Shaman
+        [2825] = true, -- Bloodlust
+        [108271] = true, -- Astral Shift
+
+    -- Warlock
+        [212295] = true, -- Nether Ward
+        [104773] = true, -- Unending Resolve
+        [196098] = true, -- Soul Harvest
+
+    -- Warrior 
+        [118038] = true, -- Die by the Sword
+        [184364] = true, -- Enraged Regeneration
+        [23920] = true, -- Spell Reflect
+        [107574] = true, -- Avatar
+        [1719] = true, -- Recklessness
+        [227847] = true, -- Bladestorm
+        [197690] = true, -- Def Stance
 };
 
 local nameplateScale = GetCVar("nameplateGlobalScale")
@@ -425,6 +500,10 @@ function Nameplates:OnInitialize()
     SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)
     SetCVar("nameplateHorizontalScale", Nameplates.settings.healthWidth)        
     SetCVar("nameplateMotion", Nameplates.settings.overlap)
+    SetCVar("nameplateShowEnemyGuardians", Nameplates.settings.enemyguardian)
+    SetCVar("nameplateShowEnemyMinus", Nameplates.settings.enemyminus)
+    SetCVar("nameplateShowEnemyTotems", Nameplates.settings.enemytotem)
+    SetCVar("nameplateShowEnemyPets", Nameplates.settings.enemypets)
 
     SetCVar("nameplateMinScale", 1)
     SetCVar("nameplateMaxScale", 1)

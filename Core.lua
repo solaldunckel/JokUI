@@ -26,8 +26,6 @@ function Core:OnEnable()
 		self:RegisterChatCommand("Move", "MoveAllFrames")
 	end
 	self:RegisterChatCommand("Jokmove", "MoveAllFrames")
-	
-	self:Debug()
 end
 
 function Core:OpenGUI(cmd)
@@ -45,7 +43,7 @@ function Core:MoveAllFrames(cmd)
     BossFrameMove()
 
     StaticPopup_Show ("Lock")
-	if not bkgndFrame:IsShown() then
+	if not MoveBackgroundFrame:IsShown() then
 		StaticPopup_Hide ("Lock")
 	end
 end
@@ -74,57 +72,51 @@ function Core:RegisterCallback(key, func)
 	end
 end
 
-function Core:Debug()
-	-- local debug = CreateFrame("FRAME")
-	-- debug.text = debug:CreateFontString(nil, 'BACKGROUND')
-	-- debug.text:SetPoint("TOP", UIParent, "TOP", 0, -20)
-	-- debug.text:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+-----
+-- RELOAD UI POPUP
+-----
 
-	-- debug:SetScript("OnUpdate", function()
-	-- 	local time = GetTime()
-	-- 	if not last or last < time - 0.3 then
- --    		last = time		
- --    		UpdateAddOnMemoryUsage()
- --    		local JokUIMemory = GetAddOnMemoryUsage("JokUI")
- --    		UpdateAddOnMemoryUsage()
-			
-	-- 		debug.text:SetText("|cffFF7D0AJok|rUI : "..memFormat(JokUIMemory))
-	-- 	end
-	-- end)
+StaticPopupDialogs["ReloadUI_Popup"] = {
+	text = "Reload your UI to apply changes?",
+	button1 = "Reload",
+	button2 = "Later",
+	OnAccept = function()
+	    ReloadUI()
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
 
-	local nb = 0
+-----
+-- LOCK POPUP
+-----
 
-	function DebugTest()
-		nb = nb+1
-		print("FrameUpdate : "..nb)
-	end
-
-end
+StaticPopupDialogs["Lock"] = {
+	text = "Do you want to lock frames?",
+	button1 = "Lock",
+	OnAccept = function()
+	    Core:MoveAllFrames()
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
 
 -----
 -- Move All Background Frame
 -----
 
-bkgndFrame = CreateFrame("Frame", nil, UIParent)
-bkgndFrame:SetFrameStrata("BACKGROUND")
-bkgndFrame:SetBackdrop({
+MoveBackgroundFrame = CreateFrame("Frame", nil, UIParent)
+MoveBackgroundFrame:SetFrameStrata("BACKGROUND")
+MoveBackgroundFrame:SetBackdrop({
 	bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
 })
-bkgndFrame:SetAllPoints(UIParent)
-bkgndFrame:SetBackdropColor(0, 0, 0, 1)
-bkgndFrame:Hide()
-
-StaticPopupDialogs["Lock"] = {
-  text = "Do you want to lock frames?",
-  button1 = "Lock",
-  OnAccept = function()
-      Core:MoveAllFrames()
-  end,
-  timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,
-}
+MoveBackgroundFrame:SetAllPoints(UIParent)
+MoveBackgroundFrame:SetBackdropColor(0, 0, 0, 1)
+MoveBackgroundFrame:Hide()
 
 -----
 -- HonorFrame Taint Workaround

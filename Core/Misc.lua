@@ -347,6 +347,38 @@ function Misc:RangeSpell()
 	-- 		end
 	-- 	end
 	-- end)
+	hooksecurefunc(
+	    "ActionButton_OnEvent",
+	    function(self, event, ...)
+	        if (event == "PLAYER_TARGET_CHANGED") then
+	            self.newTimer = self.rangeTimer
+	        end
+	    end
+	)
+	hooksecurefunc(
+	    "ActionButton_UpdateUsable",
+	    function(self)
+	        local icon = _G[self:GetName() .. "Icon"]
+	        local valid = IsActionInRange(self.action)
+	        if (valid == false) then
+	            icon:SetVertexColor(1, 0.2, 0.1)
+	        end
+	    end
+	)
+	hooksecurefunc(
+	    "ActionButton_OnUpdate",
+	    function(self, elapsed)
+	        local rangeTimer = self.newTimer
+	        if (rangeTimer) then
+	            rangeTimer = rangeTimer - elapsed
+	            if (rangeTimer <= 0) then
+	                ActionButton_UpdateUsable(self)
+	                rangeTimer = TOOLTIP_UPDATE_TIME
+	            end
+	            self.newTimer = rangeTimer
+	        end
+	    end
+	)
 end
 
 function Misc:SGrid()
@@ -1767,10 +1799,6 @@ function Misc:AFK()
 					ToggleSpin(false);
 				end
 			end
-		elseif (event == 'PLAYER_STARTED_MOVING') then
-			if (UnitIsAFK('player')) then
-				ToggleSpin(false);
-			end
 		elseif (event == 'PLAYER_LEAVING_WORLD') then
 			if (UnitIsAFK('player')) then
 				ToggleSpin(false);
@@ -1788,56 +1816,6 @@ function Misc:AFK()
 	AFKCamera:RegisterEvent('PLAYER_STARTED_MOVING');
 	AFKCamera:RegisterEvent('PLAYER_LEAVING_WORLD');
 	AFKCamera:RegisterEvent('PLAYER_DEAD');
-end
-
-function Misc:Coords()
-
-	-- World Map Coords
-	local MapCoordsFrame = CreateFrame('Frame', nil, WorldMapFrame.ScrollContainer);
-	MapCoordsFrame.delay = 0.1;
-	MapCoordsFrame.elapsed = 0;
-
-	MapCoordsFrame:SetWidth(270);	
-	MapCoordsFrame:SetHeight(16);
-	MapCoordsFrame:SetPoint('BOTTOM', 0, 20);
-
-	MapCoordsFrame.text = MapCoordsFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal');
-	MapCoordsFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 16, 'THINOUTLINE');
-	MapCoordsFrame.text:SetAllPoints();
-
-	local function UpdateCoords(self, elapsed)
-		MapCoordsFrame.elapsed = MapCoordsFrame.elapsed + elapsed; -- Increment the tick timer
-		if(MapCoordsFrame.elapsed >= MapCoordsFrame.delay) then -- Matched tick delay?
-		    if WorldMapFrame:IsVisible() then
-		        WorldMapFrameTitleText:SetFont("Fonts\\FRIZQT__.TTF", 14, 'THINOUTLINE');
-		        local scale = WorldMapFrame.ScrollContainer.Child:GetEffectiveScale();
-		        local width = WorldMapFrame.ScrollContainer.Child:GetWidth();
-		        local height = WorldMapFrame.ScrollContainer.Child:GetHeight();
-		        local cenx, ceny = WorldMapFrame.ScrollContainer.Child:GetCenter();
-		        local x, y = GetCursorPosition();
-		        local vmapx = (x / scale - (cenx - (width/2))) / width;
-		        local vmapy = (ceny + (height/2) - y / scale) / height;
-
-		        local inInstance, _ = IsInInstance();
-				if (inInstance ~= true) then
-
-			        local coords = string.format('(%d:%d)', (floor(vmapx * 1000 + 0.5)) / 10, (floor(vmapy * 1000 + 0.5)) / 10);
-			        local px, py = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player"):GetXY()
-			        local pcoords = string.format('(%i:%i)',px*100,py*100)
-
-			        if (vmapx >= 0  and vmapy >= 0 and vmapx <=1 and vmapy <=1) then
-			            MapCoordsFrame.text:SetFormattedText("Cursor : "..coords.." / Player : "..pcoords);
-			        else
-			            MapCoordsFrame.text:SetText('Player : '..pcoords);
-			        end
-		        end
-		    end
-		    MapCoordsFrame.elapsed = 0;
-		end
-	end
-
-	MapCoordsFrame:SetScript('OnUpdate', UpdateCoords)
-	MapCoordsFrame:Show();
 end
 
 function Misc:ItemLevel()
@@ -2728,13 +2706,13 @@ function Misc:ExtraActionButton()
 			locked = true
 			ExtraActionButton:SetFrameStrata("LOW")
 			ExtraActionButton1:SetFrameStrata("LOW")
-			bkgndFrame:Hide()
+			MoveBackgroundFrame:Hide()
 		else
 			locked = false
 			ExtraActionButton:SetFrameStrata("TOOLTIP")
 			ExtraActionButton1:SetFrameStrata("TOOLTIP")
-			bkgndFrame:SetFrameStrata("DIALOG")
-			bkgndFrame:Show()
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
 		end
 
 		if(Drag:IsShown()) then
@@ -2825,13 +2803,13 @@ function Misc:PowerBarAlt()
 			locked = true
 			PlayerPowerBarAlt:SetMovable(false)
 			overlay:SetFrameStrata("LOW")
-			bkgndFrame:Hide()
+			MoveBackgroundFrame:Hide()
 		else
 			locked = false
 			PlayerPowerBarAlt:SetFrameStrata("TOOLTIP")
 			PlayerPowerBarAlt:SetMovable(true)
-			bkgndFrame:SetFrameStrata("DIALOG")
-			bkgndFrame:Show()
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
 		end
 		
 		if UnitAlternatePowerInfo("player") then return end -- don't mess with it if it's real!
@@ -2869,42 +2847,3 @@ function Misc:PowerBarAlt()
 		end
 	end
 end
-
--- SLASH_CastBar1 = '/castbar'
--- SlashCmdList.CastBar = function(message)
--- 	local startColor = CastingBarFrame_GetEffectiveStartColor(CastingBarFrame, false, notInterruptible);
--- 	CastingBarFrame:SetStatusBarColor(startColor:GetRGB());
--- 	if CastingBarFrame.flashColorSameAsStart then
--- 		CastingBarFrame.Flash:SetVertexColor(startColor:GetRGB());
--- 	else
--- 		CastingBarFrame.Flash:SetVertexColor(1, 1, 1);
--- 	end
-	
--- 	if ( CastingBarFrame.Spark ) then
--- 		CastingBarFrame.Spark:Show();
--- 	end
--- 	CastingBarFrame.value = 50;
--- 	CastingBarFrame.maxValue = 200;
--- 	CastingBarFrame:SetMinMaxValues(0, CastingBarFrame.maxValue);
--- 	CastingBarFrame:SetValue(CastingBarFrame.value);
--- 	if ( CastingBarFrame.Text ) then
--- 		CastingBarFrame.Text:SetText("Test");
--- 	end
-
--- 	CastingBarFrame.casting = true;
-
--- 	if ( CastingBarFrame.BorderShield ) then
--- 		if ( CastingBarFrame.showShield and notInterruptible ) then
--- 			CastingBarFrame.BorderShield:Show();
--- 			if ( CastingBarFrame.BarBorder ) then
--- 				CastingBarFrame.BarBorder:Hide();
--- 			end
--- 		else
--- 			CastingBarFrame.BorderShield:Hide();
--- 			if ( CastingBarFrame.BarBorder ) then
--- 				CastingBarFrame.BarBorder:Show();
--- 			end
--- 		end
--- 	end
--- 	CastingBarFrame:Show();
--- end

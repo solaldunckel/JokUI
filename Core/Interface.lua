@@ -176,6 +176,26 @@ do
 		end)
 end
 
+do
+	Interface:RegisterFeature("Hide ExtraActionButton Texture",
+		"Hide ExtraActionButton Texture",
+		"Hide ExtraActionButton Texture.",
+		false,
+		true,
+		function(state)
+			if state then
+				local style = ExtraActionButton1.style
+				style:SetTexture(nil)
+				--ExtraActionButton1Artwork:SetTexture(nil)
+				hooksecurefunc(style, "SetTexture", function(self, texture)
+      				if texture then
+        				self:SetTexture(nil)
+      				end
+   				end)
+			end
+		end)
+end
+
 -------------------------------------------------------------------------------
 -- Functions
 -------------------------------------------------------------------------------
@@ -540,22 +560,12 @@ function Interface:UnitFrames()
 		border:SetTexCoord(0, 1, 0, 1)
 		border:SetDrawLayer("BACKGROUND",- 7)
 		if b.buff then
-			border:SetVertexColor(0.4, 0.35, 0.35)
+			border:SetAlpha(0.5)
 		end
 		border:ClearAllPoints()
 		border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
 		border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
 		b.border = border
-		--shadow
-		-- local back = CreateFrame("Frame", nil, b)
-		-- back:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 4)
-		-- back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 4, -4)
-		-- back:SetFrameLevel(b:GetFrameLevel() - 1)
-		-- back:SetBackdrop(backdrop)
-		-- back:SetBackdropBorderColor(0, 0, 0, 0.9)
-		-- b.bg = back
-		-- --set button styled variable
-		-- b.styled = true
     end
   
     hooksecurefunc("TargetFrame_UpdateAuras", function(self)
@@ -1235,17 +1245,19 @@ function Interface:CastBars()
 		CastingBarFrame:SetUserPlaced(true)
 		CastingBarFrame:SetMovable(false)
 		CastingBarFrame:SetScale(1)
+
  		CastingBarFrame.Icon:Show()
 		CastingBarFrame.Icon:ClearAllPoints()
-		CastingBarFrame.Icon:SetTexCoord(.08, .92, .08, .92)
-		CastingBarFrame.Icon:SetSize(20, 20)
+		CastingBarFrame.Icon:SetSize(22, 22)
     	CastingBarFrame.Icon:SetPoint("RIGHT", CastingBarFrame, "LEFT", -7, 0)
+
   		CastingBarFrame.Text:ClearAllPoints()
   		CastingBarFrame.Text:SetPoint("CENTER", 0, 1)
+
   		CastingBarFrame.BorderShield:SetWidth(CastingBarFrame.BorderShield:GetWidth() + 4)
+  		CastingBarFrame.BorderShield:SetPoint("TOP", 0, 26)
   		CastingBarFrame.Border:SetPoint("TOP", 0, 26)
  		CastingBarFrame.Flash:SetPoint("TOP", 0, 26)
-		CastingBarFrame.BorderShield:SetPoint("TOP", 0, 26)
 
 		-- Target Castbar
 		TargetFrameSpellBar:SetScale(1.1)
@@ -1398,7 +1410,7 @@ function Interface:Buffs()
 	      color             = { r = 0, g = 0, b = 0, a = 0.9},
 	      classcolored      = false,
 	      inset             = 6,
-	      padding           = 4,
+	      padding           = 2,
 	    },
 
 	    duration = {
@@ -1469,7 +1481,7 @@ function Interface:Buffs()
 
 	--backdrop debuff
 
-	  local backdropDebuff = {
+	local backdropDebuff = {
 	    bgFile = nil,
 	    edgeFile = debuffFrame.background.edgeFile,
 	    tile = false,
@@ -1481,11 +1493,11 @@ function Interface:Buffs()
 	      top = debuffFrame.background.inset,
 	      bottom = debuffFrame.background.inset,
 	    },
-	  }
+	}
 
 	--backdrop buff
 
-	  local backdropBuff = {
+	local backdropBuff = {
 	    bgFile = nil,
 	    edgeFile = buffFrame.background.edgeFile,
 	    tile = false,
@@ -1497,15 +1509,14 @@ function Interface:Buffs()
 	      top = buffFrame.background.inset,
 	      bottom = buffFrame.background.inset,
 	    },
-	  }
+	}
 
-	  local ceil, min, max = ceil, min, max
-
+	local ceil, min, max = ceil, min, max
 	local buffFrameHeight = 0
 
 	--apply aura frame texture func
 
-	  local function applySkin(b)
+	local function applySkin(b)
 	    if not b or (b and b.styled) then return end
 
 	    local name = b:GetName()
@@ -1588,11 +1599,11 @@ function Interface:Buffs()
 
 	    --set button styled variable
 	    b.styled = true
-	    end
+	end
 
 	--update debuff anchors
 
-	  local function updateDebuffAnchors(buttonName,index)
+	local function updateDebuffAnchors(buttonName,index)
 	    local button = _G[buttonName..index]
 	    if not button then return end
 	    --apply skin
@@ -1607,11 +1618,11 @@ function Interface:Buffs()
 	    else
 	      button:SetPoint("TOPRIGHT", _G[buttonName..(index-1)], "TOPLEFT", -debuffFrame.colSpacing, 0)
 	    end
-	  end
+	end
 
 	--update buff anchors
 
-	  local function updateAllBuffAnchors()
+	local function updateAllBuffAnchors()
 	    --variables
 	    local buttonName  = "BuffButton"
 	    local numEnchants = BuffFrame.numEnchants
@@ -1660,36 +1671,36 @@ function Interface:Buffs()
 	    local rows = ceil((buffCounter+offset)/buffFrame.buttonsPerRow)
 	    local height = buffFrame.button.size*rows + buffFrame.rowSpacing*rows + buffFrame.gap*min(1,rows)
 	    buffFrameHeight = height
-	  end
+	end
 
 	--buff drag frame
 
-	  local bf = CreateFrame("Frame", "rBFS_BuffDragFrame", UIParent)
-	  bf:SetSize(buffFrame.button.size,buffFrame.button.size)
-	  bf:SetPoint(buffFrame.pos.a1,buffFrame.pos.af,buffFrame.pos.a2,buffFrame.pos.x,buffFrame.pos.y)
+	local bf = CreateFrame("Frame", "rBFS_BuffDragFrame", UIParent)
+	bf:SetSize(buffFrame.button.size,buffFrame.button.size)
+	bf:SetPoint(buffFrame.pos.a1,buffFrame.pos.af,buffFrame.pos.a2,buffFrame.pos.x,buffFrame.pos.y)
 
 	--debuff drag frame
 
-	    local df = CreateFrame("Frame", "rBFS_DebuffDragFrame", UIParent)
-	    df:SetSize(debuffFrame.button.size,debuffFrame.button.size)
-	    df:SetPoint(debuffFrame.pos.a1,debuffFrame.pos.af,debuffFrame.pos.a2,debuffFrame.pos.x,debuffFrame.pos.y)
+	local df = CreateFrame("Frame", "rBFS_DebuffDragFrame", UIParent)
+	df:SetSize(debuffFrame.button.size,debuffFrame.button.size)
+	df:SetPoint(debuffFrame.pos.a1,debuffFrame.pos.af,debuffFrame.pos.a2,debuffFrame.pos.x,debuffFrame.pos.y)
 
 	  --temp enchant stuff
-	  applySkin(TempEnchant1)
-	  applySkin(TempEnchant2)
-	  applySkin(TempEnchant3)
+	applySkin(TempEnchant1)
+	applySkin(TempEnchant2)
+	applySkin(TempEnchant3)
 
 	  --position the temp enchant buttons
-	  TempEnchant1:ClearAllPoints()
-	  TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0) --button will be repositioned later in case temp enchant and consolidated buffs are both available
-	  TempEnchant2:ClearAllPoints()
-	  TempEnchant2:SetPoint("TOPRIGHT", TempEnchant1, "TOPLEFT", -buffFrame.colSpacing, 0)
-	  TempEnchant3:ClearAllPoints()
-	  TempEnchant3:SetPoint("TOPRIGHT", TempEnchant2, "TOPLEFT", -buffFrame.colSpacing, 0)
+	TempEnchant1:ClearAllPoints()
+	TempEnchant1:SetPoint("TOPRIGHT", rBFS_BuffDragFrame, "TOPRIGHT", 0, 0) --button will be repositioned later in case temp enchant and consolidated buffs are both available
+	TempEnchant2:ClearAllPoints()
+	TempEnchant2:SetPoint("TOPRIGHT", TempEnchant1, "TOPLEFT", -buffFrame.colSpacing, 0)
+	TempEnchant3:ClearAllPoints()
+	TempEnchant3:SetPoint("TOPRIGHT", TempEnchant2, "TOPLEFT", -buffFrame.colSpacing, 0)
 	  
 	  --hook Blizzard functions
-	  hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
-	  hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
+	hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
+	hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
 end
 
 function Interface:ReAnchor()

@@ -53,8 +53,6 @@ local MythicProgressValues = {{131812,4,"Heartsbane Soulcharmer"},{135474,4,"Thi
 -- Config
 -------------------------------------------------------------------------------
 
-
-
 local mythicplus_defaults = {
     profile = {
     	enableProgress = true,
