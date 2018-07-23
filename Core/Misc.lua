@@ -59,7 +59,6 @@ function Misc:OnInitialize()
 	self:EquipmentSets()
 	self:HoverBind()
 	self:SafeQueue()
-	-- self:Coords()	
 	self:Talents()
 	self:AFK()
 	self:ItemLevel()
@@ -193,9 +192,11 @@ do
 		false,
 		function(state)
 			if state then
-				LossOfControlFrame:ClearAllPoints() LossOfControlFrame:SetPoint("CENTER",UIParent,"CENTER",0,0)
+				LossOfControlFrame:ClearAllPoints() 
+				LossOfControlFrame:SetPoint("CENTER",UIParent,"CENTER",0,0)
 				select(1,LossOfControlFrame:GetRegions()):SetAlpha(0)
-				select(2,LossOfControlFrame:GetRegions()):SetAlpha(0) select(3,LossOfControlFrame:GetRegions()):SetAlpha(0)
+				select(2,LossOfControlFrame:GetRegions()):SetAlpha(0) 
+				select(3,LossOfControlFrame:GetRegions()):SetAlpha(0)
 			end
 		end)
 end

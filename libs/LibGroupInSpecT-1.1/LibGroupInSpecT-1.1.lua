@@ -172,7 +172,7 @@ local UnitIsConnected                 = _G.UnitIsConnected
 local UnitIsPlayer                    = _G.UnitIsPlayer
 local UnitIsUnit                      = _G.UnitIsUnit
 local UnitName                        = _G.UnitName
-local SendAddonMessage                = C_ChatInfo and C_ChatInfo.SendAddonMessage or SendAddonMessage -- XXX 8.0 compat
+local SendAddonMessage                = C_ChatInfo.SendAddonMessage -- XXX 8.0 compat
 
 
 local global_spec_id_roles_detailed = {

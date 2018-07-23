@@ -622,7 +622,7 @@ function RaidFrames:Cooldowns()
 		},			
 	}
 
-	for _,c in pairs(Cooldowns) do
+	for _, c in pairs(Cooldowns) do
 		if IsActiveBattlefieldArena() then
 			c["208683"] = {spellID = 208683, cd = 120, spec = "all", talent = "all"}
 		end

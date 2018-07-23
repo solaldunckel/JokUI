@@ -184,9 +184,13 @@ do
 		true,
 		function(state)
 			if state then
-				local style = ExtraActionButton1.style
-				style:SetTexture(nil)
-				--ExtraActionButton1Artwork:SetTexture(nil)
+				local ZoneAbilityFrame = ZoneAbilityFrame.SpellButton.Style
+				hooksecurefunc(ZoneAbilityFrame, "SetTexture", function(self, texture)
+      				if texture then
+        				self:SetTexture(nil)
+      				end
+   				end)
+   				local style = ExtraActionButton1.style
 				hooksecurefunc(style, "SetTexture", function(self, texture)
       				if texture then
         				self:SetTexture(nil)
@@ -2488,7 +2492,7 @@ function Interface:Mover()
 	 handle:SetScript("OnDragStop", OnDragStop)
 	end
 
-	movableFrames = {
+	local movableFrames = {
 	 BankFrame,
 	 DressUpFrame,
 	 FriendsFrame,
@@ -2509,14 +2513,14 @@ function Interface:Mover()
 	 VideoOptionsFrame
 	}
 
-	movableFramesWithhandle = {
+	local movableFramesWithhandle = {
 	 ["CharacterFrame"] =  { PaperDollFrame, fff, ReputationFrame, TokenFrame , PetPaperDollFrameCompanionFrame, ReputationFrame } ,
 	 ["ColorPickerFrame"] = { Interface:CreateOwnHandleFrame(ColorPickerFrame, 132, 32, 117, 8, "ColorPickerFrame") },
 	 ["MailFrame"] = {SendMailFrame},
 	 ["WorldMapFrame"] = { WorldMapFrame },
 	}
 
-	movableFramesLoD = {
+	local movableFramesLoD = {
 	 ["Blizzard_AchievementUI"] = function() Interface:SetMoveHandle(AchievementFrame, AchievementFrameHeader) end,
 	 ["Blizzard_ArchaeologyUI"] = function() Interface:SetMoveHandle(ArchaeologyFrame) end,
 	 ["Blizzard_AuctionUI"] = function() Interface:SetMoveHandle(AuctionFrame) end,
