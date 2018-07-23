@@ -516,15 +516,15 @@ function RaidFrames:Cooldowns()
 		-- 2 = PALADIN
 		["PALADIN"] = {
 			-- HOLY = 65
-			["642_11"] = {spellID = 642, cd = 210, spec =65, talent = 17575}, -- DIVINE SHIELD
-			["642_12"] = {spellID = 642, cd = 300, spec =65, talent = 22176}, -- DIVINE SHIELD
+			["642_11"] = {spellID = 642, cd = 300, spec =65, talent = 17575}, -- DIVINE SHIELD
+			["642_12"] = {spellID = 642, cd = 210, spec =65, talent = 22176}, -- DIVINE SHIELD
 			["642_13"] = {spellID = 642, cd = 300, spec =65, talent = 17577}, -- DIVINE SHIELD
 			["1022_1"] = {spellID = 1022, cd = 240, spec =65, talent = "all"}, -- BLESSING OF PROTECTION
 			["31821"] = {spellID = 31821, cd = 180, spec =65, talent = "all"}, -- AURA MASTERY
 
 			-- PROT = 66
-			["642_21"] = {spellID = 642, cd = 300, spec =66, talent = 22705}, -- DIVINE SHIELD_PROT
-			["642_22"] = {spellID = 642, cd = 210, spec =66, talent = 21795}, -- DIVINE SHIELD_PROT
+			["642_21"] = {spellID = 642, cd = 210, spec =66, talent = 22705}, -- DIVINE SHIELD_PROT
+			["642_22"] = {spellID = 642, cd = 300, spec =66, talent = 21795}, -- DIVINE SHIELD_PROT
 			["642_23"] = {spellID = 642, cd = 300, spec =66, talent = 17601}, -- DIVINE SHIELD_PROT		
 			["1022_21"] = {spellID = 1022, cd = 300, spec =66, talent = 22433}, -- BLESSING OF PROTECTION_PROT
 			["1022_22"] = {spellID = 1022, cd = 300, spec =66, talent = 22434}, -- BLESSING OF PROTECTION_PROT
@@ -533,8 +533,8 @@ function RaidFrames:Cooldowns()
 			--["86659"] = {spellID = 86659, cd = 300, spec =66, talent = "all"}, -- GUARDIAN OF ANCIENTS KINGS
 
 			-- RET = 70
-			["642_31"] = {spellID = 642, cd = 210, spec =70, talent = 22185}, -- DIVINE SHIELD
-			["642_32"] = {spellID = 642, cd = 300, spec =70, talent = 22595}, -- DIVINE SHIELD
+			["642_31"] = {spellID = 642, cd = 300, spec =70, talent = 22185}, -- DIVINE SHIELD
+			["642_32"] = {spellID = 642, cd = 210, spec =70, talent = 22595}, -- DIVINE SHIELD
 			["642_33"] = {spellID = 642, cd = 300, spec =70, talent = 22186}, -- DIVINE SHIELD
 			["1022_3"] = {spellID = 1022, cd = 240, spec =70, talent = "all"}, -- BLESSING OF PROTECTION
 		},
@@ -569,6 +569,8 @@ function RaidFrames:Cooldowns()
 		["SHAMAN"] = {
 			-- ALL
 			["108271"] = {spellID = 108271, cd = 90, spec = "all", talent = "all"}, -- ASTRAL SHIFT
+			["57994"] = {spellID = 57994, cd = 12, spec = "all", talent = "all"}, -- WIND SHEAR
+			["192058"] = {spellID = 192058, cd = 60, spec = "all", talent = "all"}, -- CAPACITOR TOTEM
 		},
 
 		-- 8 = MAGE
@@ -1068,12 +1070,6 @@ function RaidFrames:Cooldowns()
 				if spellID == 235219 then -- ICEBLOCK RESET
 					JokCooldowns['Roster'][name][45438]["start"] = 0 -- ICEBLOCK
 					UpdateCD(name, 45438)
-				elseif spellID == 49998 then -- VAMPIRIC BLOOD
-					local info = LGIST:GetCachedInfo (sourceGUID)
-					if info.talents[22014] and JokCooldowns['Roster'][name][55233]["start"] then
-						JokCooldowns['Roster'][name][55233]["start"] = JokCooldowns['Roster'][name][55233]["start"]-7.5
-						UpdateCD(name, 55233)
-					end
 				end
 			end
 		end

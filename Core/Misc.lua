@@ -536,6 +536,11 @@ function Misc:TooltipID()
 	  if id then addLine(self, id, types.spell) end
 	end)
 
+	GameTooltip:HookScript("OnTooltipSetSpell", function(self)
+	  local id = GetMouseFocus():GetID()
+	  if id then addLine(self, id, types.talent) end
+	end)
+
 	-- NPCs
 	GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 	  if C_PetBattles.IsInBattle() then return end

@@ -76,7 +76,6 @@ local nameplates_aura_spells = {
         [31224] = true, -- Cloak of Shadows
         [13750] = true, -- Adrenaline Rush
         [121471] = true, -- Shadow Blades
-        [79140] = true, -- Vendetta
 
     -- Shaman
         [2825] = true, -- Bloodlust
@@ -86,6 +85,7 @@ local nameplates_aura_spells = {
         [212295] = true, -- Nether Ward
         [104773] = true, -- Unending Resolve
         [196098] = true, -- Soul Harvest
+        [113860] = true, -- Dark Soul : Misery
 
     -- Warrior 
         [118038] = true, -- Die by the Sword
