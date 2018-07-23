@@ -28,26 +28,6 @@ function Core:OnEnable()
 	self:RegisterChatCommand("Jokmove", "MoveAllFrames")
 end
 
-function Core:OpenGUI(cmd)
-	AceConfigDialog:Open("JokUI")
-end
-
-function Core:ReloadUI(cmd)
-	ReloadUI()
-end
-
-function Core:MoveAllFrames(cmd)
-	PowerBarAlt:Move()
-    ExtraActionButton:Move()
-    SGrid(64)
-    BossFrameMove()
-
-    StaticPopup_Show ("Lock")
-	if not MoveBackgroundFrame:IsShown() then
-		StaticPopup_Hide ("Lock")
-	end
-end
-
 function Core:RegisterModule(name, ...)
 	local mod = self:NewModule(name, ...)
 	self[name] = mod
@@ -70,6 +50,26 @@ function Core:RegisterCallback(key, func)
 			callbacks[key] = { func }
 		end
 	end
+end
+
+function Core:ReloadUI(cmd)
+	ReloadUI()
+end
+
+function Core:MoveAllFrames(cmd)
+	PowerBarAlt:Move()
+    ExtraActionButton:Move()
+    SGrid(64)
+    BossFrameMove()
+
+    StaticPopup_Show ("Lock")
+	if not MoveBackgroundFrame:IsShown() then
+		StaticPopup_Hide ("Lock")
+	end
+end
+
+function Core:OpenGUI(cmd)
+	AceConfigDialog:Open("JokUI")
 end
 
 -----
