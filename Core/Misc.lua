@@ -49,6 +49,7 @@ function Misc:OnInitialize()
 	JokUI.Config:Register("Miscellaneous", misc_config, 14)
 
 	self:RegisterEvent("ADDON_LOADED")
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 	self:AutoRep()
 	self:RangeSpell()
@@ -64,6 +65,7 @@ function Misc:OnInitialize()
 	self:ItemLevel()
 	self:Surrender()
 	self:TeleportCloak()
+	self:Quests()
 	self:ExtraActionButton()
 	self:PowerBarAlt()
 
@@ -237,94 +239,196 @@ do
 		end)
 end
 
-do
-	Misc:RegisterFeature("InCombatIcon",
-		"Add 'In Combat' Icon",
-		"Adds an icon next to unit frames if it's in combat.",
-		true,
-		true,
-		function(state)
-			if state then
-				local CTT=CreateFrame("Frame")
-				CTT:SetPoint("CENTER", TargetFrameTextureFrameLevelText,11,18)
-				CTT:SetSize(29,28)				
-				CTT.t=CTT:CreateTexture(nil,BORDER)
-				CTT.t:SetAllPoints()
-				CTT.t:SetTexCoord(0.5, 1, 0, 0.42)
-				CTT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
-				CTT:Hide()
+-- do
+-- 	Misc:RegisterFeature("InCombatIcon",
+-- 		"Add 'In Combat' Icon",
+-- 		"Adds an icon next to unit frames if it's in combat.",
+-- 		true,
+-- 		true,
+-- 		function(state)
+-- 			if state then
+-- 				local CTT=CreateFrame("Frame")
+-- 				CTT:SetPoint("CENTER", TargetFrameTextureFrameLevelText,11,18)
+-- 				CTT:SetSize(29,28)				
+-- 				CTT.t=CTT:CreateTexture(nil,BORDER)
+-- 				CTT.t:SetAllPoints()
+-- 				CTT.t:SetTexCoord(0.5, 1, 0, 0.42)
+-- 				CTT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+-- 				CTT:Hide()
 
-				local function FrameOnUpdate(self) 
-					if UnitAffectingCombat("target") then 
-						self:Show()
-				 	else 
-				 		self:Hide()
-				 	end 
-				 	if UnitAffectingCombat("player") then
-				 		PlayerLevelText:Hide()
-				 	else
-				 		PlayerLevelText:Show()
-				 	end
-				end
+-- 				local function FrameOnUpdate(self) 
+-- 					if UnitAffectingCombat("target") then 
+-- 						self:Show()
+-- 				 	else 
+-- 				 		self:Hide()
+-- 				 	end 
+-- 				 	if UnitAffectingCombat("player") then
+-- 				 		PlayerLevelText:Hide()
+-- 				 	else
+-- 				 		PlayerLevelText:Show()
+-- 				 	end
+-- 				end
 
-				local g = CreateFrame("Frame")
-				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CTT) end)
+-- 				local g = CreateFrame("Frame")
+-- 				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CTT) end)
 
-				local CFT=CreateFrame("Frame")
-				CFT:SetPoint("CENTER",FocusFrameTextureFrameLevelText,4,18)
-				CFT:SetSize(29,28)
-				CFT.t=CFT:CreateTexture(nil,BORDER)
-				CFT.t:SetAllPoints()
-				CFT.t:SetTexCoord(0.5, 1, 0, 0.42)
-				CFT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
-				CFT:Hide()
+-- 				local CFT=CreateFrame("Frame")
+-- 				CFT:SetPoint("CENTER",FocusFrameTextureFrameLevelText,4,18)
+-- 				CFT:SetSize(29,28)
+-- 				CFT.t=CFT:CreateTexture(nil,BORDER)
+-- 				CFT.t:SetAllPoints()
+-- 				CFT.t:SetTexCoord(0.5, 1, 0, 0.42)
+-- 				CFT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+-- 				CFT:Hide()
 
-				local function FrameOnUpdate(self) 
-					if UnitAffectingCombat("focus") then 
-						self:Show() 
-					else 
-						self:Hide() 
-					end 
-				end
+-- 				local function FrameOnUpdate(self) 
+-- 					if UnitAffectingCombat("focus") then 
+-- 						self:Show() 
+-- 					else 
+-- 						self:Hide() 
+-- 					end 
+-- 				end
 
-				local g = CreateFrame("Frame")
-				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CFT) end)
-			end
-		end)
-end
+-- 				local g = CreateFrame("Frame")
+-- 				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CFT) end)
+-- 			end
+-- 		end)
+-- end
 
 function Misc:AutoRep()
-	local function AutoRepair()
-		local bag, slot
-		for bag = 0, 4 do
-			for slot = 0, GetContainerNumSlots(bag) do
-				local link = GetContainerItemLink(bag, slot)
-				if link and (select(3, GetItemInfo(link)) == 0) then
-					UseContainerItem(bag, slot)
+
+	-- AUTO SELL
+
+	-- Create sell junk banner
+	local StartMsg = CreateFrame("FRAME", nil, MerchantFrame)
+	StartMsg:ClearAllPoints()
+	StartMsg:SetPoint("BOTTOMLEFT", 4, 4)
+	StartMsg:SetSize(160, 22)
+	StartMsg:SetToplevel(true)
+	StartMsg:Hide()
+
+	StartMsg.s = StartMsg:CreateTexture(nil, "BACKGROUND")
+	StartMsg.s:SetAllPoints()
+	StartMsg.s:SetColorTexture(0.1, 0.1, 0.1, 1.0)
+
+	StartMsg.f = StartMsg:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge") 
+	StartMsg.f:SetAllPoints();
+	StartMsg.f:SetText("SELLING JUNK")
+
+	-- Declarations
+	local IterationCount, totalPrice = 500, 0
+	local SellJunkFrame = CreateFrame("FRAME")
+	local SellJunkTicker, mBagID, mBagSlot
+
+	-- Function to stop selling
+	local function StopSelling()
+		if SellJunkTicker then SellJunkTicker:Cancel() end
+		StartMsg:Hide()
+		SellJunkFrame:UnregisterEvent("ITEM_LOCKED")
+		SellJunkFrame:UnregisterEvent("ITEM_UNLOCKED")
+	end
+
+	-- Vendor function
+	local function SellJunkFunc()
+
+		-- Variables
+		local SoldCount, Rarity, ItemPrice = 0, 0, 0
+		local CurrentItemLink, void
+
+		-- Traverse bags and sell grey items
+		for BagID = 0, 4 do
+			for BagSlot = 1, GetContainerNumSlots(BagID) do
+				CurrentItemLink = GetContainerItemLink(BagID, BagSlot)
+				if CurrentItemLink then
+					void, void, Rarity, void, void, void, void, void, void, void, ItemPrice = GetItemInfo(CurrentItemLink)
+					local void, itemCount = GetContainerItemInfo(BagID, BagSlot)
+					if Rarity == 0 and ItemPrice ~= 0 then
+						SoldCount = SoldCount + 1
+						if MerchantFrame:IsShown() then
+							-- If merchant frame is open, vendor the item
+							UseContainerItem(BagID, BagSlot)
+							-- Perform actions on first iteration
+							if SellJunkTicker._remainingIterations == IterationCount then
+								-- Calculate total price
+								totalPrice = totalPrice + (ItemPrice * itemCount)
+								-- Store first sold bag slot for analysis
+								if SoldCount == 1 then
+									mBagID, mBagSlot = BagID, BagSlot
+								end
+							end
+						else
+							-- If merchant frame is not open, stop selling
+							StopSelling()
+							return
+						end
+					end
 				end
 			end
 		end
 
-		if(CanMerchantRepair()) then
-			local cost = GetRepairAllCost()
-			if cost > 0 then
-				local money = GetMoney()
-				if IsInGuild() then
-					local guildMoney = GetGuildBankWithdrawMoney()
-					if guildMoney > GetGuildBankMoney() then
-						guildMoney = GetGuildBankMoney()
-					end
-					if guildMoney > cost and CanGuildBankRepair() then
-						RepairAllItems(1)
-						print(format("|cfff07100Repair cost covered by G-Bank: %.1fg|r", cost * 0.0001))
-						return
-					end
+		-- Stop selling if no items were sold for this iteration or iteration limit was reached
+		if SoldCount == 0 or SellJunkTicker and SellJunkTicker._remainingIterations == 1 then 
+			StopSelling() 
+			if totalPrice > 0 then 
+				print("Sold junk for".. " " .. GetCoinText(totalPrice) .. ".")
+			end
+		end
+
+	end
+
+	SellJunkFrame:RegisterEvent("MERCHANT_SHOW");
+	SellJunkFrame:RegisterEvent("MERCHANT_CLOSED");
+
+	-- Event handler
+	SellJunkFrame:SetScript("OnEvent", function(self, event)
+		if event == "MERCHANT_SHOW" then
+			-- Reset variables
+			totalPrice, mBagID, mBagSlot = 0, -1, -1
+			-- Do nothing if shift key is held down
+			if IsShiftKeyDown() then return end
+			-- Cancel existing ticker if present
+			if SellJunkTicker then SellJunkTicker:Cancel() end
+			-- Sell grey items using ticker (ends when all grey items are sold or iteration count reached)
+			SellJunkTicker = C_Timer.NewTicker(0.2, SellJunkFunc, IterationCount)
+			SellJunkFrame:RegisterEvent("ITEM_LOCKED")
+			SellJunkFrame:RegisterEvent("ITEM_UNLOCKED")
+		elseif event == "ITEM_LOCKED" then
+			StartMsg:Show()
+			SellJunkFrame:UnregisterEvent("ITEM_LOCKED")
+		elseif event == "ITEM_UNLOCKED" then
+			SellJunkFrame:UnregisterEvent("ITEM_UNLOCKED")
+			-- Check whether vendor refuses to buy items
+			if mBagID and mBagSlot and mBagID ~= -1 and mBagSlot ~= -1 then
+				local texture, count, locked = GetContainerItemInfo(mBagID, mBagSlot)
+				if count and not locked then
+					-- Item has been unlocked but still not sold so stop selling
+					StopSelling()
 				end
-				if money > cost then
+			end
+		elseif event == "MERCHANT_CLOSED" then
+			-- If merchant frame is closed, stop selling
+			StopSelling()
+		end
+	end)
+
+	-- AUTO REPAIR
+
+	local function AutoRepair()
+		if(CanMerchantRepair()) then
+			local cost, CanRepair = GetRepairAllCost()
+			if CanRepair then -- If merchant is offering repair
+				if IsInGuild() then
+					-- Guilded character
+					if CanGuildBankRepair() then
+						RepairAllItems(1)
+						RepairAllItems()
+						print(format("|cfff07100Repair cost covered by G-Bank: %.1fg|r", cost * 0.0001))
+					else
+						RepairAllItems()
+					end
+				else
 					RepairAllItems()
 					print(format("|cffead000Repair cost: %.1fg|r", cost * 0.0001))
-				else
-					print("Not enough gold to cover the repair cost.")
 				end
 			end
 		end
@@ -332,7 +436,7 @@ function Misc:AutoRep()
 
 	local AutoRep = CreateFrame("Frame")
 	AutoRep:RegisterEvent("MERCHANT_SHOW")
-	AutoRep:SetScript("OnEvent", function() AutoRepair() end)
+	AutoRep:SetScript("OnEvent", AutoRepair)
 end
 
 function Misc:RangeSpell()
@@ -2310,6 +2414,126 @@ function Misc:TeleportCloak()
 	TeleportCloak.ZONE_CHANGED_INDOORS = RestoreItems
 	TeleportCloak:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	TeleportCloak.ZONE_CHANGED_NEW_AREA = RestoreItems
+end
+
+function Misc:Quests()
+ -- if IsAddOnLoaded("Classic Quest Log") then return end
+ -- --[[ DTweaks_QuestLevel Orginal code modified from https://github.com/liquidbase/DuffedUIv8 ]]--
+ -- local DTweaks_QuestLevel = {}
+ -- --[[ Gossip Frame ]]--
+ -- function GossipFrameUpdate_hook()
+ --  local buttonIndex = 1
+ 
+ --  -- name, level, isTrivial, isDaily, isRepeatable, isLegendary, isIgnored, ... = GetGossipAvailableQuests()
+ --  local availableQuests = {GetGossipAvailableQuests()}
+ --  local numAvailableQuests = table.getn(availableQuests)
+ --  for i=1, numAvailableQuests, 7 do
+ --   local titleButton = _G["GossipTitleButton" .. buttonIndex]
+ --   local title = "["..availableQuests[i+1].."] "..availableQuests[i]
+ --   local isTrivial = availableQuests[i+2]
+ --   if isTrivial then
+ --    titleButton:SetFormattedText(TRIVIAL_QUEST_DISPLAY, title)
+ --   else
+ --    titleButton:SetFormattedText(NORMAL_QUEST_DISPLAY, title)
+ --   end
+ --   GossipResize(titleButton)
+ --   buttonIndex = buttonIndex + 1
+ --  end
+ --  if numAvailableQuests > 1 then
+ --   buttonIndex = buttonIndex + 1
+ --  end
+ 
+ --  -- name, level, isTrivial, isDaily, isLegendary, isIgnored, ... = GetGossipActiveQuests()
+ --  local activeQuests = {GetGossipActiveQuests()}
+ --  local numActiveQuests = table.getn(activeQuests)
+ --  for i=1, numActiveQuests, 6 do
+ --   local titleButton = _G["GossipTitleButton" .. buttonIndex]
+ --   local title = "["..activeQuests[i+1].."] "..activeQuests[i]
+ --   local isTrivial = activeQuests[i+2]
+ --   if isTrivial then
+ --    titleButton:SetFormattedText(TRIVIAL_QUEST_DISPLAY, title)
+ --   else
+ --    titleButton:SetFormattedText(NORMAL_QUEST_DISPLAY, title)
+ --   end
+ --   GossipResize(titleButton)
+ --   buttonIndex = buttonIndex + 1
+ --  end
+ -- end
+ -- hooksecurefunc("GossipFrameUpdate", GossipFrameUpdate_hook)
+ 
+ -- -- Hook objective tracker
+ -- function SetBlockHeader_hook()
+ --  for i = 1, GetNumQuestWatches() do
+ --   local questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isStory, isOnMap, hasLocalPOI = GetQuestWatchInfo(i)
+ --   if ( not questID ) then
+ --    break
+ --   end
+ --   local oldBlock = QUEST_TRACKER_MODULE:GetExistingBlock(questID)
+ --   if oldBlock then
+ --    local oldBlockHeight = oldBlock.height
+ --    local oldHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, title, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+ --    local newTitle = "["..select(2, GetQuestLogTitle(questLogIndex)).."] "..title
+ --    local newHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, newTitle, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+ --    oldBlock:SetHeight(oldBlockHeight + newHeight - oldHeight);
+ --   end
+ --  end
+ -- end
+ -- hooksecurefunc(QUEST_TRACKER_MODULE, "Update", SetBlockHeader_hook)
+ 
+ -- -- Hook quest log on map
+ -- function QuestLogQuests_hook(self, poiTable)
+ --  local numEntries, numQuests = GetNumQuestLogEntries()
+ --  local headerCollapsed = false
+ --  local titleIndex = 0
+ --  for questLogIndex = 1, numEntries do
+ --   local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isBounty, isStory = GetQuestLogTitle(questLogIndex)
+ --   if ( isHeader ) then
+ --    headerCollapsed = isCollapsed
+ --   elseif not isTask and (not isBounty or IsQuestComplete(questID)) and not headerCollapsed then
+ --    titleIndex = titleIndex + 1
+ --    local button = QuestLogQuests_GetTitleButton(titleIndex)
+ --    local buttonText = button.Text:GetText() or ''
+ --    local oldBlockHeight = button:GetHeight()
+ --    local oldHeight = button.Text:GetStringHeight()
+ --    local newTitle = "["..level.."] "..buttonText
+ --    button.Text:SetText(newTitle)
+ --    local newHeight = button.Text:GetStringHeight()
+ --    button:SetHeight(oldBlockHeight + newHeight - oldHeight)
+ --   end
+ --  end
+ -- end
+ -- hooksecurefunc("QuestLogQuests_Update", QuestLogQuests_hook)
+ 
+ -- -- Hook quest info
+ -- function QuestInfo_hook(template, parentFrame, acceptButton, material, mapView)
+ --  local elementsTable = template.elements
+ --  for i = 1, #elementsTable, 3 do
+ --   if elementsTable[i] == QuestInfo_ShowTitle then
+ --    if QuestInfoFrame.questLog then
+ --     local questLogIndex = GetQuestLogSelection()
+ --     local level = select(2, GetQuestLogTitle(questLogIndex))
+ --     local newTitle = "["..level.."] "..QuestInfoTitleHeader:GetText()
+ --     QuestInfoTitleHeader:SetText(newTitle)
+ --    end
+ --   end
+ --  end
+ -- end
+ -- hooksecurefunc("QuestInfo_Display", QuestInfo_hook)
+
+	local QuestNum = CreateFrame("Frame")
+	QuestNum:RegisterEvent("PLAYER_ENTERING_WORLD")
+	QuestNum:RegisterEvent("QUEST_LOG_UPDATE")
+	QuestNum:SetScript("OnEvent", function()
+		local _, N = GetNumQuestLogEntries()
+ 		ObjectiveTrackerBlocksFrame.QuestHeader.Text:SetText("Quests: "..N.."/25")
+ 		ObjectiveTrackerFrame.HeaderMenu.Title:SetText("Objectives: "..N.."/25")
+ 	end)
+
+
+end
+
+ function Misc:PLAYER_ENTERING_WORLD()
+	
 end
 
 function Misc:ExtraActionButton()

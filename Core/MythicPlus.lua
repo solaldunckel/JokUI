@@ -141,6 +141,7 @@ function MythicPlus:OnEnable()
 
 	self:Timer()
 	--self:Schedule()
+	C_MythicPlus.RequestCurrentAffixes()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 	self:RegisterEvent("CHALLENGE_MODE_START")
@@ -202,18 +203,18 @@ do
 				local slot = CreateFrame("frame")
 				slot:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN");
 				slot:SetScript("OnEvent", function()
-				    for i = BACKPACK_CONTAINER, NUM_BAG_SLOTS, 1 do
-				        for j = 0, GetContainerNumSlots(i), 1 do
-				            local link = GetContainerItemLink(i, j)
-				            if link and link:find("keystone:") then
-				                ClearCursor()
-				                PickupContainerItem(i, j)
-				                if CursorHasItem() then
-				                    C_ChallengeMode.SlotKeystone()
-				                end
-				            end
-				        end
-				    end
+				    for container=BACKPACK_CONTAINER, NUM_BAG_SLOTS do
+						local slots = GetContainerNumSlots(container)
+						for slot=1, slots do
+							local _, _, _, _, _, _, slotLink, _, _, slotItemID = GetContainerItemInfo(container, slot)
+							if slotLink and slotLink:match("|Hkeystone:") then
+								PickupContainerItem(container, slot)
+								if (CursorHasItem()) then
+									C_ChallengeMode.SlotKeystone()
+								end
+							end
+						end
+					end
 				end)
 			end
 		end)
@@ -343,12 +344,15 @@ function MythicPlus:Timer()
 		end
 	end
 
+	hooksecurefunc("Scenario_ChallengeMode_UpdateTime", UpdateTime)
+
 	local function ProgressBar_SetValue(self, percent)
 		if self.criteriaIndex then
 			local _, _, _, _, totalQuantity, _, _, quantityString, _, _, _, _, _ = C_Scenario.GetCriteriaInfo(self.criteriaIndex)
 			local currentQuantity = quantityString and tonumber( strsub(quantityString, 1, -2) )
 			if currentQuantity and totalQuantity then
 				self.Bar.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+				self.Bar.Label:SetPoint("CENTER", self.Bar, "CENTER", 0, 0)
 				self.Bar.Label:SetFormattedText("%.2f%% - %d/%d", currentQuantity/totalQuantity*100, currentQuantity, totalQuantity)
 			end
 		end
@@ -364,7 +368,6 @@ function MythicPlus:Timer()
 		block.Level:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	end
 
-	hooksecurefunc("Scenario_ChallengeMode_UpdateTime", UpdateTime)
 	hooksecurefunc("Scenario_ChallengeMode_ShowBlock", ShowBlock)
 
 	function MythicPlus:PLAYER_ENTERING_WORLD()

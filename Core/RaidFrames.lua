@@ -423,6 +423,15 @@ function RaidFrames:Misc()
 	_G[n.."WidthSlider"] 
 	h:SetMinMaxValues(1,200) 
 	w:SetMinMaxValues(1,200)
+
+	-- for i=1,10 do
+	-- 	local Buff = _G["CompactRaidFrame1Buff"..i.."Icon"]
+	-- 	for k,v in pairs({		
+	-- 		Buff,
+	-- 	}) do
+	-- 		v:SetTexCoord( .1, .9, .1, .9)
+	-- 	end
+	-- end 
 end
 
 function RaidFrames:Cooldowns()
