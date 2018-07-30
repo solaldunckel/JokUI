@@ -491,6 +491,16 @@ function Nameplates:OnInitialize()
     self.db = JokUI.db:RegisterNamespace("Nameplates", nameplates_defaults)
     self.settings = self.db.profile
     JokUI.Config:Register("Nameplates", nameplates_config)
+end
+
+function Nameplates:OnEnable()
+
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("RAID_TARGET_UPDATE")
+    self:RegisterEvent("PLAYER_TARGET_CHANGED")
+    self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+
+    self:ExtraAuras()
 
     -- Set CVAR
     SetCVar("nameplateGlobalScale", Nameplates.settings.globalScale)
@@ -515,17 +525,6 @@ function Nameplates:OnInitialize()
     -- Remove Larger Nameplates Function (thx Plater)
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger:Disable()
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
-
-end
-
-function Nameplates:OnEnable()
-
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("RAID_TARGET_UPDATE")
-    self:RegisterEvent("PLAYER_TARGET_CHANGED")
-    self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-
-    self:ExtraAuras()
 
 end
 
@@ -684,10 +683,10 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         local _, instanceType = IsInInstance()
-        if (not InCombatLockdown()) and instanceType == "party" or instanceType == "raid" then
+        if instanceType == "party" or instanceType == "raid" then
             C_NamePlate.SetNamePlateFriendlySize(80, 1)
         else
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
+            C_NamePlate.SetNamePlateFriendlySize(80, 20)
         end
     end
 
@@ -774,23 +773,25 @@ end
 
 -- UPDATE BUFFS 
 
-local function UpdateBuffFrame(...)
-    for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
-        if ( not v.UnitFrame:IsForbidden() ) then
-            local bf = v.UnitFrame.BuffFrame
-            if v.UnitFrame.BuffFrame:GetWidth() == 99 then
-                bf:SetHeight(0)
-            end
-            if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) and not ResourceFrameOffset then
-            	bf:SetPoint("BOTTOM", v.UnitFrame.name, "TOP", 0, 0)
-            elseif ( v.UnitFrame.displayedUnit ) then               
-            	bf:SetPoint("BOTTOM", v.UnitFrame.healthBar, "TOP", 0, 0)
-            end
-            bf:UpdateAnchor()
-        end
-    end
-end
-NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
+-- local function UpdateBuffFrame(...)
+--     for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
+--         if ( not v.UnitFrame:IsForbidden() ) then
+--             local bf = v.UnitFrame.BuffFrame
+--             if v.UnitFrame.BuffFrame:GetWidth() == 99 then
+--                 bf:SetHeight(0)
+--             end
+--             if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) and not ResourceFrameOffset then
+--             	bf:SetPoint("BOTTOM", v.UnitFrame.name, "TOP", 0, 0)
+--             elseif ( v.UnitFrame.displayedUnit ) then               
+--             	bf:SetPoint("BOTTOM", v.UnitFrame.healthBar, "TOP", 0, 0)
+--             elseif UnitIsFriend(v.UnitFrame.displayedUnit, "player") then
+--                 bf:SetPoint("BOTTOM", v.UnitFrame.name, "TOP", 0, 0)
+--             end
+--             bf:UpdateAnchor()
+--         end
+--     end
+-- end
+-- NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
 
 -- function Nameplates:UpdateBuffFrameAnchorsByUnit(unit)
 --     local frame = C_NamePlate.GetNamePlateForUnit(unit, issecure())
@@ -893,7 +894,6 @@ hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
 
         frame.healthBar:SetStatusBarColor(r, g, b)
     end
-
 end)
 
 -- Update Name
@@ -1007,7 +1007,6 @@ hooksecurefunc("DefaultCompactNamePlateFrameSetup", function(frame, options)
     frame.castBar:SetScript("OnValueChanged", function(self, value)
         Nameplates:UpdateCastbarTimer(frame)
     end)
-
 end)
 
 function Nameplates:ExtraAuras()
@@ -1225,8 +1224,9 @@ function Nameplates:ExtraAuras()
         namePlate.suf = CreateFrame("Button", "$parentUnitFrame", namePlate)
         namePlate.suf:SetAllPoints(namePlate)
         namePlate.suf:SetFrameLevel(namePlate:GetFrameLevel())
-        
+
         namePlate.suf.icons = CreateFrame("Frame", nil, namePlate.suf)
+
         namePlate.suf.icons:SetPoint("BOTTOMLEFT", namePlate.UnitFrame.BuffFrame, "TOPLEFT", 1, 2)
 
         namePlate.suf.icons:SetWidth(100)

@@ -49,15 +49,15 @@ function Misc:OnInitialize()
 	JokUI.Config:Register("Miscellaneous", misc_config, 14)
 
 	self:RegisterEvent("ADDON_LOADED")
-	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 	self:AutoRep()
-	self:RangeSpell()
+	--self:RangeSpell()
 	self:SGrid()
 	self:TooltipID()
 	self:ShowStats()
 	self:Specialization()
 	self:EquipmentSets()
+	self:Warmode()
 	self:HoverBind()
 	self:SafeQueue()
 	self:Talents()
@@ -987,7 +987,7 @@ function Misc:Talents()
 
 		for index, items in next, items do
 			local Button = CreateFrame('Button', '$parentItemButton' .. index, self, 'SecureActionButtonTemplate, ActionBarButtonSpellActivationAlert')
-			Button:SetPoint('RIGHT', PlayerTalentFrameTalentsPvpTalentButton, -132 - (40 * (index - 1)), 4)
+			Button:SetPoint('RIGHT', PlayerTalentFrameTalentsPvpTalentButton, -132 - (40 * (index - 1)), 0)
 			Button:SetSize(34, 34)
 			Button:SetAttribute('type', 'item')
 			Button:SetScript('OnEnter', OnEnter)
@@ -1435,7 +1435,7 @@ function Misc:EquipmentSets()
 	local menuFrame = CreateFrame("Frame", "SetManagerDatatextClickMenu", SetFrame, "UIDropDownMenuTemplate")
 	local color = RAID_CLASS_COLORS[select(2, UnitClass("player"))].colorStr
 
-	local SetFrame = CreateFrame('Frame', nil, UIParent)
+	local SetFrame = CreateFrame('Frame', "SetFrame", UIParent)
 	SetFrame:SetPoint("TOPLEFT", Spec, "TOPRIGHT", 28, 0)
 	SetFrame:SetWidth(140)
 	SetFrame:SetHeight(14)
@@ -1522,6 +1522,82 @@ function Misc:EquipmentSets()
 	SetFrame:RegisterEvent("EQUIPMENT_SWAP_FINISHED")
 	SetFrame:RegisterEvent("EQUIPMENT_SETS_CHANGED")
 	SetFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+end
+
+function Misc:Warmode()
+
+	local color = RAID_CLASS_COLORS[select(2, UnitClass("player"))].colorStr
+
+	local Warmode = CreateFrame('Frame', 'Warmode', UIParent)
+	Warmode:SetPoint("TOPLEFT", SetFrame, "TOPRIGHT", 25, -1)
+	Warmode:SetWidth(58)
+	Warmode:SetHeight(13)
+	Warmode:EnableMouse(true)
+	Warmode:RegisterEvent("PLAYER_ENTERING_WORLD")
+	Warmode:RegisterEvent("PLAYER_FLAGS_CHANGED")
+
+	Warmode.text = Warmode:CreateFontString(nil, 'BACKGROUND')
+	Warmode.text:SetPoint("CENTER", Warmode)
+	Warmode.text:SetFont(font, 13, "OUTLINE")
+	Warmode.text:SetShadowOffset(1, -1)
+	Warmode.text:SetShadowColor(0, 0, 0)
+
+	local icon = "Interface\\PVPFrame\\Icons\\prestige-icon-3"
+	local warmodeIcon = '|T'..icon..':24:24:0:0:64:64:4:60:4:60|t'
+
+	local function WarmodeUpdate(self)
+		local isWarmodeToggled = C_PvP:IsWarModeDesired()
+		if isWarmodeToggled then
+			Warmode.text:SetFormattedText('%s %s', warmodeIcon, ": |cff00ff00 ON")
+		else
+			Warmode.text:SetFormattedText('%s %s', warmodeIcon, ": |cffff0000 OFF")
+		end
+	end
+
+	local function addonTooltip(self)
+		GameTooltip:ClearLines()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+
+		local isWarmodeToggled = C_PvP:IsWarModeDesired()
+		if isWarmodeToggled then
+			GameTooltip:AddLine("Warmode: |cff00ff00 ON|r")
+		else
+			GameTooltip:AddLine("Warmode: |cffff0000 OFF|r")
+		end
+
+		if not C_PvP:CanToggleWarMode() then
+			GameTooltip:AddLine("|cFFFF0000This can only be turned on or off in Orgrimmar.")
+		end
+
+		GameTooltip:Show()
+	end
+
+	Warmode:SetScript("OnEnter", function()
+		addonTooltip(Warmode)
+	end)
+	Warmode:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
+	Warmode:SetScript("OnEvent", function(self, event, ...)
+		if event=="PLAYER_ENTERING_WORLD" then
+			Warmode:Show()
+			WarmodeUpdate()
+		elseif event == "PLAYER_FLAGS_CHANGED" then
+			local unit = ...
+			if unit == "player" then
+				WarmodeUpdate()
+			end
+		end
+	end)
+
+	Warmode:SetScript("OnMouseDown", function(self, button)
+		if button == "LeftButton" then
+			if C_PvP:CanToggleWarMode() then
+				C_PvP:ToggleWarMode()
+			end
+		end
+	end)
 end
 
 function Misc:HoverBind()
@@ -1930,7 +2006,7 @@ function Misc:AFK()
 	    	self.AFKMode:Show()
 	        -- Refresh and Set the Player Model anims
 	        AFKCamera.playerModel:SetUnit('player');
-	        AFKCamera.playerModel:SetAnimation(69);
+	        AFKCamera.playerModel:SetAnimation(0);
 	        AFKCamera.playerModel:SetRotation(math.rad(-15));
 	        AFKCamera.playerModel:SetCamDistanceScale(1.2);
 
@@ -2022,7 +2098,7 @@ function Misc:AFK()
 	-- Set Up the Player Model
 	AFKCamera.playerModel = CreateFrame('PlayerModel', nil, AFKCamera);
 	AFKCamera.playerModel:SetSize(AFKCamera.height * 0.6, AFKCamera.height * 1.1);
-	AFKCamera.playerModel:SetPoint('BOTTOMRIGHT', AFKCamera.height * 0.1, -AFKCamera.height * 0.35);
+	AFKCamera.playerModel:SetPoint('BOTTOMRIGHT', AFKCamera.height * 0.1, -AFKCamera.height * 0.27);
 	AFKCamera.playerModel:SetFacing(6)
 
 	-- Pet model for Hunters, Warlocks etc
@@ -2064,13 +2140,17 @@ function Misc:AFK()
 			if (UnitIsAFK('player')) then
 				ToggleSpin(false);
 			end
+		elseif (event == 'UPDATE_BATTLEFIELD_STATUS') then
+			if (UnitIsAFK('player')) then
+				ToggleSpin(false);
+			end
 	    end
 	end
 
 	-- Register the Modules Events
 	AFKCamera:SetScript('OnEvent', HandleEvents);
 	AFKCamera:RegisterEvent('PLAYER_FLAGS_CHANGED');
-	AFKCamera:RegisterEvent('PLAYER_STARTED_MOVING');
+	AFKCamera:RegisterEvent('UPDATE_BATTLEFIELD_STATUS')
 	AFKCamera:RegisterEvent('PLAYER_LEAVING_WORLD');
 	AFKCamera:RegisterEvent('PLAYER_DEAD');
 end
@@ -2417,123 +2497,17 @@ function Misc:TeleportCloak()
 end
 
 function Misc:Quests()
- -- if IsAddOnLoaded("Classic Quest Log") then return end
- -- --[[ DTweaks_QuestLevel Orginal code modified from https://github.com/liquidbase/DuffedUIv8 ]]--
- -- local DTweaks_QuestLevel = {}
- -- --[[ Gossip Frame ]]--
- -- function GossipFrameUpdate_hook()
- --  local buttonIndex = 1
- 
- --  -- name, level, isTrivial, isDaily, isRepeatable, isLegendary, isIgnored, ... = GetGossipAvailableQuests()
- --  local availableQuests = {GetGossipAvailableQuests()}
- --  local numAvailableQuests = table.getn(availableQuests)
- --  for i=1, numAvailableQuests, 7 do
- --   local titleButton = _G["GossipTitleButton" .. buttonIndex]
- --   local title = "["..availableQuests[i+1].."] "..availableQuests[i]
- --   local isTrivial = availableQuests[i+2]
- --   if isTrivial then
- --    titleButton:SetFormattedText(TRIVIAL_QUEST_DISPLAY, title)
- --   else
- --    titleButton:SetFormattedText(NORMAL_QUEST_DISPLAY, title)
- --   end
- --   GossipResize(titleButton)
- --   buttonIndex = buttonIndex + 1
- --  end
- --  if numAvailableQuests > 1 then
- --   buttonIndex = buttonIndex + 1
- --  end
- 
- --  -- name, level, isTrivial, isDaily, isLegendary, isIgnored, ... = GetGossipActiveQuests()
- --  local activeQuests = {GetGossipActiveQuests()}
- --  local numActiveQuests = table.getn(activeQuests)
- --  for i=1, numActiveQuests, 6 do
- --   local titleButton = _G["GossipTitleButton" .. buttonIndex]
- --   local title = "["..activeQuests[i+1].."] "..activeQuests[i]
- --   local isTrivial = activeQuests[i+2]
- --   if isTrivial then
- --    titleButton:SetFormattedText(TRIVIAL_QUEST_DISPLAY, title)
- --   else
- --    titleButton:SetFormattedText(NORMAL_QUEST_DISPLAY, title)
- --   end
- --   GossipResize(titleButton)
- --   buttonIndex = buttonIndex + 1
- --  end
- -- end
- -- hooksecurefunc("GossipFrameUpdate", GossipFrameUpdate_hook)
- 
- -- -- Hook objective tracker
- -- function SetBlockHeader_hook()
- --  for i = 1, GetNumQuestWatches() do
- --   local questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isStory, isOnMap, hasLocalPOI = GetQuestWatchInfo(i)
- --   if ( not questID ) then
- --    break
- --   end
- --   local oldBlock = QUEST_TRACKER_MODULE:GetExistingBlock(questID)
- --   if oldBlock then
- --    local oldBlockHeight = oldBlock.height
- --    local oldHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, title, nil, OBJECTIVE_TRACKER_COLOR["Header"])
- --    local newTitle = "["..select(2, GetQuestLogTitle(questLogIndex)).."] "..title
- --    local newHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, newTitle, nil, OBJECTIVE_TRACKER_COLOR["Header"])
- --    oldBlock:SetHeight(oldBlockHeight + newHeight - oldHeight);
- --   end
- --  end
- -- end
- -- hooksecurefunc(QUEST_TRACKER_MODULE, "Update", SetBlockHeader_hook)
- 
- -- -- Hook quest log on map
- -- function QuestLogQuests_hook(self, poiTable)
- --  local numEntries, numQuests = GetNumQuestLogEntries()
- --  local headerCollapsed = false
- --  local titleIndex = 0
- --  for questLogIndex = 1, numEntries do
- --   local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isBounty, isStory = GetQuestLogTitle(questLogIndex)
- --   if ( isHeader ) then
- --    headerCollapsed = isCollapsed
- --   elseif not isTask and (not isBounty or IsQuestComplete(questID)) and not headerCollapsed then
- --    titleIndex = titleIndex + 1
- --    local button = QuestLogQuests_GetTitleButton(titleIndex)
- --    local buttonText = button.Text:GetText() or ''
- --    local oldBlockHeight = button:GetHeight()
- --    local oldHeight = button.Text:GetStringHeight()
- --    local newTitle = "["..level.."] "..buttonText
- --    button.Text:SetText(newTitle)
- --    local newHeight = button.Text:GetStringHeight()
- --    button:SetHeight(oldBlockHeight + newHeight - oldHeight)
- --   end
- --  end
- -- end
- -- hooksecurefunc("QuestLogQuests_Update", QuestLogQuests_hook)
- 
- -- -- Hook quest info
- -- function QuestInfo_hook(template, parentFrame, acceptButton, material, mapView)
- --  local elementsTable = template.elements
- --  for i = 1, #elementsTable, 3 do
- --   if elementsTable[i] == QuestInfo_ShowTitle then
- --    if QuestInfoFrame.questLog then
- --     local questLogIndex = GetQuestLogSelection()
- --     local level = select(2, GetQuestLogTitle(questLogIndex))
- --     local newTitle = "["..level.."] "..QuestInfoTitleHeader:GetText()
- --     QuestInfoTitleHeader:SetText(newTitle)
- --    end
- --   end
- --  end
- -- end
- -- hooksecurefunc("QuestInfo_Display", QuestInfo_hook)
-
 	local QuestNum = CreateFrame("Frame")
 	QuestNum:RegisterEvent("PLAYER_ENTERING_WORLD")
 	QuestNum:RegisterEvent("QUEST_LOG_UPDATE")
 	QuestNum:SetScript("OnEvent", function()
 		local _, N = GetNumQuestLogEntries()
- 		ObjectiveTrackerBlocksFrame.QuestHeader.Text:SetText("Quests: "..N.."/25")
- 		ObjectiveTrackerFrame.HeaderMenu.Title:SetText("Objectives: "..N.."/25")
+ 		ObjectiveTrackerBlocksFrame.QuestHeader.Text:SetText("Quests : "..N.."/25")
+ 		ObjectiveTrackerFrame.HeaderMenu.Title:SetText("Quests : "..N.."/25")
  	end)
 
-
-end
-
- function Misc:PLAYER_ENTERING_WORLD()
-	
+ 	--ObjectiveTrackerBlocksFrame.QuestHeader.Background:Hide()
+ 	--ObjectiveTrackerBlocksFrame.AchievementHeader.Background:Hide()
 end
 
 function Misc:ExtraActionButton()
@@ -2750,6 +2724,7 @@ function Misc:ExtraActionButton()
 		--self:RegisterEvent('WORLD_MAP_UPDATE')
 		self:RegisterEvent('QUEST_LOG_UPDATE')
 		self:RegisterEvent('QUEST_POI_UPDATE')
+		self:RegisterEvent('AREA_POIS_UPDATED')
 		self:RegisterEvent('QUEST_WATCH_LIST_CHANGED')
 		self:RegisterEvent('QUEST_ACCEPTED')
 		self:RegisterEvent('ZONE_CHANGED')

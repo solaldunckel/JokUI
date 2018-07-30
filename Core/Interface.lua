@@ -118,6 +118,8 @@ end
 function Interface:AfterEnable()
 	if Interface.settings.UnitFrames.enable then
 		self:UnitFrames()
+	else
+		self:ColorUnitFrames()
 	end
 
 	if Interface.settings.SkinInterface then
@@ -274,9 +276,12 @@ function Interface:UnitFrames()
 		ClassColor(self, self.unit)
 	end)
 
-	hooksecurefunc("UnitFrameManaBar_UpdateType", function(manaBar)
-		ClassColor(self, self.unit)
-	 end)
+	-- hooksecurefunc("UnitFrameManaBar_UpdateType", function(manaBar)
+	-- 	ClassColor(self, self.unit)
+	--  end)
+
+	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
+	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 
 	function wPlayerFrame_ToPlayerArt(self)
 		PlayerFrame:SetScale(Interface.settings.UnitFrames.scale)
@@ -291,9 +296,7 @@ function Interface:UnitFrames()
 		PlayerFrameHealthBarText:SetPoint("CENTER", PlayerFrameHealthBar, "CENTER", 0, 0);
 	end
 	hooksecurefunc("PlayerFrame_ToPlayerArt", wPlayerFrame_ToPlayerArt)
-
-	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
-	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
+	
 	--TARGET
 	function original_CheckClassification (self, forceNormalTexture)
 		self.name:SetPoint("LEFT", self, 15, 36);
@@ -555,7 +558,7 @@ function Interface:UnitFrames()
 		end
 		--icon
 		local icon = _G[name.."Icon"]
-		icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+		icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 		icon:SetDrawLayer("BACKGROUND",-7)
 		b.icon = icon
 		--border
@@ -641,6 +644,29 @@ function Interface:UnitFrames()
         v:SetVertexColor(.15, .15, .15)
 	end
 end 
+
+function Interface:ColorUnitFrames()
+	--HIDE COLORS BEHIND NAME
+	hooksecurefunc("TargetFrame_CheckFaction", function(self)
+	    self.nameBackground:SetVertexColor(0, 0, 0, 0);
+	end)
+
+	-- CLASS COLOR HP BAR
+	local function colour(statusbar, unit)
+	        local _, class, c
+	        if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
+	                _, class = UnitClass(unit)
+	                c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class]
+	                statusbar:SetStatusBarColor(c.r, c.g, c.b)
+	                --PlayerFrameHealthBar:SetStatusBarColor(0,1,0)
+	        end
+	end
+
+	hooksecurefunc("UnitFrameHealthBar_Update", colour)
+	hooksecurefunc("HealthBar_OnValueChanged", function(self)
+	        colour(self, self.unit)
+	end)
+end
 
 function Interface:ActionBars()
 
@@ -986,6 +1012,12 @@ function Interface:Chat()
 		_G[chatWindowName.."TabSelectedLeft"]:SetTexture(nil)
 		_G[chatWindowName.."TabSelectedMiddle"]:SetTexture(nil)
 		_G[chatWindowName.."TabSelectedRight"]:SetTexture(nil)
+
+		_G[chatWindowName.."ButtonFrameBackground"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameLeftTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameRightTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameTopTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameBottomTexture"]:SetTexture( nil );
 		chatTab:SetAlpha( 1.0 );
 	end
 
@@ -1481,7 +1513,7 @@ function Interface:Buffs()
 	HOUR_ONELETTER_ABBR = "%dh"
 	DAY_ONELETTER_ABBR = "%dd"
 	MINUTE_ONELETTER_ABBR = "%dm"
-	SECOND_ONELETTER_ABBR = "%ds"
+	--SECOND_ONELETTER_ABBR = "%ds"
 
 	--backdrop debuff
 
@@ -1732,18 +1764,27 @@ function Interface:ReAnchor()
 
   	-- ETC
   	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -58)
-  	
-  	MainMenuBarBackpackButton:Hide()
-  	CharacterBag0Slot:Hide()
-  	CharacterBag1Slot:Hide()
-  	CharacterBag2Slot:Hide()
-  	CharacterBag3Slot:Hide()
-  	MicroButtonAndBagsBar.MicroBagBar:Hide()
+
+  	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
 
 	DurabilityFrame:SetPoint("BOTTOMRIGHT", VerticalMultiBarsContainer, "TOPRIGHT", 0, 0)
 	DurabilityFrame:SetScale(0.5)
-	MainMenuBarArtFrame.RightEndCap:Hide()
-	MainMenuBarArtFrame.LeftEndCap:Hide()
+
+  	for i,v in pairs({
+		MainMenuBarBackpackButton,
+  		CharacterBag0Slot,
+  		CharacterBag1Slot,
+  		CharacterBag2Slot,
+  		CharacterBag3Slot,
+  		MicroButtonAndBagsBar.MicroBagBar,
+  		MainMenuBarArtFrame.RightEndCap,
+		MainMenuBarArtFrame.LeftEndCap,
+		--MainMenuBarArtFrameBackground,
+	}) do
+        v:Hide()
+	end	
+
+  	
 end
 
 function Interface:BossFrame()
