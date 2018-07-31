@@ -1767,8 +1767,7 @@ function Interface:ReAnchor()
 
   	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
 
-	DurabilityFrame:SetPoint("BOTTOMRIGHT", VerticalMultiBarsContainer, "TOPRIGHT", 0, 0)
-	DurabilityFrame:SetScale(0.5)
+	DurabilityFrame:SetScale(0.8)
 
   	for i,v in pairs({
 		MainMenuBarBackpackButton,
