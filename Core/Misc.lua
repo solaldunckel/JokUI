@@ -66,6 +66,7 @@ function Misc:OnInitialize()
 	self:Surrender()
 	self:TeleportCloak()
 	self:Quests()
+	self:SkipCinematic()
 	self:ExtraActionButton()
 	self:PowerBarAlt()
 
@@ -2505,9 +2506,22 @@ function Misc:Quests()
  		ObjectiveTrackerBlocksFrame.QuestHeader.Text:SetText("Quests : "..N.."/25")
  		ObjectiveTrackerFrame.HeaderMenu.Title:SetText("Quests : "..N.."/25")
  	end)
+end
 
- 	--ObjectiveTrackerBlocksFrame.QuestHeader.Background:Hide()
- 	--ObjectiveTrackerBlocksFrame.AchievementHeader.Background:Hide()
+function Misc:SkipCinematic()
+
+	CinematicFrame:HookScript("OnShow", function(self, ...)
+	  if IsModifierKeyDown() then return end
+	  CinematicFrame_CancelCinematic()
+	end)
+
+	local omfpf = _G["MovieFrame_PlayMovie"]
+	_G["MovieFrame_PlayMovie"] = function(...)
+	  if IsModifierKeyDown() then return omfpf(...) end
+	  GameMovieFinished()
+	  return true
+	end
+
 end
 
 function Misc:ExtraActionButton()
