@@ -59,6 +59,8 @@ end
 function Core:MoveAllFrames(cmd)
 	PowerBarAlt:Move()
     ExtraActionButton:Move()
+    PlayerFrame:Move()
+    TargetFrame:Move()
     SGrid(64)
     BossFrameMove()
 

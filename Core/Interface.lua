@@ -24,6 +24,17 @@ local interface_defaults = {
     		player = { x = 0, y = 175},
     		target = { x = 0, y = 550},
     	},
+    	PlayerFrame = {
+    		point = "TOPLEFT",
+    		x = -19,
+    		y = -6, 
+    	},
+    	TargetFrame = {
+    		point = "TOPLEFT",
+    		x = 250,
+    		y = -6, 
+    	},
+    	BossFrame = {"TOPLEFT", nil, "TOPLEFT", 1340, -300},
     	SkinInterface = true,    	
     }
 }
@@ -118,6 +129,8 @@ end
 function Interface:AfterEnable()
 	if Interface.settings.UnitFrames.enable then
 		self:UnitFrames()
+		self:PlayerFrame()
+		self:TargetFrame()
 	else
 		self:ColorUnitFrames()
 	end
@@ -645,6 +658,140 @@ function Interface:UnitFrames()
 	end
 end 
 
+function Interface:PlayerFrame()
+
+	local IsMoveAnythingLoaded
+
+	if (IsAddOnLoaded("MoveAnything")) then
+		IsMoveAnythingLoaded = " |cffffd100/jokmove r" 
+	else
+		IsMoveAnythingLoaded = " |cffffd100/move |r"
+	end
+	
+	local PlayerFrame = PlayerFrame
+	PlayerFrame:SetMovable(true)
+	PlayerFrame:SetUserPlaced(true)
+
+	-- Remove integrated movement functions to avoid conflicts
+	_G.PlayerFrame_ResetUserPlacedPosition = function() 
+		Interface.settings.PlayerFrame = {
+			point = "TOPLEFT",
+			x = -19,
+			y = -6,
+		}
+		PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
+	end
+
+	
+	_G.PlayerFrame_SetLocked = function() print("use /move") end
+
+	local locked = true
+	local moving = nil
+
+	PlayerFrame:SetScript("OnMouseDown", function(self, button)
+		if locked then return end
+		if button == "LeftButton" then
+			PlayerFrame:ClearAllPoints()
+			PlayerFrame:StartMoving()
+			moving = true
+		end
+	end)
+
+	PlayerFrame:SetScript("OnMouseUp", function(self, button)
+		if moving then
+			moving = nil
+			PlayerFrame:StopMovingOrSizing()
+
+			local point, _, _, x, y = PlayerFrame:GetPoint(1)
+			Interface.settings.PlayerFrame.point = point
+			Interface.settings.PlayerFrame.x = x
+			Interface.settings.PlayerFrame.y = y
+		end
+	end)
+
+	PlayerFrame:ClearAllPoints()
+	PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
+
+	function PlayerFrame:Move()
+		if locked == false then
+			locked = true
+			PlayerFrame:SetMovable(false)
+			MoveBackgroundFrame:Hide()
+		else
+			locked = false
+			PlayerFrame:SetFrameStrata("TOOLTIP")
+			PlayerFrame:SetMovable(true)
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
+		end
+	end
+end
+
+function Interface:TargetFrame()
+	_G.TargetFrame_ResetUserPlacedPosition = function() 
+	Interface.settings.TargetFrame = {
+			point = "TOPLEFT",
+			x = 250,
+			y = -6,
+		}
+		TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
+	end
+	_G.TargetFrame_SetLocked = function() print("use /move") end
+
+	local TargetFrame = TargetFrame
+	TargetFrame:SetMovable(true)
+	TargetFrame:SetUserPlaced(true)
+
+	local locked = true
+	local moving = nil
+
+	TargetFrame:SetScript("OnMouseDown", function(self, button)
+		if locked then return end
+		if button == "LeftButton" then
+			TargetFrame:ClearAllPoints()
+			TargetFrame:StartMoving()
+			moving = true
+		end
+	end)
+
+	TargetFrame:SetScript("OnMouseUp", function(self, button)
+		if moving then
+			moving = nil
+			TargetFrame:StopMovingOrSizing()
+
+			local point, _, _, x, y = TargetFrame:GetPoint(1)
+			Interface.settings.TargetFrame.point = point
+			Interface.settings.TargetFrame.x = x
+			Interface.settings.TargetFrame.y = y
+		end
+	end)
+
+	TargetFrame:ClearAllPoints()
+	TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
+
+	function TargetFrame:Move()
+		if locked == false then
+			locked = true
+			TargetFrame:SetMovable(false)
+			MoveBackgroundFrame:Hide()
+		else
+			locked = false
+			TargetFrame:SetFrameStrata("TOOLTIP")
+			TargetFrame:SetMovable(true)
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
+			if not UnitExists("target") then
+				SetPortraitTexture(TargetFramePortrait, "player")
+				TargetFrameTextureFrameName:SetText("test")
+				TargetFrameHealthBar:SetMinMaxValues(1, 99999999)
+				TargetFrameHealthBar:SetValue(random(11111111, 88888888))
+				
+				TargetFrame:Show()
+			end
+		end
+	end
+end
+
 function Interface:ColorUnitFrames()
 	--HIDE COLORS BEHIND NAME
 	hooksecurefunc("TargetFrame_CheckFaction", function(self)
@@ -1017,7 +1164,11 @@ function Interface:Chat()
 		_G[chatWindowName.."ButtonFrameLeftTexture"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameRightTexture"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameTopTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameTopRightTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameTopLeftTexture"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameBottomTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameBottomRightTexture"]:SetTexture( nil );
+		_G[chatWindowName.."ButtonFrameBottomLeftTexture"]:SetTexture( nil );
 		chatTab:SetAlpha( 1.0 );
 	end
 
@@ -1271,6 +1422,103 @@ function Interface:CastBars()
 
 	if not InCombatLockdown() then
 
+		-- Channels Ticks
+
+		local sparkfactory = {
+			__index = function(t,k)
+				local spark = CastingBarFrame:CreateTexture(nil, 'OVERLAY')
+				t[k] = spark
+				spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+				spark:SetVertexColor(1, 1, 1, 1)
+				spark:SetBlendMode('ADD')
+				spark:SetWidth(10)
+				spark:SetHeight(15*2.2)
+				return spark
+			end
+		}
+		local barticks = setmetatable({}, sparkfactory)
+
+		local function setBarTicks(ticknum)
+			if( ticknum and ticknum > 0) then
+				local delta = ( CastingBarFrame:GetWidth() / ticknum )
+				for k = 1,ticknum do
+					local t = barticks[k]
+					t:ClearAllPoints()
+					t:SetPoint("CENTER", CastingBarFrame, "LEFT", delta * k, 0 )
+					t:Show()
+				end
+			else
+				barticks[1].Hide = nil
+				for i=1,#barticks do
+					barticks[i]:Hide()
+				end
+			end
+		end
+
+		-- TODO: this will need updates for Cataclysm
+		local channelingTicks = {
+			-- warlock
+			[GetSpellInfo(198590)] = 5, -- drain soul
+			[GetSpellInfo(234153)] = 5, -- drain life
+			-- druid
+			[GetSpellInfo(740)] = 4, -- Tranquility
+			-- priest
+			[GetSpellInfo(15407)] = 3, -- mind flay
+			[GetSpellInfo(48045)] = 5, -- mind sear
+			[GetSpellInfo(47540)] = 2, -- penance
+			-- mage
+			[GetSpellInfo(5143)] = 5, -- arcane missiles
+			[GetSpellInfo(12051)] = 4, -- evocation
+		}
+
+		local function getChannelingTicks(spell)			
+			return channelingTicks[spell] or 0
+		end
+
+		local function isTalentSelected(class, spec, talentID)
+			local specIndex = GetSpecialization()
+			local _, className = UnitClass("player")
+			if className == class and specIndex == spec then 
+				local _, _, _, selected = GetTalentInfoByID(talentID, specIndex)
+				if selected then
+					return true
+				else
+					return false
+				end
+			end
+		end
+
+		local frame = CreateFrame("Frame", "ChannelTicks", UIParent)
+
+		frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+		frame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+		frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+		frame:RegisterEvent("UNIT_SPELLCAST_START")
+		frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+		frame:RegisterEvent("PLAYER_TALENT_UPDATE")		
+
+		frame:SetScript("OnEvent", function(self, event, ...)
+			if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TALENT_UPDATE" then
+				if isTalentSelected("PRIEST", 1, 19752) then
+					channelingTicks[GetSpellInfo(47540)] = 3
+				else
+					channelingTicks[GetSpellInfo(47540)] = 2
+				end
+			elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
+				local unit = ...
+				if unit == "player" then
+					local spell = UnitChannelInfo(unit)
+					CastingBarFrame.channelingTicks = getChannelingTicks(spell)
+					setBarTicks(CastingBarFrame.channelingTicks)
+				end
+			elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+				local unit = ...
+				if unit == "player" then
+					setBarTicks(0)
+				end
+			end
+		end)
+
 		UIPARENT_MANAGED_FRAME_POSITIONS["CastingBarFrame"] = nil
 
 		-- Player Castbar
@@ -1295,16 +1543,16 @@ function Interface:CastBars()
   		CastingBarFrame.Border:SetPoint("TOP", 0, 26)
  		CastingBarFrame.Flash:SetPoint("TOP", 0, 26)
 
-		-- Target Castbar
-		TargetFrameSpellBar:SetScale(1.1)
-		TargetFrameSpellBar.Icon:SetTexCoord(.08, .92, .08, .92)
-  		TargetFrameSpellBar.Icon:SetPoint("RIGHT", TargetFrameSpellBar, "LEFT", -3, 0)
-		
-		-- Player Timer
+ 		-- Player Timer
 		CastingBarFrame.timer = CastingBarFrame:CreateFontString(nil)
 		CastingBarFrame.timer:SetFont(STANDARD_TEXT_FONT, 14,'THINOUTLINE')
 		CastingBarFrame.timer:SetPoint("LEFT", CastingBarFrame, "RIGHT", 7, 0)
 		CastingBarFrame.update = 0.1
+
+		-- Target Castbar
+		TargetFrameSpellBar:SetScale(1.1)
+		TargetFrameSpellBar.Icon:SetTexCoord(.08, .92, .08, .92)
+  		TargetFrameSpellBar.Icon:SetPoint("RIGHT", TargetFrameSpellBar, "LEFT", -3, 0)
 
 		-- Target Timer
 		TargetFrameSpellBar.timer = TargetFrameSpellBar:CreateFontString(nil)
@@ -1781,12 +2029,11 @@ function Interface:ReAnchor()
 		--MainMenuBarArtFrameBackground,
 	}) do
         v:Hide()
-	end	
-
-  	
+	end	 	
 end
 
 function Interface:BossFrame()
+
 	-- initialize addon table
 	Interface.events = Interface.events or {}
 	Interface.commands = Interface.commands or {}
@@ -1924,7 +2171,7 @@ function Interface:BossFrame()
 			local bossPortrait = _G["Boss"..i.."TargetFramePortrait"]
 			local bossTexture = _G["Boss"..i.."TargetFrameTextureFrameTexture"]
 
-			if BF.scale then boss:SetScale(BF.scale) end
+			if BF.scale then boss:SetScale(BF.scale) end -- taint
 
 			boss.highLevelTexture:SetPoint("CENTER", 62, -16);
 			boss.threatIndicator:SetTexture(nil)
@@ -1932,8 +2179,8 @@ function Interface:BossFrame()
 			if BF.space and i > 1 and boss:GetNumPoints() > 0 then
 				p = {boss:GetPoint(1)}
 				p[5] = BF.space
-				boss:ClearAllPoints()
-				boss:SetPoint(unpack(p))
+				boss:ClearAllPoints() -- taint
+				boss:SetPoint(unpack(p)) -- taint
 			end
 
 			if BF.raidicon.pos then
@@ -2008,7 +2255,6 @@ function Interface:BossFrame()
 		Interfaces_SetStyle()
 
 		self.bossFrame = _G["Boss1TargetFrame"]
-		self.defaultAnchor = {"TOPLEFT", nil, "TOPLEFT", 1340, -300}
 		self.defaultScale = self.bossFrame:GetScale()
 		self.bossFrame.OrgSetPoint = self.bossFrame.SetPoint
 		self.bossFrame.SetPoint = function() end
@@ -2024,14 +2270,16 @@ function Interface:BossFrame()
 		anchorFrame:SetScript("OnMouseWheel", anchorFrame.OnMouseWheel)
 		anchorFrame:SetScript("OnShow", anchorFrame.OnShow)
 		anchorFrame:Hide()
-		if JokUIDB["anchor"] and JokUIDB["anchor"][1] and JokUIDB["anchor"][4] and JokUIDB["anchor"][5] then
+		if Interface.settings.BossFrame and Interface.settings.BossFrame[1] and Interface.settings.BossFrame[4] and Interface.settings.BossFrame[5] then
 			anchorFrame:ClearAllPoints()
-			anchorFrame:SetPoint(unpack(JokUIDB.anchor))
-			self.bossFrame:ClearAllPoints()
-			self.bossFrame:OrgSetPoint(unpack(JokUIDB.anchor))
+			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			self.bossFrame:ClearAllPoints() -- taint
+			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
 		else
 			anchorFrame:ClearAllPoints()
-			anchorFrame:SetPoint(unpack(self.defaultAnchor))
+			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			self.bossFrame:ClearAllPoints() -- taint
+			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
 		end
 
 		self.testMode = false
@@ -2067,9 +2315,9 @@ function Interface:BossFrame()
 
 	function anchorFrame:OnUpdate(elapsed)
 		if not InCombatLockdown() and self.moving then
-			JokUIDB["anchor"] = {self:GetPoint(1)}
+			Interface.settings.BossFrame = {self:GetPoint(1)}
 			Interface.bossFrame:ClearAllPoints()
-			Interface.bossFrame:OrgSetPoint(unpack(JokUIDB.anchor))
+			Interface.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame))
 		end
 	end
 

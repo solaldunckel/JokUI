@@ -3,8 +3,6 @@ local Config = JokUI:RegisterModule("Config")
 
 local AceConfig = LibStub("AceConfig-3.0")
 
-local IsMoveAnythingLoaded
-
 if (IsAddOnLoaded("MoveAnything")) then
 	IsMoveAnythingLoaded = " |cffffd100/jokmove : |r" 
 else

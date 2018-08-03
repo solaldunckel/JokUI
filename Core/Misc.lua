@@ -51,13 +51,13 @@ function Misc:OnInitialize()
 	self:RegisterEvent("ADDON_LOADED")
 
 	self:AutoRep()
-	--self:RangeSpell()
 	self:SGrid()
 	self:TooltipID()
 	self:ShowStats()
 	self:Specialization()
 	self:EquipmentSets()
 	self:Warmode()
+	self:Dampening()
 	self:HoverBind()
 	self:SafeQueue()
 	self:Talents()
@@ -438,53 +438,6 @@ function Misc:AutoRep()
 	local AutoRep = CreateFrame("Frame")
 	AutoRep:RegisterEvent("MERCHANT_SHOW")
 	AutoRep:SetScript("OnEvent", AutoRepair)
-end
-
-function Misc:RangeSpell()
-	-- hooksecurefunc("ActionButton_UpdateRangeIndicator",function(self, checksRange, inRange)
-	-- 	local icon = self.icon
-	-- 	if not ( self.HotKey:GetText() == RANGE_INDICATOR ) then
-	-- 		if ( checksRange ) then
-	-- 			if ( inRange ) then
-	-- 				icon:SetVertexColor(1, 1, 1)
-	-- 			else
-	-- 				icon:SetVertexColor(1, 0.2, 0.1)
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end)
-	hooksecurefunc(
-	    "ActionButton_OnEvent",
-	    function(self, event, ...)
-	        if (event == "PLAYER_TARGET_CHANGED") then
-	            self.newTimer = self.rangeTimer
-	        end
-	    end
-	)
-	hooksecurefunc(
-	    "ActionButton_UpdateUsable",
-	    function(self)
-	        local icon = _G[self:GetName() .. "Icon"]
-	        local valid = IsActionInRange(self.action)
-	        if (valid == false) then
-	            icon:SetVertexColor(1, 0.2, 0.1)
-	        end
-	    end
-	)
-	hooksecurefunc(
-	    "ActionButton_OnUpdate",
-	    function(self, elapsed)
-	        local rangeTimer = self.newTimer
-	        if (rangeTimer) then
-	            rangeTimer = rangeTimer - elapsed
-	            if (rangeTimer <= 0) then
-	                ActionButton_UpdateUsable(self)
-	                rangeTimer = TOOLTIP_UPDATE_TIME
-	            end
-	            self.newTimer = rangeTimer
-	        end
-	    end
-	)
 end
 
 function Misc:SGrid()
@@ -1599,6 +1552,50 @@ function Misc:Warmode()
 			end
 		end
 	end)
+end
+
+function Misc:Dampening()
+	local frame = CreateFrame("Frame", nil , UIParent)
+	local _
+	local FindAuraByName = AuraUtil.FindAuraByName
+	local dampeningtext = GetSpellInfo(110310)
+
+
+	frame:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:SetPoint("TOP", UIWidgetTopCenterContainerFrame, "BOTTOM", 0, 0)
+	frame:SetSize(200, 11.38) --11,38 is the height of the remaining time
+	frame.text = frame:CreateFontString(nil, "BACKGROUND")
+	frame.text:SetFontObject(GameFontNormalSmall)
+	frame.text:SetAllPoints()
+
+
+	function frame:UNIT_AURA(unit)
+		--     1	  2		3		4			5			6			7			8				9				  10		11			12				13				14		15		   16
+		local name, icon, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, nameplateShowAll, noIdea, timeMod , percentage = FindAuraByName(dampeningtext, unit, "HARMFUL")
+
+		if percentage then
+			if not self:IsShown() then
+				self:Show()
+			end
+			if self.dampening ~= percentage then
+				self.dampening = percentage
+				self.text:SetText(dampeningtext..": "..percentage.."%")
+			end
+
+		elseif self:IsShown() then
+			self:Hide()
+		end
+	end
+
+	function frame:PLAYER_ENTERING_WORLD()
+		local _, instanceType = IsInInstance()
+		if instanceType == "arena" then
+			self:RegisterUnitEvent("UNIT_AURA", "player")
+		else	
+			self:UnregisterEvent("UNIT_AURA")
+		end
+	end
 end
 
 function Misc:HoverBind()

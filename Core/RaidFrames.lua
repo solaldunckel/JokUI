@@ -348,16 +348,4 @@ function RaidFrames:Misc()
 		border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
 		b.border = border
     end
-    
-  --   hooksecurefunc("CompactUnitFrame_UpdateAll",function(f) 
-	 -- 	if CompactRaidFrameContainer.groupMode == "flush" then
-		-- 	for i=1,10 do
-		-- 		local b = _G["CompactRaidFrame1Buff"..i]
-		-- 		applySkin(b)
-		-- 	end 
-		-- end	
-	 -- end)
-
-	
-
 end
