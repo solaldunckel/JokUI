@@ -502,10 +502,10 @@ function Nameplates:OnEnable()
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
-    self:RegisterEvent('NAME_PLATE_CREATED')
-    self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
-    self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
-    self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
+    --self:RegisterEvent('NAME_PLATE_CREATED')
+    --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
+    --self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
+    --self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
     self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
 
     self:SecureHook('CompactUnitFrame_UpdateName')
@@ -861,6 +861,8 @@ function Nameplates:ThreatColor(frame)
 end
 
 function Nameplates:Highlight(frame)
+    if UnitIsUnit(frame.displayedUnit, "target") or UnitIsPlayer(frame.displayedUnit) then return end
+
     local function SetBorderColor(frame, r, g, b, a)
         frame.healthBar.border:SetVertexColor(r, g, b, a);
         if frame.castBar and frame.castBar.border then
@@ -872,9 +874,9 @@ function Nameplates:Highlight(frame)
     SetBorderColor(frame, frame.optionTable.selectedBorderColor:GetRGBA());
 
     frame:SetScript('OnUpdate', function(frame)
-        if not UnitExists('mouseover') or not UnitIsUnit('mouseover', frame.displayedUnit) then
-            frame.selectionHighlight:Hide()
+        if not UnitExists('mouseover') or not UnitIsUnit('mouseover', frame.displayedUnit) then           
             if not UnitIsUnit(frame.displayedUnit, "target") then
+                frame.selectionHighlight:Hide()
                 SetBorderColor(frame, frame.optionTable.defaultBorderColor:GetRGBA());
             end
             frame:SetScript('OnUpdate',nil)

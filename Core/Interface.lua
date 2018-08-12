@@ -123,10 +123,7 @@ function Interface:OnEnable()
 	for name in pairs(features) do
 		self:SyncFeature(name)
 	end
-	self:AfterEnable()
-end
 
-function Interface:AfterEnable()
 	if Interface.settings.UnitFrames.enable then
 		self:UnitFrames()
 		self:PlayerFrame()
@@ -811,7 +808,7 @@ function Interface:ColorUnitFrames()
 
 	hooksecurefunc("UnitFrameHealthBar_Update", colour)
 	hooksecurefunc("HealthBar_OnValueChanged", function(self)
-	        colour(self, self.unit)
+	    colour(self, self.unit)
 	end)
 end
 

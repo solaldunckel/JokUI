@@ -317,35 +317,11 @@ function RaidFrames:FadeMore()
 end
 
 function RaidFrames:Misc()
+
 	-- RAID FRAMES SIZE DEFAULT SLIDER
 	local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
 	_G[n.."HeightSlider"],
 	_G[n.."WidthSlider"] 
 	h:SetMinMaxValues(1,200) 
 	w:SetMinMaxValues(1,200)
-
-	local function applySkin(b)
-		if not b or (b and b.styled) then return end
-		--button name
-		local name = b:GetName()
-		if (name:match("Debuff")) then
-			b.debuff = true
-	   	else
-	   		b.buff = true
-		end
-		--icon
-		local icon = _G[name.."Icon"]
-		icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-		icon:SetDrawLayer("BACKGROUND",-7)
-		b.icon = icon
-		--border
-		local border = b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-		border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
-		border:SetTexCoord(0, 1, 0, 1)
-		border:SetDrawLayer("BACKGROUND",- 7)
-		border:ClearAllPoints()
-		border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
-		border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
-		b.border = border
-    end
 end
