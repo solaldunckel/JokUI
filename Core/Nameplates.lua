@@ -5,6 +5,8 @@ local Nameplates = JokUI:RegisterModule("Nameplates")
 -- Locals
 -------------------------------------------------------------------------------
 
+local _, class = UnitClass("player")
+
 local match = string.match
 local format = format
 local floor = floor
@@ -500,6 +502,15 @@ function Nameplates:OnEnable()
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
+    self:RegisterEvent('NAME_PLATE_CREATED')
+    self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
+    self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
+    self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
+    self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
+
+    self:SecureHook('CompactUnitFrame_UpdateName')
+    self:SecureHook('CompactUnitFrame_UpdateHealthColor')
+
     self:ExtraAuras()
 
     -- Set CVAR
@@ -530,7 +541,7 @@ end
 
 -------------------------------------------------------------------------------
 -- Functions
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 local markerColors = {
     ["1"] = { r = 0.85, g = 0.81, b = 0.27 },
@@ -543,7 +554,7 @@ local markerColors = {
     ["8"] = { r = 0.89, g = 0.83, b = 0.74 },
 }
 
-    -- Format Time
+-- Format Time
 
 function Nameplates:FormatTime(s)
     if s > 86400 then
@@ -563,7 +574,7 @@ function Nameplates:FormatTime(s)
     return floor(s), s - floor(s)
 end
 
-    -- Abbreviate Function
+-- Abbreviate Function
 
 function Nameplates:Abbrev(str,length)
     if ( str ~= nil and length ~= nil ) then
@@ -572,7 +583,7 @@ function Nameplates:Abbrev(str,length)
     return ""
 end
 
-    -- Check if the frame is a nameplate.
+-- Check if the frame is a nameplate.
 
 function Nameplates:FrameIsNameplate(unit)
     if ( type(unit) ~= "string" ) then 
@@ -585,7 +596,7 @@ function Nameplates:FrameIsNameplate(unit)
     end
 end
 
-    -- Force Nameplate Update
+-- Force Nameplate Update
     
 function Nameplates:ForceUpdate()
     for i, frame in ipairs(C_NamePlate.GetNamePlates(issecure())) do
@@ -626,6 +637,12 @@ function Nameplates:UseOffTankColor(unit)
     return false
 end
 
+function Nameplates:IsPet(unit)
+    return (not UnitIsPlayer(unit) and UnitPlayerControlled(unit))
+end
+
+-- Class Color Text
+
 function Nameplates:SetTextColorByClass(unit, text)
     local _, class = UnitClass (unit)
     if (class) then
@@ -636,6 +653,16 @@ function Nameplates:SetTextColorByClass(unit, text)
     end
     return text
 end
+
+-- Is Showing Resource Frame?
+
+function Nameplates:IsShowingResourcesOnTarget()
+    if GetCVar("nameplateResourceOnTarget") == 1 and GetCVar("nameplateShowSelf") == 1 then
+        return true
+    end
+end
+
+-- Group Members Snippet 
 
 function Nameplates:GroupMembers(reversed, forceParty)
     local unit  = (not forceParty and IsInRaid()) and 'raid' or 'party'
@@ -670,177 +697,114 @@ function Nameplates:UpdateCastbarTimer(frame)
     end
 end
 
-local ResourceFrameOffset
+-----------------------------------------
 
-function Nameplates:RAID_TARGET_UPDATE()
-    self:UpdateRaidMarkerColoring()
-end
+function Nameplates:SkinPlates(frame)
 
-function Nameplates:PLAYER_ENTERING_WORLD()
+    -- Name
 
-    NamePlateTargetResourceFrame:SetScale(0.8)
+    frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
+    frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
+    
+    -- Abbreviate Long Names. 
 
-    -- Friendly Force Stacking
-    if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
-        local _, instanceType = IsInInstance()
-        if instanceType == "party" or instanceType == "raid" then
-            C_NamePlate.SetNamePlateFriendlySize(80, 1)
+    frame.name:SetText(Nameplates:Abbrev(frame.name:GetText(),32))
+
+    -- Only Name Fix
+
+    if not UnitIsPlayer(frame.displayedUnit) and GetCVar("nameplateShowOnlyNames") == 1  then
+        frame.healthBar:Show()
+    end
+
+    -- Friendly Player Name.
+    
+    if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and Nameplates.settings.friendlyName) then
+        local friendly_name = GetUnitName(frame.displayedUnit,true)
+        local _, class = UnitClass(frame.displayedUnit)
+        local color = select(4, GetClassColor(class))
+        local text = "|c"..color..friendly_name:match("[^-]+")..""
+        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+        frame.name:SetText(text)
+        -- 
+        if Nameplates.settings.hideHealth then
+            frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
+            frame.healthBar:Hide()
+            -- if IsActiveBattlefieldArena() then
+            --     frame.healthBar:Show()
+            --     frame.healthBar:SetHeight(3)
+            --     frame.healthBar:SetScale(0.8)
+            --     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 3)
+            -- end
         else
-            C_NamePlate.SetNamePlateFriendlySize(80, 20)
+            frame.healthBar:Show()
+            frame.healthBar:SetHeight(4)
         end
     end
-
-    if Nameplates.settings.clickthroughfriendly then
-        C_NamePlate.SetNamePlateFriendlyClickThrough(true)
+    
+    -- Enemy Player Name.
+    
+    -- if ( UnitCanAttack(frame.displayedUnit,"player") ) then
+    --     local enemy_name = GetUnitName(frame.displayedUnit,true)
+    --     local color = "ffff0000"
+    --     if UnitIsPlayer(frame.displayedUnit) then
+    --         local _, class = UnitClass(frame.displayedUnit)
+    --         color = select(4, GetClassColor(class))
+    --         enemy_name = enemy_name:match("[^-]+")
+    --     end
+    --     local text = "|c"..color..enemy_name..""
+    --     frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+    --     frame.name:SetText(text)
+    -- end
+    
+    -- Arena Number on Nameplates.
+    
+    if IsActiveBattlefieldArena() and frame.displayedUnit:find("nameplate") and Nameplates.settings.arenanumber then 
+        for i=1,3 do 
+            if UnitIsUnit(frame.displayedUnit,"arena"..i) then 
+                frame.name:SetText(i)
+                frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11)
+                frame.name:SetTextColor(1,1,0)
+                break 
+            end 
+        end 
     end
 
-    -- Nameplate Class Bar
-    if not InCombatLockdown() then
-        local _, class = UnitClass("player")
-        if class == "WARLOCK" or class == "DEATHKNIGHT" or class == "ROGUE" then
-            SetCVar("nameplateResourceOnTarget", 1)
-            SetCVar("nameplateShowSelf", 1)
-            ResourceFrameOffset = true
-        else
-            SetCVar("nameplateResourceOnTarget", 0)
-            SetCVar("nameplateShowSelf", 0)
-            ResourceFrameOffset = false
-        end
-    end
+    -- Health Bar Height
 
-    hooksecurefunc(NamePlateDriverFrame, "OnLoad", function()
-        if UnitExists("target") and not UnitIsPlayer("target") and ResourceFrameOffset then
-            local namePlateTarget = C_NamePlate.GetNamePlateForUnit("target", issecure());
-            NamePlateTargetResourceFrame:SetPoint("BOTTOM", namePlateTarget.UnitFrame.name, "TOP", 0, -2);
-        end
-    end)
-
+    frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
+    frame.healthBar:SetStatusBarTexture(statusBar)
 end
 
--- Current Target Opacity
+function Nameplates:SkinCastBar(frame)
 
-function Nameplates:PLAYER_TARGET_CHANGED()
-    for _, frame in pairs(C_NamePlate.GetNamePlates()) do
-        if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
-            frame.UnitFrame:SetAlpha(1)
-        else
-            frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
-        end
+    -- Castbar.
+
+    frame.castBar:SetStatusBarTexture(statusBar)
+    frame.castBar.Text:SetShadowOffset(.5, -.5)
+    frame.castBar.Text:SetFont("Fonts\\FRIZQT__.TTF", 8, "THINOUTLINE")
+    frame.castBar:SetHeight(12)
+    frame.castBar.Icon:SetSize(12, 12)
+    frame.castBar.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+    frame.castBar.Icon:SetPoint("RIGHT", frame.castBar, "LEFT", 2, 0)
+
+    -- Castbar Timer.
+
+    if ( not frame.castBar.CastTime ) then
+        frame.castBar.CastTime = frame.castBar:CreateFontString(nil, "OVERLAY")
+        frame.castBar.CastTime:Hide()
+        frame.castBar.CastTime:SetPoint("RIGHT", frame.castBar, "RIGHT", 17, 0)
+        frame.castBar.CastTime:SetFont(castbarFont, 8, "OUTLINE")
+        frame.castBar.CastTime:Show()
     end
+
+    -- Update Castbar.
+
+    frame.castBar:SetScript("OnValueChanged", function(self, value)
+        Nameplates:UpdateCastbarTimer(frame)
+    end) 
 end
 
--- Add Interrupter's Name and Targeted Player
-
-function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
-    if IsInGroup() then
-        local time, event, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical = CombatLogGetCurrentEventInfo()
-        if event == "SPELL_INTERRUPT" then
-            for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
-                local token = plateFrame.namePlateUnitToken
-                if (plateFrame.UnitFrame.castBar:IsShown()) then
-                    if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
-                        if (UnitGUID(token) == targetGUID) then
-                            plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
-                        end
-                    end
-                end
-            end
-        elseif event == "SPELL_CAST_START" or event == "SPELL_CAST_SUCCESS" or event == "SPELL_CAST_FAILED" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
-            for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
-                local castingUnit = plateFrame.namePlateUnitToken
-                if (plateFrame.UnitFrame.castBar:IsShown()) then
-                    local name = UnitCastingInfo(castingUnit)
-                    if not name then                    
-                        name = UnitChannelInfo(castingUnit)
-                    end 
-                    if name then
-                        local targetUnit = castingUnit.."-target"
-                        for u in Nameplates:GroupMembers() do
-                            if UnitIsUnit(targetUnit, u) then
-                                local targetName = UnitName(targetUnit)
-                                local targetRole = UnitGroupRolesAssigned(targetUnit)
-                                if targetRole ~= "TANK" then
-                                    plateFrame.UnitFrame.castBar.Text:SetText(name .. Nameplates:SetTextColorByClass(targetName, targetName))
-                                end
-                            end
-                        end
-                    end  
-                end
-            end
-        end       
-    end
-end
-
--- UPDATE BUFFS 
-
--- local function UpdateBuffFrame(...)
---     for _,v in pairs(C_NamePlate.GetNamePlates(issecure())) do
---         if ( not v.UnitFrame:IsForbidden() ) then
---             local bf = v.UnitFrame.BuffFrame
---             if v.UnitFrame.BuffFrame:GetWidth() == 99 then
---                 bf:SetHeight(0)
---             end
---             if ( v.UnitFrame.displayedUnit and UnitShouldDisplayName(v.UnitFrame.displayedUnit) ) and not ResourceFrameOffset then
---             	bf:SetPoint("BOTTOM", v.UnitFrame.name, "TOP", 0, 0)
---             elseif ( v.UnitFrame.displayedUnit ) then               
---             	bf:SetPoint("BOTTOM", v.UnitFrame.healthBar, "TOP", 0, 0)
---             elseif UnitIsFriend(v.UnitFrame.displayedUnit, "player") then
---                 bf:SetPoint("BOTTOM", v.UnitFrame.name, "TOP", 0, 0)
---             end
---             bf:UpdateAnchor()
---         end
---     end
--- end
--- NamePlateDriverFrame:HookScript("OnEvent", UpdateBuffFrame)
-
--- function Nameplates:UpdateBuffFrameAnchorsByUnit(unit)
---     local frame = C_NamePlate.GetNamePlateForUnit(unit, issecure())
---     if ( not frame ) then return end
-
---     local BuffFrame = frame.UnitFrame.BuffFrame
-
---     if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
---         BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 2)
---     elseif ( frame.UnitFrame.displayedUnit ) then
---         BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 2)
---     end
-
---     BuffFrame:UpdateAnchor()
--- end
-
--- function Nameplates:UpdateAllBuffFrameAnchors()
---     for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
---         if ( not frame.UnitFrame:IsForbidden() ) then
---             local BuffFrame = frame.UnitFrame.BuffFrame
-
---             if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
---                 BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 20)
---             elseif ( frame.UnitFrame.displayedUnit ) then
---                 BuffFrame.baseYOffset = 0
---             end
-
---             BuffFrame:UpdateAnchor()
---         end
---     end
--- end
-
--- local f = CreateFrame("frame")
--- f:RegisterEvent("UNIT_AURA")
--- f:RegisterEvent("PLAYER_TARGET_CHANGED")
--- f:SetScript("OnEvent", function(self, event, ...)
---     if event == "UNIT_AURA" then
---         local unit = ...
---         Nameplates:UpdateBuffFrameAnchorsByUnit(unit)
---     elseif event == "PLAYER_TARGET_CHANGED" then
---         Nameplates:UpdateAllBuffFrameAnchors()
---     end
--- end)
-
--- NAMEPLATE HEALTH COLOR
-
-hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
-    if ( frame:IsForbidden() ) then return end
-
+function Nameplates:ThreatColor(frame)
     local r, g, b
     if ( not UnitIsConnected(frame.unit) ) then
         r, g, b = 0.5, 0.5, 0.5
@@ -894,120 +858,194 @@ hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
 
         frame.healthBar:SetStatusBarColor(r, g, b)
     end
-end)
+end
 
--- Update Name
+function Nameplates:Highlight(frame)
+    local function SetBorderColor(frame, r, g, b, a)
+        frame.healthBar.border:SetVertexColor(r, g, b, a);
+        if frame.castBar and frame.castBar.border then
+            frame.castBar.border:SetVertexColor(r, g, b, a);
+        end
+    end
 
-hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
+    frame.selectionHighlight:Show()
+    SetBorderColor(frame, frame.optionTable.selectedBorderColor:GetRGBA());
+
+    frame:SetScript('OnUpdate', function(frame)
+        if not UnitExists('mouseover') or not UnitIsUnit('mouseover', frame.displayedUnit) then
+            frame.selectionHighlight:Hide()
+            if not UnitIsUnit(frame.displayedUnit, "target") then
+                SetBorderColor(frame, frame.optionTable.defaultBorderColor:GetRGBA());
+            end
+            frame:SetScript('OnUpdate',nil)
+        end
+    end)
+end
+
+-------------------------------------------------------------------------------
+-- SKIN
+-------------------------------------------------------------------------------
+
+function Nameplates:RAID_TARGET_UPDATE()
+    self:UpdateRaidMarkerColoring() 
+    --
+end
+
+function Nameplates:PLAYER_ENTERING_WORLD()
+
+    -- Friendly Force Stacking
+    if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
+        local _, instanceType = IsInInstance()
+        if instanceType == "party" or instanceType == "raid" then
+            C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
+        else
+            C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
+        end
+    end
+
+    -- Clickthrough Friendly Nameplates
+    if Nameplates.settings.clickthroughfriendly then
+        C_NamePlate.SetNamePlateFriendlyClickThrough(true)
+    end
+
+    -- Nameplate Class Bar
+    if not InCombatLockdown() then
+        if class == "WARLOCK" or class == "DEATHKNIGHT" or class == "ROGUE" then
+            SetCVar("nameplateResourceOnTarget", 1)
+            SetCVar("nameplateShowSelf", 1)
+        else
+            SetCVar("nameplateResourceOnTarget", 0)
+            SetCVar("nameplateShowSelf", 0)
+        end
+    end
+
+    -- Resource Frame SetPoint
+    NamePlateTargetResourceFrame:SetScale(0.8)
+    hooksecurefunc(NamePlateDriverFrame, "OnLoad", function()
+        if UnitExists("target") and not UnitIsPlayer("target") and Nameplates:IsShowingResourcesOnTarget() then
+            local namePlateTarget = C_NamePlate.GetNamePlateForUnit("target", issecure());
+            NamePlateTargetResourceFrame:SetPoint("BOTTOM", namePlateTarget.UnitFrame.name, "TOP", 0, -2);
+        end
+    end)
+end
+
+function Nameplates:CompactUnitFrame_UpdateName(frame)
     if ( frame:IsForbidden() ) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-	
-	-- Name
+    self:SkinPlates(frame)
+end
 
-	frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)   		
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
-	
-	-- Abbreviate Long Names. 
-
-    local newName = frame.name:GetText()
-    newName = Nameplates:Abbrev(newName,32)
-	frame.name:SetText(newName)
-
-    -- Only Name Fix
-
-    if not UnitIsPlayer(frame.displayedUnit) then
-        frame.healthBar:Show()
-    end
-
-    -- Friendly Player Name.
-	
-	if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and Nameplates.settings.friendlyName) then
-		local friendly_name = GetUnitName(frame.displayedUnit,true)
-		local _, class = UnitClass(frame.displayedUnit)
-        local color = select(4, GetClassColor(class))
-    	local text = "|c"..color..friendly_name:match("[^-]+")..""				
-		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-		frame.name:SetText(text)
-        -- 
-		if Nameplates.settings.hideHealth and not frame:IsForbidden() then
-			frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
-			frame.healthBar:Hide()
-			if IsActiveBattlefieldArena() then
-				frame.healthBar:Show()
-	            frame.healthBar:SetHeight(3)
-	            frame.healthBar:SetScale(0.8)
-				frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 3)
-			end
-        else
-            frame.healthBar:Show()
-            frame.healthBar:SetHeight(4)
-		end
-	end
-	
-	-- Enemy Player Name.
-	
-	if ( UnitIsPlayer(frame.displayedUnit) and UnitCanAttack(frame.displayedUnit,"player") ) then
-		local enemy_name = GetUnitName(frame.displayedUnit,true)
-		local _, class = UnitClass(frame.displayedUnit)
-        local color = select(4, GetClassColor(class))
-    	local text = "|c"..color..enemy_name:match("[^-]+")..""				
-		frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-		frame.name:SetText(text)
-		frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 2)
-	end
-	
-	-- Arena Number on Nameplates.
-	
-	if IsActiveBattlefieldArena() and frame.displayedUnit:find("nameplate") and Nameplates.settings.arenanumber then 
-		for i=1,5 do 
-			if UnitIsUnit(frame.displayedUnit,"arena"..i) then 
-				frame.name:SetText(i)
-				frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11)
-				frame.name:SetTextColor(1,1,0)
-				break 
-			end 
-		end 
-	end     		
-end)
-
-hooksecurefunc("DefaultCompactNamePlateFrameSetup", function(frame, options)
+function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
     if ( frame:IsForbidden() ) then return end
+    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+    self:ThreatColor(frame) 
+end
 
-    -- Health Bar Height
+function Nameplates:NAME_PLATE_CREATED(_, plate)
+    local nameplate = plate
+    local frame = nameplate.UnitFrame
 
-    frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
-    frame.healthBar:SetStatusBarTexture(statusBar)
-    
-    -- Elite Icon
-        
-    frame.ClassificationFrame:SetScale(0.9)
+    if ( frame:IsForbidden() ) then return end
+    if UnitIsUnit('player', frame:GetName()) then return end
+    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-    -- Castbar.
+    self:SkinPlates(frame)
+    self:SkinCastBar(frame)
+end
 
-    frame.castBar:SetStatusBarTexture(statusBar)
-    frame.castBar.Text:SetShadowOffset(.5, -.5)
-    frame.castBar.Text:SetFont("Fonts\\FRIZQT__.TTF", 8, "THINOUTLINE")
-    frame.castBar:SetHeight(12)
-    frame.castBar.Icon:SetSize(12, 12)
-    frame.castBar.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    frame.castBar.Icon:SetPoint("RIGHT", frame.castBar, "LEFT", 2, 0)
+function Nameplates:NAME_PLATE_UNIT_ADDED(_, token)
+    local nameplate = C_NamePlate.GetNamePlateForUnit(token)
+    local frame = nameplate.UnitFrame
 
-    -- Castbar Timer.
+    if ( frame:IsForbidden() ) then return end
+    if Nameplates:IsPet(frame.displayedUnit) then return end
+    if UnitIsUnit('player', frame:GetName()) then return end
+    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-    if ( not frame.castBar.CastTime ) then
-        frame.castBar.CastTime = frame.castBar:CreateFontString(nil, "OVERLAY")
-        frame.castBar.CastTime:Hide()
-        frame.castBar.CastTime:SetPoint("RIGHT", frame.castBar, "RIGHT", 17, 0)
-        frame.castBar.CastTime:SetFont(castbarFont, 8, "OUTLINE")
-        frame.castBar.CastTime:Show()
+    self:SkinPlates(frame)
+    self:SkinCastBar(frame)   
+end
+
+function Nameplates:NAME_PLATE_UNIT_REMOVED(_, token)
+    local nameplate = C_NamePlate.GetNamePlateForUnit(token)
+    local frame = nameplate.UnitFrame
+
+    if ( frame:IsForbidden() ) then return end
+    if UnitIsUnit('player', frame:GetName()) then return end
+    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+
+    self:SkinPlates(frame) 
+    self:SkinCastBar(frame)
+end
+
+function Nameplates:UNIT_THREAT_LIST_UPDATE(_, token)
+    if token and token:match("nameplate") then
+        local nameplate = C_NamePlate.GetNamePlateForUnit(token)
+        local frame = nameplate.UnitFrame
+
+        if ( frame:IsForbidden() ) then return end
+
+        self:ThreatColor(frame)
     end
+end
 
-    -- Update Castbar.
+function Nameplates:PLAYER_TARGET_CHANGED()
+    for _, frame in pairs(C_NamePlate.GetNamePlates()) do
+        if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
+            frame.UnitFrame:SetAlpha(1)
+        else
+            frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
+        end
+    end
+end
 
-    frame.castBar:SetScript("OnValueChanged", function(self, value)
-        Nameplates:UpdateCastbarTimer(frame)
-    end)
-end)
+function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
+    if IsInGroup() then
+        local time, event, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical = CombatLogGetCurrentEventInfo()
+        if event == "SPELL_INTERRUPT" then
+            for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
+                local token = plateFrame.namePlateUnitToken
+                if (plateFrame.UnitFrame.castBar:IsShown()) then
+                    if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
+                        if (UnitGUID(token) == targetGUID) then
+                            plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
+                        end
+                    end
+                end
+            end
+        elseif event == "SPELL_CAST_START" or event == "SPELL_CAST_SUCCESS" or event == "SPELL_CAST_FAILED" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
+            for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
+                local castingUnit = plateFrame.namePlateUnitToken
+                if (plateFrame.UnitFrame.castBar:IsShown()) then
+                    local name = UnitCastingInfo(castingUnit)
+                    if not name then                    
+                        name = UnitChannelInfo(castingUnit)
+                    end 
+                    if name then
+                        local targetUnit = castingUnit.."-target"
+                        for u in Nameplates:GroupMembers() do
+                            if UnitIsUnit(targetUnit, u) then
+                                local targetName = UnitName(targetUnit)
+                                local targetRole = UnitGroupRolesAssigned(targetUnit)
+                                if targetRole ~= "TANK" then
+                                    plateFrame.UnitFrame.castBar.Text:SetText(name .. Nameplates:SetTextColorByClass(targetName, targetName))
+                                end
+                            end
+                        end
+                    end  
+                end
+            end
+        end       
+    end
+end
+
+function Nameplates:UPDATE_MOUSEOVER_UNIT()
+    local nameplate = C_NamePlate.GetNamePlateForUnit('mouseover')
+    if not nameplate then return end
+
+    local frame = nameplate.UnitFrame
+    self:Highlight(frame)
+end
 
 function Nameplates:ExtraAuras()
 

@@ -240,62 +240,6 @@ do
 		end)
 end
 
--- do
--- 	Misc:RegisterFeature("InCombatIcon",
--- 		"Add 'In Combat' Icon",
--- 		"Adds an icon next to unit frames if it's in combat.",
--- 		true,
--- 		true,
--- 		function(state)
--- 			if state then
--- 				local CTT=CreateFrame("Frame")
--- 				CTT:SetPoint("CENTER", TargetFrameTextureFrameLevelText,11,18)
--- 				CTT:SetSize(29,28)				
--- 				CTT.t=CTT:CreateTexture(nil,BORDER)
--- 				CTT.t:SetAllPoints()
--- 				CTT.t:SetTexCoord(0.5, 1, 0, 0.42)
--- 				CTT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
--- 				CTT:Hide()
-
--- 				local function FrameOnUpdate(self) 
--- 					if UnitAffectingCombat("target") then 
--- 						self:Show()
--- 				 	else 
--- 				 		self:Hide()
--- 				 	end 
--- 				 	if UnitAffectingCombat("player") then
--- 				 		PlayerLevelText:Hide()
--- 				 	else
--- 				 		PlayerLevelText:Show()
--- 				 	end
--- 				end
-
--- 				local g = CreateFrame("Frame")
--- 				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CTT) end)
-
--- 				local CFT=CreateFrame("Frame")
--- 				CFT:SetPoint("CENTER",FocusFrameTextureFrameLevelText,4,18)
--- 				CFT:SetSize(29,28)
--- 				CFT.t=CFT:CreateTexture(nil,BORDER)
--- 				CFT.t:SetAllPoints()
--- 				CFT.t:SetTexCoord(0.5, 1, 0, 0.42)
--- 				CFT.t:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
--- 				CFT:Hide()
-
--- 				local function FrameOnUpdate(self) 
--- 					if UnitAffectingCombat("focus") then 
--- 						self:Show() 
--- 					else 
--- 						self:Hide() 
--- 					end 
--- 				end
-
--- 				local g = CreateFrame("Frame")
--- 				g:SetScript("OnUpdate", function(self) FrameOnUpdate(CFT) end)
--- 			end
--- 		end)
--- end
-
 function Misc:AutoRep()
 
 	-- AUTO SELL
@@ -935,7 +879,7 @@ function Misc:Talents()
 				143780, -- Tome of the Tranquil Mind (beta)
 			},
 			{
-				141446, -- Tome of the Tranquil Mind (beta)
+				153147, -- Tome of the Tranquil Mind (beta)
 			}
 		}
 
@@ -965,7 +909,7 @@ function Misc:Talents()
 
 			local Count = Button:CreateFontString('$parentCount', 'OVERLAY')
 			Count:SetPoint('BOTTOMLEFT', 1, 1)
-			Count:SetFont([[Fonts\FRIZQT__.ttf]], 12, 'OUTLINE')
+			Count:SetFont(font, 12, 'OUTLINE')
 			Button.Count = Count
 
 			local Cooldown = CreateFrame('Cooldown', '$parentCooldown', Button, 'CooldownFrameTemplate')
@@ -1036,8 +980,7 @@ end
 
 function Misc:ShowStats()
 
-	local addonList = 30
-	local font = ("Fonts\\FRIZQT__.TTF")
+	local addonList = 20
 	local fontSize = 14
 	local fontFlag = 'THINOUTLINE'
 	local textAlign = 'CENTER'
@@ -1397,7 +1340,7 @@ function Misc:EquipmentSets()
 
 	SetFrame.text = SetFrame:CreateFontString(nil, 'BACKGROUND')
 	SetFrame.text:SetPoint("CENTER", SetFrame)
-	SetFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+	SetFrame.text:SetFont(font, 13, "OUTLINE")
 	SetFrame.text:SetShadowOffset(1, -1)
 	SetFrame.text:SetShadowColor(0, 0, 0)
 
@@ -2088,7 +2031,7 @@ function Misc:AFK()
 	local classColor = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[playerclass] or RAID_CLASS_COLORS[playerclass]
 
 	self.AFKMode.bottom.name = self.AFKMode.bottom:CreateFontString(nil, 'OVERLAY')
-	self.AFKMode.bottom.name:SetFont("Fonts\\FRIZQT__.TTF", 90);
+	self.AFKMode.bottom.name:SetFont(font, 90);
 	self.AFKMode.bottom.name:SetFormattedText("%s", playername)
 	self.AFKMode.bottom.name:SetPoint("TOPLEFT", self.AFKMode.bottom, "BOTTOMLEFT", nameOffsetX, nameOffsetY)
 	self.AFKMode.bottom.name:SetTextColor(classColor.r, classColor.g, classColor.b)
@@ -2495,6 +2438,49 @@ function Misc:TeleportCloak()
 end
 
 function Misc:Quests()
+
+	local mapIDs = {
+		862, -- Zuldazar
+		863, -- Nazmir
+		864, -- Voldun
+		1165, -- Zuldazar (Dazar'alor)
+	}
+	 -- Hook objective tracker
+	
+	function SetBlockHeader_hook()
+	  for i = 1, GetNumQuestWatches() do
+	   local questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isStory, isOnMap, hasLocalPOI = GetQuestWatchInfo(i)
+	   if ( not questID ) then
+	    break
+	   end
+	   local oldBlock = QUEST_TRACKER_MODULE:GetExistingBlock(questID)
+	   if oldBlock then
+	    local oldBlockHeight = oldBlock.height
+	    local oldHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, title, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+
+	    local newTitle = title
+	    
+	    local playerMap = C_Map.GetBestMapForUnit("player")
+	    local questLine = C_QuestLine.GetQuestLineInfo(questID, playerMap)
+	    if not questLine then
+	    	for k, j in pairs(mapIDs) do
+	    		local questLine = C_QuestLine.GetQuestLineInfo(questID, k)
+	    		if questLine then
+	    			newTitle = "["..questLine["questLineName"].."] "..title
+	    		end
+	    	end
+	    else
+	    	newTitle = "["..questLine["questLineName"].."] "..title
+	   	end
+	      
+
+	    local newHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, newTitle, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+	    oldBlock:SetHeight(oldBlockHeight + newHeight - oldHeight);
+	   end
+	  end
+	end
+	hooksecurefunc(QUEST_TRACKER_MODULE, "Update", SetBlockHeader_hook)
+
 	local QuestNum = CreateFrame("Frame")
 	QuestNum:RegisterEvent("PLAYER_ENTERING_WORLD")
 	QuestNum:RegisterEvent("QUEST_LOG_UPDATE")
@@ -2518,7 +2504,6 @@ function Misc:SkipCinematic()
 	  GameMovieFinished()
 	  return true
 	end
-
 end
 
 function Misc:ExtraActionButton()
