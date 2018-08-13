@@ -1228,7 +1228,7 @@ function Misc:Specialization()
 
 	SpecFrame:SetScript("OnEvent", function(self, event)
 		if (event=="PLAYER_LOOT_SPEC_UPDATED") or (event=="PLAYER_ENTERING_WORLD") or (event=="PLAYER_TALENT_UPDATE") then
-			self:SetScript("OnUpdate", update)
+			update()
 		end
 	end)
 

@@ -503,9 +503,10 @@ function Nameplates:OnEnable()
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
     --self:RegisterEvent('NAME_PLATE_CREATED')
-    --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
+    self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
     --self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
     --self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
+    self:RegisterEvent('UNIT_AURA')
     self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
 
     self:SecureHook('CompactUnitFrame_UpdateName')
@@ -695,6 +696,38 @@ function Nameplates:UpdateCastbarTimer(frame)
             end
         end
     end
+end
+
+function Nameplates:UpdateBuffFrameAnchorsByUnit(frame)
+    -- local BuffFrame = frame.BuffFrame
+
+    -- if ( frame.displayedUnit and UnitShouldDisplayName(frame.displayedUnit) ) then
+    --     BuffFrame.baseYOffset = 0
+    --     BuffFrame:SetPoint("BOTTOM", frame.name, "TOP")
+    -- elseif ( frame.displayedUnit ) then
+    --     BuffFrame.baseYOffset = 0
+    --     BuffFrame:SetPoint("BOTTOM", frame.healthBar, "TOP")
+    -- end
+
+    -- BuffFrame:UpdateAnchor()
+end
+
+function Nameplates:UpdateAllBuffFrameAnchors()
+    -- for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
+    --     if ( not frame.UnitFrame:IsForbidden() ) then
+    --         local BuffFrame = frame.UnitFrame.BuffFrame
+
+    --         if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+    --             BuffFrame.baseYOffset = frame.UnitFrame.name:GetHeight()+1
+    --             BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP")
+    --         elseif ( frame.UnitFrame.displayedUnit ) then
+    --             BuffFrame.baseYOffset = 0
+    --             BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.healthBar "TOP")
+    --         end
+
+    --         BuffFrame:UpdateAnchor()
+    --     end
+    -- end
 end
 
 -----------------------------------------
@@ -935,6 +968,7 @@ function Nameplates:CompactUnitFrame_UpdateName(frame)
     if ( frame:IsForbidden() ) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
     self:SkinPlates(frame)
+    self:SkinCastBar(frame)
 end
 
 function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
@@ -964,8 +998,9 @@ function Nameplates:NAME_PLATE_UNIT_ADDED(_, token)
     if UnitIsUnit('player', frame:GetName()) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-    self:SkinPlates(frame)
-    self:SkinCastBar(frame)   
+    --self:SkinPlates(frame)
+    --self:SkinCastBar(frame)  
+    self:UpdateBuffFrameAnchorsByUnit(frame) 
 end
 
 function Nameplates:NAME_PLATE_UNIT_REMOVED(_, token)
@@ -999,6 +1034,22 @@ function Nameplates:PLAYER_TARGET_CHANGED()
             frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
         end
     end
+
+    self:UpdateAllBuffFrameAnchors()
+end
+
+
+function Nameplates:UNIT_AURA(_, unit)
+    local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
+    if not nameplate then return end
+    local frame = nameplate.UnitFrame
+
+    if ( frame:IsForbidden() ) then return end
+    if Nameplates:IsPet(frame.displayedUnit) then return end
+    if UnitIsUnit('player', frame:GetName()) then return end
+    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+
+    self:UpdateBuffFrameAnchorsByUnit(frame)
 end
 
 function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
@@ -1268,7 +1319,7 @@ function Nameplates:ExtraAuras()
         namePlate.suf.icons = CreateFrame("Frame", nil, namePlate.suf)
 
         namePlate.suf.icons:SetPoint("BOTTOMLEFT", namePlate.UnitFrame.BuffFrame, "TOPLEFT", 1, 2)
-
+        
         namePlate.suf.icons:SetWidth(100)
         namePlate.suf.icons:SetHeight(14.5)
         namePlate.suf.icons:SetFrameLevel(namePlate:GetFrameLevel()+1)
