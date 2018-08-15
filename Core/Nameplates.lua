@@ -19,6 +19,7 @@ local statusBar = texturePath.."UI-StatusBar"
 local nameplates_aura_spells = {
     -- Mythic+
         [277242] = true, -- Infested (G'huun)
+        [263246] = true, -- Lightning Shield
 
     -- Death Knight
         [47568] = true, -- Empower Runic Weapon
@@ -503,10 +504,10 @@ function Nameplates:OnEnable()
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
     --self:RegisterEvent('NAME_PLATE_CREATED')
-    self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
+    --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
     --self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
     --self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
-    self:RegisterEvent('UNIT_AURA')
+    --self:RegisterEvent('UNIT_AURA')
     self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
 
     self:SecureHook('CompactUnitFrame_UpdateName')
@@ -655,6 +656,17 @@ function Nameplates:SetTextColorByClass(unit, text)
     return text
 end
 
+function Nameplates:SetPlayerNameByClass(unit, text)
+    local _, class = UnitClass (unit)
+    if (class) then
+        local color = RAID_CLASS_COLORS [class]
+        if (color) then
+            text = "|c" .. color.colorStr .. text:gsub (("%-.*"), "") .. "|r"
+        end
+    end
+    return text
+end
+
 -- Is Showing Resource Frame?
 
 function Nameplates:IsShowingResourcesOnTarget()
@@ -698,6 +710,8 @@ function Nameplates:UpdateCastbarTimer(frame)
     end
 end
 
+-- Update Buff Anchor
+
 function Nameplates:UpdateBuffFrameAnchorsByUnit(frame)
     -- local BuffFrame = frame.BuffFrame
 
@@ -738,6 +752,10 @@ function Nameplates:SkinPlates(frame)
 
     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
     frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
+     -- Health Bar Height
+
+    frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
+    frame.healthBar:SetStatusBarTexture(statusBar)
     
     -- Abbreviate Long Names. 
 
@@ -751,13 +769,10 @@ function Nameplates:SkinPlates(frame)
 
     -- Friendly Player Name.
     
-    if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and Nameplates.settings.friendlyName) then
-        local friendly_name = GetUnitName(frame.displayedUnit,true)
-        local _, class = UnitClass(frame.displayedUnit)
-        local color = select(4, GetClassColor(class))
-        local text = "|c"..color..friendly_name:match("[^-]+")..""
+    if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player")) then
+        local name = GetUnitName(frame.displayedUnit,true)
         frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-        frame.name:SetText(text)
+        frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
         -- 
         if Nameplates.settings.hideHealth then
             frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
@@ -774,20 +789,13 @@ function Nameplates:SkinPlates(frame)
         end
     end
     
-    -- Enemy Player Name.
+    --Enemy Player Name.
     
-    -- if ( UnitCanAttack(frame.displayedUnit,"player") ) then
-    --     local enemy_name = GetUnitName(frame.displayedUnit,true)
-    --     local color = "ffff0000"
-    --     if UnitIsPlayer(frame.displayedUnit) then
-    --         local _, class = UnitClass(frame.displayedUnit)
-    --         color = select(4, GetClassColor(class))
-    --         enemy_name = enemy_name:match("[^-]+")
-    --     end
-    --     local text = "|c"..color..enemy_name..""
-    --     frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
-    --     frame.name:SetText(text)
-    -- end
+    if ( UnitCanAttack(frame.displayedUnit,"player") and UnitIsPlayer(frame.displayedUnit) ) then
+        local name = GetUnitName(frame.displayedUnit,true)
+        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+        frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
+    end
     
     -- Arena Number on Nameplates.
     
@@ -801,11 +809,6 @@ function Nameplates:SkinPlates(frame)
             end 
         end 
     end
-
-    -- Health Bar Height
-
-    frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
-    frame.healthBar:SetStatusBarTexture(statusBar)
 end
 
 function Nameplates:SkinCastBar(frame)
@@ -1038,7 +1041,6 @@ function Nameplates:PLAYER_TARGET_CHANGED()
     self:UpdateAllBuffFrameAnchors()
 end
 
-
 function Nameplates:UNIT_AURA(_, unit)
     local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
     if not nameplate then return end
@@ -1080,9 +1082,7 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
                             if UnitIsUnit(targetUnit, u) then
                                 local targetName = UnitName(targetUnit)
                                 local targetRole = UnitGroupRolesAssigned(targetUnit)
-                                if targetRole ~= "TANK" then
-                                    plateFrame.UnitFrame.castBar.Text:SetText(name .. Nameplates:SetTextColorByClass(targetName, targetName))
-                                end
+                                plateFrame.UnitFrame.castBar.Text:SetText(name .. Nameplates:SetTextColorByClass(targetName, targetName))
                             end
                         end
                     end  

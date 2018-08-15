@@ -7,8 +7,9 @@ JokUI = LibStub("AceAddon-3.0"):NewAddon(Core, "JokUI")
 
 LibStub("AceEvent-3.0"):Embed(JokUI)
 LibStub("AceConsole-3.0"):Embed(JokUI)
+LibStub("AceHook-3.0"):Embed(JokUI)
 
-JokUI:SetDefaultModuleLibraries("AceEvent-3.0", "AceConsole-3.0")
+JokUI:SetDefaultModuleLibraries("AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 
 function Core:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("JokUIDB", nil, true)

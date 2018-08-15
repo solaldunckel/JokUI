@@ -17,6 +17,7 @@ libs\Ace3\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\Ace3\AceConsole-3.0\AceConsole-3.0.xml
 libs\Ace3\AceGUI-3.0\AceGUI-3.0.xml
 libs\Ace3\AceConfig-3.0\AceConfig-3.0.xml
+libs\Ace3\AceHook-3.0\AceHook-3.0.xml
 
 ## CORE
 
