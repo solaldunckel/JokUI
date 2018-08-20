@@ -2461,16 +2461,17 @@ function Misc:Quests()
 	    local newTitle = title
 	    
 	    local playerMap = C_Map.GetBestMapForUnit("player")
-	    local questLine = C_QuestLine.GetQuestLineInfo(questID, playerMap)
-	    if not questLine then
-	    	for k, j in pairs(mapIDs) do
-	    		local questLine = C_QuestLine.GetQuestLineInfo(questID, k)
-	    		if questLine then
-	    			newTitle = "["..questLine["questLineName"].."] "..title
-	    		end
-	    	end
-	    else
-	    	newTitle = "["..questLine["questLineName"].."] "..title
+	    local questLine 
+	    if playerMap then
+	    	questline = C_QuestLine.GetQuestLineInfo(questID, playerMap)
+		    if not questLine then
+		    	for k, j in pairs(mapIDs) do
+		    		local questLine = C_QuestLine.GetQuestLineInfo(questID, k)
+		    		if questLine then
+		    			newTitle = "["..questLine["questLineName"].."] "..title
+		    		end
+		    	end
+		    end
 	   	end
 	      
 

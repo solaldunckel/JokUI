@@ -712,6 +712,7 @@ function Interface:PlayerFrame()
 	function PlayerFrame:Move()
 		if locked == false then
 			locked = true
+			PlayerFrame:SetFrameStrata("MEDIUM")
 			PlayerFrame:SetMovable(false)
 			MoveBackgroundFrame:Hide()
 		else
@@ -770,6 +771,7 @@ function Interface:TargetFrame()
 		if locked == false then
 			locked = true
 			TargetFrame:SetMovable(false)
+			TargetFrame:SetFrameStrata("MEDIUM")
 			MoveBackgroundFrame:Hide()
 		else
 			locked = false

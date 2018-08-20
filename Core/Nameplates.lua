@@ -17,9 +17,13 @@ local texturePath = "Interface\\AddOns\\JokUI\\media\\nameplates\\"
 local statusBar = texturePath.."UI-StatusBar"
 
 local nameplates_aura_spells = {
+
+	-- Add missing debuffs 
+		[214621] = true, -- Schism
+
     -- Mythic+
         [277242] = true, -- Infested (G'huun)
-        [263246] = true, -- Lightning Shield
+        [263246] = true, -- Lightning Shield (Temple of Sethralis)
 
     -- Death Knight
         [47568] = true, -- Empower Runic Weapon
@@ -502,13 +506,14 @@ function Nameplates:OnEnable()
     self:RegisterEvent("RAID_TARGET_UPDATE")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
+    self:RegisterEvent('UNIT_FACTION')
 
     --self:RegisterEvent('NAME_PLATE_CREATED')
     --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
     --self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
     --self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
-    --self:RegisterEvent('UNIT_AURA')
-    self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
+    --self:RegisterEvent('UNIT_AURA')    
 
     self:SecureHook('CompactUnitFrame_UpdateName')
     self:SecureHook('CompactUnitFrame_UpdateHealthColor')
@@ -538,7 +543,6 @@ function Nameplates:OnEnable()
     -- Remove Larger Nameplates Function (thx Plater)
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger:Disable()
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
-
 end
 
 -------------------------------------------------------------------------------
@@ -897,7 +901,8 @@ function Nameplates:ThreatColor(frame)
 end
 
 function Nameplates:Highlight(frame)
-    if UnitIsUnit(frame.displayedUnit, "target") or UnitIsPlayer(frame.displayedUnit) then return end
+    if UnitIsUnit(frame.displayedUnit, "target") then return end
+    if UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit, "player") then return end
 
     local function SetBorderColor(frame, r, g, b, a)
         frame.healthBar.border:SetVertexColor(r, g, b, a);
@@ -1054,6 +1059,18 @@ function Nameplates:UNIT_AURA(_, unit)
     self:UpdateBuffFrameAnchorsByUnit(frame)
 end
 
+function Nameplates:UNIT_FACTION(_, unit)
+	local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
+    if not nameplate then return end
+    local frame = nameplate.UnitFrame
+
+    if ( UnitCanAttack(frame.displayedUnit,"player") ) then
+        DefaultCompactNamePlateFrameSetup(frame, DefaultCompactNamePlateEnemyFrameOptions)
+        self:SkinPlates(frame) 
+    	self:SkinCastBar(frame)
+    end
+end
+
 function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
     if IsInGroup() then
         local time, event, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical = CombatLogGetCurrentEventInfo()
@@ -1153,7 +1170,7 @@ function Nameplates:ExtraAuras()
 
     local function CreateIcon(parent, tag)
         local button = CreateFrame("Frame", nil, parent)
-        button:SetSize(20, 14.5)            
+        button:SetSize(20, 14)            
         button:SetScale(nameplateScale)
         
         button.icon = button:CreateTexture(nil, "OVERLAY", nil, 3)
@@ -1231,6 +1248,17 @@ function Nameplates:ExtraAuras()
         button.canStealOrPurge = canStealOrPurge
         button.nameplateShowAll = nameplateShowAll
 
+        button:SetScript("OnEnter", function(self)
+        	GameTooltip:ClearLines()
+		    GameTooltip:SetOwner(button.icon, "ANCHOR_TOPRIGHT", -25);
+        	GameTooltip:SetUnitAura(unit, index, filter)
+        	GameTooltip:Show()
+        end)
+
+        button:SetScript("OnLeave", function(self)
+        	GameTooltip:Hide()
+        end)
+
         if canStealOrPurge then
             button.overlay:SetVertexColor(1, 1, 1)
             button.overlay:Show()
@@ -1257,29 +1285,31 @@ function Nameplates:ExtraAuras()
             if i <= 5 then          
                 local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
                 if canStealOrPurge or nameplates_aura_spells[spellID] then
-                    if not unitFrame.icons.Aura_Icons[i] then
-                        unitFrame.icons.Aura_Icons[i] = CreateIcon(unitFrame.icons, "aura"..i)
+                    if not unitFrame.buff.Aura_Icons[i] then
+                        unitFrame.buff.Aura_Icons[i] = CreateIcon(unitFrame.buff, "aura"..i)
                     end
-                    UpdateAuraIcon(unitFrame.icons.Aura_Icons[i], unit, index, 'HELPFUL')
+                    UpdateAuraIcon(unitFrame.buff.Aura_Icons[i], unit, index, 'HELPFUL')
                     i = i + 1
                 end
             end
         end
+
+        for index = i, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
         
         for index = 1, BUFF_MAX_DISPLAY do
             if i <= 5 then
                 local name, _, _, _, duration, expire, caster, _, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
-                if nameplates_aura_spells[spellID] then
-                    if not unitFrame.icons.Aura_Icons[i] then
-                        unitFrame.icons.Aura_Icons[i] = CreateIcon(unitFrame.icons, "aura"..i)
+                if nameplates_aura_spells[spellID] and caster == "player" then
+                    if not unitFrame.debuff.Aura_Icons[i] then
+                        unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
                     end
-                    UpdateAuraIcon(unitFrame.icons.Aura_Icons[i], unit, index, 'HARMFUL')
+                    UpdateAuraIcon(unitFrame.debuff.Aura_Icons[i], unit, index, 'HARMFUL')
                     i = i + 1
                 end
             end
-        end
+        end      
         
-        for index = i, #unitFrame.icons.Aura_Icons do unitFrame.icons.Aura_Icons[index]:Hide() end
+        for index = i, #unitFrame.debuff.Aura_Icons do unitFrame.debuff.Aura_Icons[index]:Hide() end
     end
 
     local function NamePlate_OnEvent(self, event, arg1, ...)
@@ -1316,28 +1346,29 @@ function Nameplates:ExtraAuras()
         namePlate.suf:SetAllPoints(namePlate)
         namePlate.suf:SetFrameLevel(namePlate:GetFrameLevel())
 
-        namePlate.suf.icons = CreateFrame("Frame", nil, namePlate.suf)
+        -- Buff Frame
+        namePlate.suf.buff = CreateFrame("Frame", nil, namePlate.suf)
 
-        namePlate.suf.icons:SetPoint("BOTTOMLEFT", namePlate.UnitFrame.BuffFrame, "TOPLEFT", 1, 2)
+        namePlate.suf.buff:SetPoint("BOTTOMLEFT", namePlate.UnitFrame.BuffFrame, "TOPLEFT", 1, 2)
         
-        namePlate.suf.icons:SetWidth(100)
-        namePlate.suf.icons:SetHeight(14.5)
-        namePlate.suf.icons:SetFrameLevel(namePlate:GetFrameLevel()+1)
+        namePlate.suf.buff:SetWidth(100)
+        namePlate.suf.buff:SetHeight(15)
+        namePlate.suf.buff:SetFrameLevel(namePlate:GetFrameLevel()+1)
 
-        namePlate.suf.icons.Aura_Icons = {}
-        namePlate.suf.icons.Spell_Icons = {}
+        namePlate.suf.buff.Aura_Icons = {}
+        namePlate.suf.buff.Spell_Icons = {}
         
-        namePlate.suf.icons.ActiveIcons = {}
-        namePlate.suf.icons.LineUpIcons = function()
+        namePlate.suf.buff.ActiveIcons = {}
+        namePlate.suf.buff.LineUpIcons = function()
             local lastframe
-            for v, frame in PairsByKeys(namePlate.suf.icons.ActiveIcons) do
+            for v, frame in PairsByKeys(namePlate.suf.buff.ActiveIcons) do
                 frame:ClearAllPoints()
                 if not lastframe then
                     local num = 0
-                    for k, j in pairs(namePlate.suf.icons.ActiveIcons) do
+                    for k, j in pairs(namePlate.suf.buff.ActiveIcons) do
                         num = num + 1
                     end
-                    frame:SetPoint("LEFT", namePlate.suf.icons, "LEFT", -0.5,0)
+                    frame:SetPoint("LEFT", namePlate.suf.buff, "LEFT", -0.5,0)
                 else
                     frame:SetPoint("LEFT", lastframe, "RIGHT", 4, 0)
                 end
@@ -1346,21 +1377,67 @@ function Nameplates:ExtraAuras()
             end
         end
         
-        namePlate.suf.icons.QueueIcon = function(frame, tag)
+        namePlate.suf.buff.QueueIcon = function(frame, tag)
             frame.v = tag
             
             frame:HookScript("OnShow", function()
-                namePlate.suf.icons.ActiveIcons[frame.v] = frame
-                namePlate.suf.icons.LineUpIcons()
+                namePlate.suf.buff.ActiveIcons[frame.v] = frame
+                namePlate.suf.buff.LineUpIcons()
             end)
             
             frame:HookScript("OnHide", function()
-                namePlate.suf.icons.ActiveIcons[frame.v] = nil
-                namePlate.suf.icons.LineUpIcons()
+                namePlate.suf.buff.ActiveIcons[frame.v] = nil
+                namePlate.suf.buff.LineUpIcons()
+            end)
+        end
+
+        -- Debuff Frame
+        namePlate.suf.debuff = CreateFrame("Frame", nil, namePlate.suf)
+
+        namePlate.suf.debuff:SetPoint("LEFT", namePlate.UnitFrame.BuffFrame, "RIGHT", 4, 0)
+        
+        namePlate.suf.debuff:SetWidth(100)
+        namePlate.suf.debuff:SetHeight(14)
+        namePlate.suf.debuff:SetFrameLevel(namePlate:GetFrameLevel()+1)
+
+        namePlate.suf.debuff.Aura_Icons = {}
+        namePlate.suf.debuff.Spell_Icons = {}
+        
+        namePlate.suf.debuff.ActiveIcons = {}
+        namePlate.suf.debuff.LineUpIcons = function()
+            local lastframe
+            for v, frame in PairsByKeys(namePlate.suf.debuff.ActiveIcons) do
+                frame:ClearAllPoints()
+                if not lastframe then
+                    local num = 0
+                    for k, j in pairs(namePlate.suf.debuff.ActiveIcons) do
+                        num = num + 1
+                    end
+                    frame:SetPoint("LEFT", namePlate.suf.debuff, "LEFT", -0.5,0)
+                else
+                    frame:SetPoint("LEFT", lastframe, "RIGHT", 4, 0)
+                end
+
+                lastframe = frame
+            end
+        end
+        
+        namePlate.suf.debuff.QueueIcon = function(frame, tag)
+            frame.v = tag
+            
+            frame:HookScript("OnShow", function()
+                namePlate.suf.debuff.ActiveIcons[frame.v] = frame
+                namePlate.suf.debuff.LineUpIcons()
+            end)
+            
+            frame:HookScript("OnHide", function()
+                namePlate.suf.debuff.ActiveIcons[frame.v] = nil
+                namePlate.suf.debuff.LineUpIcons()
             end)
         end
         
-        table.insert(Plate_IconHolders, namePlate.suf.icons)
+        table.insert(Plate_IconHolders, namePlate.suf.buff)
+        table.insert(Plate_IconHolders, namePlate.suf.debuff)
         
         namePlate.suf:EnableMouse(false)
     end
