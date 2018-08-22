@@ -18,12 +18,16 @@ local statusBar = texturePath.."UI-StatusBar"
 
 local nameplates_aura_spells = {
 
-	-- Add missing debuffs 
+	-- Add missing class debuffs 
 		[214621] = true, -- Schism
 
-    -- Mythic+
+    -- Mythic+ (Buffs)
         [277242] = true, -- Infested (G'huun)
         [263246] = true, -- Lightning Shield (Temple of Sethralis)
+        [260852] = true, -- Claim The Iris (Waycrest Manor)
+
+    -- Mythic+ (Debuffs)
+        [256493] = true, -- Blazing Azerite (The MOTHERLODE!!!)
 
     -- Death Knight
         [47568] = true, -- Empower Runic Weapon
@@ -507,7 +511,7 @@ function Nameplates:OnEnable()
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
-    self:RegisterEvent('UNIT_FACTION')
+    --self:RegisterEvent('UNIT_FACTION')
 
     --self:RegisterEvent('NAME_PLATE_CREATED')
     --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
@@ -712,40 +716,6 @@ function Nameplates:UpdateCastbarTimer(frame)
             end
         end
     end
-end
-
--- Update Buff Anchor
-
-function Nameplates:UpdateBuffFrameAnchorsByUnit(frame)
-    -- local BuffFrame = frame.BuffFrame
-
-    -- if ( frame.displayedUnit and UnitShouldDisplayName(frame.displayedUnit) ) then
-    --     BuffFrame.baseYOffset = 0
-    --     BuffFrame:SetPoint("BOTTOM", frame.name, "TOP")
-    -- elseif ( frame.displayedUnit ) then
-    --     BuffFrame.baseYOffset = 0
-    --     BuffFrame:SetPoint("BOTTOM", frame.healthBar, "TOP")
-    -- end
-
-    -- BuffFrame:UpdateAnchor()
-end
-
-function Nameplates:UpdateAllBuffFrameAnchors()
-    -- for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
-    --     if ( not frame.UnitFrame:IsForbidden() ) then
-    --         local BuffFrame = frame.UnitFrame.BuffFrame
-
-    --         if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-    --             BuffFrame.baseYOffset = frame.UnitFrame.name:GetHeight()+1
-    --             BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP")
-    --         elseif ( frame.UnitFrame.displayedUnit ) then
-    --             BuffFrame.baseYOffset = 0
-    --             BuffFrame:SetPoint("BOTTOM", frame.UnitFrame.healthBar "TOP")
-    --         end
-
-    --         BuffFrame:UpdateAnchor()
-    --     end
-    -- end
 end
 
 -----------------------------------------
@@ -975,6 +945,7 @@ end
 function Nameplates:CompactUnitFrame_UpdateName(frame)
     if ( frame:IsForbidden() ) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+
     self:SkinPlates(frame)
     self:SkinCastBar(frame)
 end
@@ -1008,7 +979,6 @@ function Nameplates:NAME_PLATE_UNIT_ADDED(_, token)
 
     --self:SkinPlates(frame)
     --self:SkinCastBar(frame)  
-    self:UpdateBuffFrameAnchorsByUnit(frame) 
 end
 
 function Nameplates:NAME_PLATE_UNIT_REMOVED(_, token)
@@ -1042,8 +1012,6 @@ function Nameplates:PLAYER_TARGET_CHANGED()
             frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
         end
     end
-
-    self:UpdateAllBuffFrameAnchors()
 end
 
 function Nameplates:UNIT_AURA(_, unit)
@@ -1056,7 +1024,7 @@ function Nameplates:UNIT_AURA(_, unit)
     if UnitIsUnit('player', frame:GetName()) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
-    self:UpdateBuffFrameAnchorsByUnit(frame)
+
 end
 
 function Nameplates:UNIT_FACTION(_, unit)
@@ -1170,7 +1138,7 @@ function Nameplates:ExtraAuras()
 
     local function CreateIcon(parent, tag)
         local button = CreateFrame("Frame", nil, parent)
-        button:SetSize(20, 14)            
+        button:SetSize(21, 15)            
         button:SetScale(nameplateScale)
         
         button.icon = button:CreateTexture(nil, "OVERLAY", nil, 3)
@@ -1280,36 +1248,39 @@ function Nameplates:ExtraAuras()
         if not unitFrame.unit then return end
         local unit = unitFrame.unit 
         local i = 1
-        
-        for index = 1, BUFF_MAX_DISPLAY do
-            if i <= 5 then          
-                local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
-                if canStealOrPurge or nameplates_aura_spells[spellID] then
-                    if not unitFrame.buff.Aura_Icons[i] then
-                        unitFrame.buff.Aura_Icons[i] = CreateIcon(unitFrame.buff, "aura"..i)
-                    end
-                    UpdateAuraIcon(unitFrame.buff.Aura_Icons[i], unit, index, 'HELPFUL')
-                    i = i + 1
-                end
-            end
-        end
+        local j = 1
 
-        for index = i, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
-        
         for index = 1, BUFF_MAX_DISPLAY do
-            if i <= 5 then
-                local name, _, _, _, duration, expire, caster, _, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
-                if nameplates_aura_spells[spellID] and caster == "player" then
+                local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
+                if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or nameplateShowAll then
                     if not unitFrame.debuff.Aura_Icons[i] then
                         unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
                     end
                     UpdateAuraIcon(unitFrame.debuff.Aura_Icons[i], unit, index, 'HARMFUL')
                     i = i + 1
                 end
-            end
         end      
         
         for index = i, #unitFrame.debuff.Aura_Icons do unitFrame.debuff.Aura_Icons[index]:Hide() end
+        
+        for index = 1, BUFF_MAX_DISPLAY do         
+                local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
+                if canStealOrPurge or nameplates_aura_spells[spellID] then
+                    if not unitFrame.buff.Aura_Icons[j] then
+                        unitFrame.buff.Aura_Icons[j] = CreateIcon(unitFrame.buff, "aura"..j)
+                    end
+                    UpdateAuraIcon(unitFrame.buff.Aura_Icons[j], unit, index, 'HELPFUL')
+                    j = j + 1
+                end
+        end
+
+        if i == 1 then
+            unitFrame.debuff:SetHeight(0.1)
+        elseif i > 1 then
+            unitFrame.debuff:SetHeight(15)
+        end
+
+        for index = j, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
     end
 
     local function NamePlate_OnEvent(self, event, arg1, ...)
@@ -1342,63 +1313,20 @@ function Nameplates:ExtraAuras()
     end
 
     local function OnNamePlateCreated(namePlate)
+        if namePlate.UnitFrame:IsForbidden() then return end
+
         namePlate.suf = CreateFrame("Button", "$parentUnitFrame", namePlate)
         namePlate.suf:SetAllPoints(namePlate)
         namePlate.suf:SetFrameLevel(namePlate:GetFrameLevel())
 
-        -- Buff Frame
-        namePlate.suf.buff = CreateFrame("Frame", nil, namePlate.suf)
-
-        namePlate.suf.buff:SetPoint("BOTTOMLEFT", namePlate.UnitFrame.BuffFrame, "TOPLEFT", 1, 2)
-        
-        namePlate.suf.buff:SetWidth(100)
-        namePlate.suf.buff:SetHeight(15)
-        namePlate.suf.buff:SetFrameLevel(namePlate:GetFrameLevel()+1)
-
-        namePlate.suf.buff.Aura_Icons = {}
-        namePlate.suf.buff.Spell_Icons = {}
-        
-        namePlate.suf.buff.ActiveIcons = {}
-        namePlate.suf.buff.LineUpIcons = function()
-            local lastframe
-            for v, frame in PairsByKeys(namePlate.suf.buff.ActiveIcons) do
-                frame:ClearAllPoints()
-                if not lastframe then
-                    local num = 0
-                    for k, j in pairs(namePlate.suf.buff.ActiveIcons) do
-                        num = num + 1
-                    end
-                    frame:SetPoint("LEFT", namePlate.suf.buff, "LEFT", -0.5,0)
-                else
-                    frame:SetPoint("LEFT", lastframe, "RIGHT", 4, 0)
-                end
-
-                lastframe = frame
-            end
-        end
-        
-        namePlate.suf.buff.QueueIcon = function(frame, tag)
-            frame.v = tag
-            
-            frame:HookScript("OnShow", function()
-                namePlate.suf.buff.ActiveIcons[frame.v] = frame
-                namePlate.suf.buff.LineUpIcons()
-            end)
-            
-            frame:HookScript("OnHide", function()
-                namePlate.suf.buff.ActiveIcons[frame.v] = nil
-                namePlate.suf.buff.LineUpIcons()
-            end)
-        end
-
         -- Debuff Frame
         namePlate.suf.debuff = CreateFrame("Frame", nil, namePlate.suf)
 
-        namePlate.suf.debuff:SetPoint("LEFT", namePlate.UnitFrame.BuffFrame, "RIGHT", 4, 0)
+        namePlate.suf.debuff:SetPoint("BOTTOM", namePlate.UnitFrame.name, "TOP", 0, 3)
         
         namePlate.suf.debuff:SetWidth(100)
-        namePlate.suf.debuff:SetHeight(14)
-        namePlate.suf.debuff:SetFrameLevel(namePlate:GetFrameLevel()+1)
+        namePlate.suf.debuff:SetHeight(15)
+        namePlate.suf.debuff:SetFrameLevel(namePlate:GetFrameLevel())
 
         namePlate.suf.debuff.Aura_Icons = {}
         namePlate.suf.debuff.Spell_Icons = {}
@@ -1413,9 +1341,9 @@ function Nameplates:ExtraAuras()
                     for k, j in pairs(namePlate.suf.debuff.ActiveIcons) do
                         num = num + 1
                     end
-                    frame:SetPoint("LEFT", namePlate.suf.debuff, "LEFT", -0.5,0)
+                    frame:SetPoint("BOTTOMLEFT", namePlate.suf.debuff, "BOTTOMLEFT", 0,0)
                 else
-                    frame:SetPoint("LEFT", lastframe, "RIGHT", 4, 0)
+                    frame:SetPoint("BOTTOMLEFT", lastframe, "BOTTOMRIGHT", 3, 0)
                 end
 
                 lastframe = frame
@@ -1435,6 +1363,50 @@ function Nameplates:ExtraAuras()
                 namePlate.suf.debuff.LineUpIcons()
             end)
         end
+
+        -- Buff Frame
+        namePlate.suf.buff = CreateFrame("Frame", nil, namePlate.suf)
+
+        namePlate.suf.buff:SetPoint("BOTTOMLEFT", namePlate.suf.debuff, "TOPLEFT", 0, 3)
+        
+        namePlate.suf.buff:SetWidth(100)
+        namePlate.suf.buff:SetHeight(15)
+        namePlate.suf.buff:SetFrameLevel(namePlate:GetFrameLevel())
+
+        namePlate.suf.buff.Aura_Icons = {}        
+        namePlate.suf.buff.ActiveIcons = {}
+
+        namePlate.suf.buff.LineUpIcons = function()
+            local lastframe
+            for v, frame in PairsByKeys(namePlate.suf.buff.ActiveIcons) do
+                frame:ClearAllPoints()
+                if not lastframe then
+                    local num = 0
+                    for k, j in pairs(namePlate.suf.buff.ActiveIcons) do
+                        num = num + 1
+                    end
+                    frame:SetPoint("LEFT", namePlate.suf.buff, "LEFT", 0,0)
+                else
+                    frame:SetPoint("LEFT", lastframe, "RIGHT", 3, 0)
+                end
+
+                lastframe = frame
+            end
+        end
+        
+        namePlate.suf.buff.QueueIcon = function(frame, tag)
+            frame.v = tag
+            
+            frame:HookScript("OnShow", function()
+                namePlate.suf.buff.ActiveIcons[frame.v] = frame
+                namePlate.suf.buff.LineUpIcons()
+            end)
+            
+            frame:HookScript("OnHide", function()
+                namePlate.suf.buff.ActiveIcons[frame.v] = nil
+                namePlate.suf.buff.LineUpIcons()
+            end)
+        end
         
         table.insert(Plate_IconHolders, namePlate.suf.buff)
         table.insert(Plate_IconHolders, namePlate.suf.debuff)
@@ -1445,6 +1417,8 @@ function Nameplates:ExtraAuras()
     local function OnNamePlateAdded(unit)
         local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
         local unitFrame = namePlate.suf
+
+        namePlate.UnitFrame.BuffFrame:Hide()
         SetUnit(unitFrame, unit)
         UpdateAuras(unitFrame)
     end
@@ -1452,6 +1426,29 @@ function Nameplates:ExtraAuras()
     local function OnNamePlateRemoved(unit)
         local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
         SetUnit(namePlate.suf, nil)
+    end
+
+    local function OnTargetChanged()
+        for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
+            if ( not frame.UnitFrame:IsForbidden() ) then
+                if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+                elseif ( frame.UnitFrame.displayedUnit ) then
+                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 3)
+                end
+            end
+        end  
+    end
+
+    local function BuffFrameAnchor(unit)
+        local frame = C_NamePlate.GetNamePlateForUnit(unit, issecure())
+        if ( not frame ) then return end 
+
+        if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+        elseif ( frame.UnitFrame.displayedUnit ) then
+            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 3)
+        end
     end
 
     local function NamePlates_OnEvent(self, event, ...) 
@@ -1463,16 +1460,24 @@ function Nameplates:ExtraAuras()
         elseif ( event == "NAME_PLATE_UNIT_ADDED" ) then 
             local unit = ...
             OnNamePlateAdded(unit)
+            BuffFrameAnchor(unit)
         elseif ( event == "NAME_PLATE_UNIT_REMOVED" ) then 
             local unit = ...
             OnNamePlateRemoved(unit)
+        elseif ( event == "PLAYER_TARGET_CHANGED" ) then 
+            OnTargetChanged()
+        elseif ( event == "UNIT_AURA" ) then
+            local unit = ...
+            BuffFrameAnchor(unit)
         end
     end
 
     local NamePlatesFrame = CreateFrame("Frame", "NamePlatesFrame", UIParent) 
     NamePlatesFrame:SetScript("OnEvent", NamePlates_OnEvent)
     NamePlatesFrame:RegisterEvent("VARIABLES_LOADED")
+    NamePlatesFrame:RegisterEvent("UNIT_AURA")
     NamePlatesFrame:RegisterEvent("NAME_PLATE_CREATED")
     NamePlatesFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    NamePlatesFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     NamePlatesFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 end
