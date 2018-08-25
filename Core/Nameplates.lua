@@ -128,7 +128,7 @@ local nameplates_defaults = {
         nameplateAlpha = 1,
         nameplateRange = 50,
         overlap = true,
-        verticalOverlap = 0.8,
+        verticalOverlap = 0.6,
         horizontalOverlap = 0.8,
         friendlymotion = true,
         clickthroughfriendly = true,
@@ -136,7 +136,7 @@ local nameplates_defaults = {
         enemypets = false,
         enemyguardian = false,
         enemyminus = false, 
-        healthWidth = 1.1,
+        healthWidth = 120,
         healthHeight = 9,                         
     }
 }
@@ -485,12 +485,12 @@ local nameplates_config = {
                 isPercent = false,
                 name = "Health Bar Width",
                 desc = "",
-                min = 0.7,
-                max = 2,
-                step = 0.1,
+                min = 10,
+                max = 200,
+                step = 1,
                 order = 2,
                 set = function(info,val) Nameplates.settings.healthWidth = val
-                    SetCVar("nameplateHorizontalScale", val)
+                    C_NamePlate.SetNamePlateEnemySize(val,50)
                 end,
                 get = function(info, val) return Nameplates.settings.healthWidth end
             },
@@ -906,6 +906,8 @@ end
 
 function Nameplates:PLAYER_ENTERING_WORLD()
 
+    C_NamePlate.SetNamePlateEnemySize(120,45)
+
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         local _, instanceType = IsInInstance()
@@ -1251,33 +1253,39 @@ function Nameplates:ExtraAuras()
         local j = 1
 
         for index = 1, BUFF_MAX_DISPLAY do
-                local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
-                if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or nameplateShowAll then
-                    if not unitFrame.debuff.Aura_Icons[i] then
-                        unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
-                    end
-                    UpdateAuraIcon(unitFrame.debuff.Aura_Icons[i], unit, index, 'HARMFUL')
-                    i = i + 1
+            local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
+            if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or nameplateShowAll then
+                if not unitFrame.debuff.Aura_Icons[i] then
+                    unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
                 end
+                UpdateAuraIcon(unitFrame.debuff.Aura_Icons[i], unit, index, 'HARMFUL')
+                i = i + 1
+            end
         end      
         
         for index = i, #unitFrame.debuff.Aura_Icons do unitFrame.debuff.Aura_Icons[index]:Hide() end
         
         for index = 1, BUFF_MAX_DISPLAY do         
-                local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
-                if canStealOrPurge or nameplates_aura_spells[spellID] then
-                    if not unitFrame.buff.Aura_Icons[j] then
-                        unitFrame.buff.Aura_Icons[j] = CreateIcon(unitFrame.buff, "aura"..j)
-                    end
-                    UpdateAuraIcon(unitFrame.buff.Aura_Icons[j], unit, index, 'HELPFUL')
-                    j = j + 1
+            local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
+            if canStealOrPurge or nameplates_aura_spells[spellID] then
+                if not unitFrame.buff.Aura_Icons[j] then
+                    unitFrame.buff.Aura_Icons[j] = CreateIcon(unitFrame.buff, "aura"..j)
                 end
+                UpdateAuraIcon(unitFrame.buff.Aura_Icons[j], unit, index, 'HELPFUL')
+                j = j + 1
+            end
         end
 
         if i == 1 then
             unitFrame.debuff:SetHeight(0.1)
         elseif i > 1 then
             unitFrame.debuff:SetHeight(15)
+        end
+
+        if j == 1 then
+            unitFrame.buff:SetHeight(0.1)
+        elseif j > 1 then
+            unitFrame.buff:SetHeight(15)
         end
 
         for index = j, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
@@ -1434,7 +1442,7 @@ function Nameplates:ExtraAuras()
                 if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
                     frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
                 elseif ( frame.UnitFrame.displayedUnit ) then
-                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 3)
+                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
                 end
             end
         end  
@@ -1447,7 +1455,7 @@ function Nameplates:ExtraAuras()
         if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
             frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
         elseif ( frame.UnitFrame.displayedUnit ) then
-            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 3)
+            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
         end
     end
 

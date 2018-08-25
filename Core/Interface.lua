@@ -34,7 +34,7 @@ local interface_defaults = {
     		x = 250,
     		y = -6, 
     	},
-    	BossFrame = {"TOPLEFT", nil, "TOPLEFT", 1340, -300},
+    	BossFrame = {"TOPLEFT", nil, "TOPLEFT", 1250, -285},
     	SkinInterface = true,    	
     }
 }
@@ -130,6 +130,8 @@ function Interface:OnEnable()
 		self:TargetFrame()
 	else
 		self:ColorUnitFrames()
+		self:PlayerFrame()
+		self:TargetFrame()
 	end
 
 	if Interface.settings.SkinInterface then
@@ -224,7 +226,7 @@ function Interface:UnitFrames()
 	local AURA_OFFSET_X = 4;
 	local LARGE_AURA_SIZE = 23
 	local SMALL_AURA_SIZE = 20
-	local AURA_ROW_WIDTH = 119;
+	local AURA_ROW_WIDTH = 110;
 
 	local function ClassColor(statusbar, unit)
 		local _, class, c
@@ -334,11 +336,6 @@ function Interface:UnitFrames()
 		self.manabar:ClearAllPoints();
 		self.manabar:SetPoint("TOPLEFT", 5, -52);
 		self.manabar:SetSize(119, 13);
-		self.manabar.LeftText:ClearAllPoints();
-		self.manabar.LeftText:SetPoint("LEFT", self.manabar, "LEFT", 8, 0);	
-		self.manabar.RightText:ClearAllPoints();
-		self.manabar.RightText:SetPoint("RIGHT", self.manabar, "RIGHT", -5, 0);
-		self.manabar.TextString:SetPoint("CENTER", self.manabar, "CENTER", 0, 0);
 
 		--TargetOfTarget
 		TargetFrameToTHealthBar:ClearAllPoints()
@@ -792,19 +789,27 @@ function Interface:TargetFrame()
 end
 
 function Interface:ColorUnitFrames()
+	local AURA_START_X = 6;
+	local AURA_START_Y = 28;
+	local AURA_OFFSET_Y = 3;
+	local AURA_OFFSET_X = 4;
+	local LARGE_AURA_SIZE = 23
+	local SMALL_AURA_SIZE = 20
+	local AURA_ROW_WIDTH = 119;
+
 	--HIDE COLORS BEHIND NAME
 	hooksecurefunc("TargetFrame_CheckFaction", function(self)
-	    self.nameBackground:SetVertexColor(0, 0, 0, 0);
+	    self.nameBackground:SetVertexColor(0, 0, 0, 0.5);
 	end)
 
 	-- CLASS COLOR HP BAR
 	local function colour(statusbar, unit)
 	        local _, class, c
 	        if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
-	                _, class = UnitClass(unit)
-	                c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class]
-	                statusbar:SetStatusBarColor(c.r, c.g, c.b)
-	                --PlayerFrameHealthBar:SetStatusBarColor(0,1,0)
+	            _, class = UnitClass(unit)
+	            c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class]
+	            statusbar:SetStatusBarColor(c.r, c.g, c.b)
+	            --PlayerFrameHealthBar:SetStatusBarColor(0,1,0)
 	        end
 	end
 
@@ -2269,7 +2274,7 @@ function Interface:BossFrame()
 		anchorFrame:SetScript("OnMouseWheel", anchorFrame.OnMouseWheel)
 		anchorFrame:SetScript("OnShow", anchorFrame.OnShow)
 		anchorFrame:Hide()
-		if Interface.settings.BossFrame and Interface.settings.BossFrame[1] and Interface.settings.BossFrame[4] and Interface.settings.BossFrame[5] then
+		if Interface.settings.BossFrame then
 			anchorFrame:ClearAllPoints()
 			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
 			self.bossFrame:ClearAllPoints() -- taint
