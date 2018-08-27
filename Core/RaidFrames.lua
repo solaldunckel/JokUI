@@ -19,8 +19,8 @@ local font = STANDARD_TEXT_FONT
 local raidframes_defaults = {
     profile = {
     	Buffs = {
-        	debuffscale = 25,
-        	buffscale = 25,
+        	debuffscale = 1,
+        	buffscale = 1,
     	},   
         RaidFade = {
         	fadealpha = .3,	
@@ -47,11 +47,10 @@ local raidframes_config = {
 		isPercent = false,
 		name = "Buff Size",
 		desc = "",
-		min = 20,
-		max = 45,
-		step = 1,
+		min = 0.5,
+		max = 1.5,
+		step = 0.1,
 		order = 3,
-		disabled = function() return true end,
 		set = function(info,val) RaidFrames.settings.Buffs.buffscale = val
 		end,
 		get = function(info) return RaidFrames.settings.Buffs.buffscale end
@@ -61,11 +60,10 @@ local raidframes_config = {
 		isPercent = false,
 		name = "Debuff Size",
 		desc = "",
-		min = 20,
-		max = 45,
-		step = 1,
+		min = 0.5,
+		max = 1.5,
+		step = 0.1,
 		order = 4,
-		disabled = function() return true end,
 		set = function(info,val) RaidFrames.settings.Buffs.debuffscale = val
 		end,
 		get = function(info) return RaidFrames.settings.Buffs.debuffscale end
@@ -111,6 +109,7 @@ function RaidFrames:OnEnable()
 		self:SyncFeature(name)
 	end
 
+	self:Buffs()
 	self:Misc()
 end
 
@@ -293,6 +292,33 @@ function RaidFrames:ShowAbsorb()
 		  	--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
 		end		
 	end)
+end
+
+function RaidFrames:Buffs()
+	local blacklist = {
+    };
+
+	--Compact Unit Frame
+	function CompactUnitFrame_UtilSetBuff_Hook(buffFrame, unit, index, filter)
+		local buffName, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal,
+		spellId, canApplyAura, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod, _ = UnitBuff(unit, index, filter)
+
+		buffFrame:SetScale(RaidFrames.settings.Buffs.buffscale)
+
+		if blacklist[spellId] then
+			buffFrame:Hide()
+		end
+
+	end
+	hooksecurefunc("CompactUnitFrame_UtilSetBuff", CompactUnitFrame_UtilSetBuff_Hook)
+
+	function CompactUnitFrame_UtilSetDebuff_Hook(debuffFrame, unit, index, filter)
+		local buffName, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal,
+		spellId, canApplyAura, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod, _ = UnitDebuff(unit, index, filter)
+
+		debuffFrame:SetScale(RaidFrames.settings.Buffs.debuffscale)
+	end
+	hooksecurefunc("CompactUnitFrame_UtilSetDebuff", CompactUnitFrame_UtilSetDebuff_Hook)
 end
 	
 function RaidFrames:FadeMore()

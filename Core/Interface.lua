@@ -1235,66 +1235,65 @@ function Interface:Colors()
     end
     select(2, TimeManagerClockButton:GetRegions()):SetVertexColor(1,1,1)
 
-	local CF=CreateFrame("Frame")
-	CF:RegisterEvent("PLAYER_ENTERING_WORLD")
-	CF:RegisterEvent("GROUP_ROSTER_UPDATE")
+	-- local CF=CreateFrame("Frame")
+	-- CF:RegisterEvent("PLAYER_ENTERING_WORLD")
+	-- CF:RegisterEvent("GROUP_ROSTER_UPDATE")
 
-	function ColorRaid()
-		for g = 1, NUM_RAID_GROUPS do
-			local group = _G["CompactRaidGroup"..g.."BorderFrame"]
-			if group then
-				for _, region in pairs({group:GetRegions()}) do
-					if region:IsObjectType("Texture") then
-						region:SetVertexColor(.15, .15, .15)
-					end
-				end
-			end
-			-- Groups Title
-			local group = _G["CompactRaidGroup"..g.."Title"]
-			if group then
-				for _, region in pairs({group:GetRegions()}) do
-					region:SetText(g)
-				end
-			end
-			for m = 1, 5 do
-				local frame = _G["CompactRaidGroup"..g.."Member"..m]
-				if frame then
-					groupcolored = true
-					for _, region in pairs({frame:GetRegions()}) do
-						if region:GetName():find("Border") then
-							region:SetVertexColor(.15, .15, .15)
-						end
-					end
-				end
-				local frame = _G["CompactRaidFrame"..m]
-				if frame then
-					singlecolored = true
-					for _, region in pairs({frame:GetRegions()}) do
-						if region:GetName():find("Border") then
-							region:SetVertexColor(.15, .15, .15)
-						end
-					end
-				end
-			end
-		end
-		for _, region in pairs({CompactRaidFrameContainerBorderFrame:GetRegions()}) do
-			if region:IsObjectType("Texture") then
-				region:SetVertexColor(.15, .15, .15)
-			end
-		end
-	end
+	-- function ColorRaid()
+	-- 	for g = 1, NUM_RAID_GROUPS do
+	-- 		local group = _G["CompactRaidGroup"..g.."BorderFrame"]
+	-- 		if group then
+	-- 			for _, region in pairs({group:GetRegions()}) do
+	-- 				if region:IsObjectType("Texture") then
+	-- 					region:SetVertexColor(.15, .15, .15)
+	-- 				end
+	-- 			end
+	-- 		end
+	-- 		-- Groups Title
+	-- 		local group = _G["CompactRaidGroup"..g.."Title"]
+	-- 		if group then
+	-- 			for _, region in pairs({group:GetRegions()}) do
+	-- 				region:SetText(g)
+	-- 			end
+	-- 		end
+	-- 		for m = 1, 5 do
+	-- 			local frame = _G["CompactRaidGroup"..g.."Member"..m]
+	-- 			if frame then
+	-- 				groupcolored = true
+	-- 				for _, region in pairs({frame:GetRegions()}) do
+	-- 					if region:GetName():find("Border") then
+	-- 						region:SetVertexColor(.15, .15, .15)
+	-- 					end
+	-- 				end
+	-- 			end
+	-- 			local frame = _G["CompactRaidFrame"..m]
+	-- 			if frame then
+	-- 				singlecolored = true
+	-- 				for _, region in pairs({frame:GetRegions()}) do
+	-- 					if region:GetName():find("Border") then
+	-- 						region:SetVertexColor(.15, .15, .15)
+	-- 					end
+	-- 				end
+	-- 			end
+	-- 		end
+	-- 	end
+	-- 	for _, region in pairs({CompactRaidFrameContainerBorderFrame:GetRegions()}) do
+	-- 		if region:IsObjectType("Texture") then
+	-- 			region:SetVertexColor(.15, .15, .15)
+	-- 		end
+	-- 	end
+	-- end
 	
-	CF:SetScript("OnEvent", function(self, event)
-		ColorRaid()
-		CF:SetScript("OnUpdate", function()
-			if CompactRaidGroup1 and not groupcolored == true then
-				ColorRaid()
-			end
-			if CompactRaidFrame1 and not singlecolored == true then
-				ColorRaid()
-			end
-		end)
-	end)
+	-- CF:SetScript("OnEvent", function(self, event)
+	-- 	if event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+	-- 		if CompactRaidGroup1 and not groupcolored == true then
+	-- 			ColorRaid()
+	-- 		end
+	-- 		if CompactRaidFrame1 and not singlecolored == true then
+	-- 			ColorRaid()
+	-- 		end
+	-- 	end
+	-- end)
 
 	for i,v in pairs({
 		Boss1TargetFrameSpellBar.BorderShield,
@@ -1997,22 +1996,22 @@ function Interface:ReAnchor()
 	-- these three lines define where to position the topright corner
 	-- negative x values go left, positive x values go right
 	-- negative y values go down, positive y values go up
-	local anchor = "TOPRIGHT"
-	local xOff = -3
-	local yOff = 0
+	-- local anchor = "TOPRIGHT"
+	-- local xOff = -3
+	-- local yOff = 0
 
- 	if IsAddOnLoaded("Blizzard_ObjectiveTracker") then
-    	local tracker = ObjectiveTrackerFrame
-    	tracker:ClearAllPoints()
-    	tracker:SetPoint(anchor,UIParent,xOff,yOff)
-    	hooksecurefunc(ObjectiveTrackerFrame,"SetPoint",function(self,anchorPoint,relativeTo,x,y)
-      		if anchorPoint~=anchor and x~=xOff and y~=yOff then
-      			if MultiBarLeft:IsShown() then
-        			self:SetPoint("TOPRIGHT",MultiBarLeft, "TOPLEFT", xOff,yOff)
-        		end
-      		end
-    	end)
-  	end
+ -- 	if IsAddOnLoaded("Blizzard_ObjectiveTracker") then
+ --    	local tracker = ObjectiveTrackerFrame
+ --    	tracker:ClearAllPoints()
+ --    	tracker:SetPoint(anchor,UIParent,xOff,yOff)
+ --    	hooksecurefunc(ObjectiveTrackerFrame,"SetPoint",function(self,anchorPoint,relativeTo,x,y)
+ --      		if anchorPoint~=anchor and x~=xOff and y~=yOff then
+ --      			if MultiBarLeft:IsShown() then
+ --        			self:SetPoint("TOPRIGHT",MultiBarLeft, "TOPLEFT", xOff,yOff)
+ --        		end
+ --      		end
+ --    	end)
+ --  	end
 
   	-- ETC
   	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -58)

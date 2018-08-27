@@ -20,6 +20,7 @@ local nameplates_aura_spells = {
 
 	-- Add missing class debuffs 
 		[214621] = true, -- Schism
+        [228358] = true, -- Flurry
 
     -- Mythic+ (Buffs)
         [277242] = true, -- Infested (G'huun)
@@ -543,10 +544,6 @@ function Nameplates:OnEnable()
 
     SetCVar("nameplateShowAll", 1)
     SetCVar("NameplatePersonalShowAlways", 0)
-
-    -- Remove Larger Nameplates Function (thx Plater)
-    InterfaceOptionsNamesPanelUnitNameplatesMakeLarger:Disable()
-    InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
 end
 
 -------------------------------------------------------------------------------
@@ -733,7 +730,7 @@ function Nameplates:SkinPlates(frame)
     
     -- Abbreviate Long Names. 
 
-    frame.name:SetText(Nameplates:Abbrev(frame.name:GetText(),32))
+    frame.name:SetText(Nameplates:Abbrev(frame.name:GetText(),24))
 
     -- Only Name Fix
 
@@ -747,6 +744,7 @@ function Nameplates:SkinPlates(frame)
         local name = GetUnitName(frame.displayedUnit,true)
         frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
         frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
+        frame:SetAlpha(1)
         -- 
         if Nameplates.settings.hideHealth then
             frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
@@ -792,7 +790,7 @@ function Nameplates:SkinCastBar(frame)
     frame.castBar:SetStatusBarTexture(statusBar)
     frame.castBar.Text:SetShadowOffset(.5, -.5)
     frame.castBar.Text:SetFont("Fonts\\FRIZQT__.TTF", 8, "THINOUTLINE")
-    frame.castBar:SetHeight(12)
+    frame.castBar:SetHeight(10)
     frame.castBar.Icon:SetSize(12, 12)
     frame.castBar.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
     frame.castBar.Icon:SetPoint("RIGHT", frame.castBar, "LEFT", 2, 0)
@@ -906,15 +904,21 @@ end
 
 function Nameplates:PLAYER_ENTERING_WORLD()
 
-    C_NamePlate.SetNamePlateEnemySize(120,45)
+     -- Remove Larger Nameplates Function (thx Plater)
+    InterfaceOptionsNamesPanelUnitNameplatesMakeLarger:Disable()
+    InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
 
+    C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth,45)
+
+    SetCVar("nameplateHorizontalScale", 0.4)
+    SetCVar("nameplateVerticalScale", 1.1)
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         local _, instanceType = IsInInstance()
         if instanceType == "party" or instanceType == "raid" then
             C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
         else
-            C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
+            C_NamePlate.SetNamePlateFriendlySize(120, 0.1)
         end
     end
 
@@ -1007,13 +1011,13 @@ function Nameplates:UNIT_THREAT_LIST_UPDATE(_, token)
 end
 
 function Nameplates:PLAYER_TARGET_CHANGED()
-    for _, frame in pairs(C_NamePlate.GetNamePlates()) do
-        if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
-            frame.UnitFrame:SetAlpha(1)
-        else
-            frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
-        end
-    end
+    -- for _, frame in pairs(C_NamePlate.GetNamePlates()) do
+    --     if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
+    --         frame.UnitFrame:SetAlpha(1)
+    --     else
+    --         frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
+    --     end
+    -- end
 end
 
 function Nameplates:UNIT_AURA(_, unit)
@@ -1048,9 +1052,13 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
             for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
                 local token = plateFrame.namePlateUnitToken
                 if (plateFrame.UnitFrame.castBar:IsShown()) then
-                    if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
-                        if (UnitGUID(token) == targetGUID) then
-                            plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
+                    for u in Nameplates:GroupMembers() do
+                        if UnitIsUnit(sourceName, u) then
+                            if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
+                                if (UnitGUID(token) == targetGUID) then
+                                    plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
+                                end
+                            end
                         end
                     end
                 end
@@ -1451,11 +1459,12 @@ function Nameplates:ExtraAuras()
     local function BuffFrameAnchor(unit)
         local frame = C_NamePlate.GetNamePlateForUnit(unit, issecure())
         if ( not frame ) then return end 
-
-        if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
-        elseif ( frame.UnitFrame.displayedUnit ) then
-            frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+        if ( not frame.UnitFrame:IsForbidden() ) then
+            if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+                frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+            elseif ( frame.UnitFrame.displayedUnit ) then
+                frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+            end
         end
     end
 
