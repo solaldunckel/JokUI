@@ -448,16 +448,6 @@ local nameplates_config = {
                 end,
                 get = function(info) return Nameplates.settings.enemyguardian end
             },
-            enemyminus = {
-                type = "toggle",
-                name = "Show Enemy Minus",
-                desc = "",
-                order = 1,
-                set = function(info,val) Nameplates.settings.enemyminus = val
-                    SetCVar("nameplateShowEnemyMinus", val)
-                end,
-                get = function(info) return Nameplates.settings.enemyminus end
-            },
         },
     },
     health = {
@@ -534,7 +524,6 @@ function Nameplates:OnEnable()
     SetCVar("nameplateHorizontalScale", Nameplates.settings.healthWidth)        
     SetCVar("nameplateMotion", Nameplates.settings.overlap)
     SetCVar("nameplateShowEnemyGuardians", Nameplates.settings.enemyguardian)
-    SetCVar("nameplateShowEnemyMinus", Nameplates.settings.enemyminus)
     SetCVar("nameplateShowEnemyTotems", Nameplates.settings.enemytotem)
     SetCVar("nameplateShowEnemyPets", Nameplates.settings.enemypets)
 
