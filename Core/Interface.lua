@@ -220,13 +220,25 @@ end
 
 function Interface:UnitFrames()
 	local unit = {}
-	local AURA_START_X = 6;
-	local AURA_START_Y = 28;
-	local AURA_OFFSET_Y = 3;
-	local AURA_OFFSET_X = 4;
-	local LARGE_AURA_SIZE = 23
-	local SMALL_AURA_SIZE = 20
+	local AURA_START_X = 4;
+	local AURA_START_Y = 30;
+	local AURA_OFFSET_Y = 2;
+	local AURA_OFFSET_X = 2;
+	local LARGE_AURA_SIZE = 24
+	local SMALL_AURA_SIZE = 21
 	local AURA_ROW_WIDTH = 110;
+
+	hooksecurefunc("PlayerFrame_UpdateStatus", function()
+		PlayerStatusTexture:Hide()
+		PlayerRestGlow:Hide()
+		PlayerFrameFlash:Hide()
+		PlayerPrestigeBadge:SetAlpha(0)
+		PlayerPrestigePortrait:SetAlpha(0)
+		TargetFrameTextureFramePrestigeBadge:SetAlpha(0)
+		TargetFrameTextureFramePrestigePortrait:SetAlpha(0)
+		FocusFrameTextureFramePrestigeBadge:SetAlpha(0)
+		FocusFrameTextureFramePrestigePortrait:SetAlpha(0)
+	end)
 
 	local function ClassColor(statusbar, unit)
 		local _, class, c
@@ -292,11 +304,11 @@ function Interface:UnitFrames()
 	-- 	ClassColor(self, self.unit)
 	--  end)
 
+	PlayerFrame:SetScale(Interface.settings.UnitFrames.scale)
 	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 
-	function wPlayerFrame_ToPlayerArt(self)
-		PlayerFrame:SetScale(Interface.settings.UnitFrames.scale)
+	function wPlayerFrame_ToPlayerArt(self)		
 		PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame");
 		PlayerStatusTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-Player-Status")
 		PlayerName:SetPoint("CENTER", PlayerFrameHealthBar, 0, 23);
@@ -357,13 +369,6 @@ function Interface:UnitFrames()
 	function StyleVehicle(self, vehicleType)
 		PlayerFrame.state = "vehicle"
 
-		UnitFrame_SetUnit(self, "vehicle", PlayerFrameHealthBar, PlayerFrameManaBar)
-		UnitFrame_SetUnit(PetFrame, "player", PetFrameHealthBar, PetFrameManaBar)
-		PetFrame_Update(PetFrame)
-		PlayerFrame_Update()
-		BuffFrame_Update()
-		ComboFrame_Update(ComboFrame)
-
 		PlayerFrameTexture:Hide()
 		if (vehicleType == "Natural") then
 			PlayerFrameVehicleTexture:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Organic")
@@ -393,6 +398,370 @@ function Interface:UnitFrames()
 	end
 	hooksecurefunc("PlayerFrame_ToVehicleArt", StyleVehicle)
 		
+	--BUFFS
+	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+		local size
+		local offsetY = AURA_OFFSET_Y
+		local offsetX = AURA_OFFSET_X
+		local rowWidth = 0
+		local maxRowWidth = AURA_ROW_WIDTH
+		local firstBuffOnRow = 1
+		for i=1, numAuras do
+			if ( largeAuraList[i] ) then
+				size = LARGE_AURA_SIZE
+				offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
+			else
+				size = SMALL_AURA_SIZE
+			end
+			if ( i == 1 ) then
+				rowWidth = size
+				self.auraRows = self.auraRows + 1
+			else
+				rowWidth = rowWidth + size + offsetX
+			end
+			if ( rowWidth > maxRowWidth ) then
+				updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically)
+				rowWidth = size
+				self.auraRows = self.auraRows + 1
+				firstBuffOnRow = i
+				offsetY = AURA_OFFSET_Y
+			else
+				updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+			end
+		end
+	end
+
+	local function unit_targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+		unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateAuraPositions", unit_targetUpdateAuraPositions)
+
+	function unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		local point, relativePoint
+		local startY, auraOffsetY
+		if ( mirrorVertically ) then
+			point = "BOTTOM"
+			relativePoint = "TOP"
+			startY = -6
+			offsetY = -offsetY
+			auraOffsetY = -AURA_OFFSET_Y
+		else
+			point = "TOP"
+			relativePoint="BOTTOM"
+			startY = AURA_START_Y
+			auraOffsetY = AURA_OFFSET_Y
+		end
+		 
+		local buff = _G[buffName..index]
+		if ( index == 1 ) then
+			if ( UnitIsFriend("player", self.unit) or numDebuffs == 0 ) then
+				-- unit is friendly or there are no debuffs...buffs start on top
+				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY)		   
+			else
+				-- unit is not friendly and we have debuffs...buffs start on bottom
+				buff:SetPoint(point.."LEFT", self.debuffs, relativePoint.."LEFT", 0, -offsetY)
+			end
+			self.buffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0)
+			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
+			self.spellbarAnchor = buff
+		elseif ( anchorIndex ~= (index-1) ) then
+			-- anchor index is not the previous index...must be a new row
+			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY)
+			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
+			self.spellbarAnchor = buff
+		else
+			-- anchor index is the previous index
+			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], point.."RIGHT", offsetX, 0)
+		end
+
+		buff:SetWidth(size)
+		buff:SetHeight(size)
+	end
+
+	local function unit_targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateBuffAnchor", unit_targetUpdateBuffAnchor)
+
+	function unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		local buff = _G[debuffName..index];
+		local isFriend = UnitIsFriend("player", self.unit);
+		 
+		--For mirroring vertically
+		local point, relativePoint;
+		local startY, auraOffsetY;
+		if ( mirrorVertically ) then
+			point = "BOTTOM";
+			relativePoint = "TOP";
+			startY = -8;
+			offsetY = - offsetY;
+			auraOffsetY = -AURA_OFFSET_Y;
+		else
+			point = "TOP";
+			relativePoint="BOTTOM";
+			startY = AURA_START_Y;
+			auraOffsetY = AURA_OFFSET_Y;
+		end
+		 
+		if ( index == 1 ) then
+			if ( isFriend and numBuffs > 0 ) then
+				-- unit is friendly and there are buffs...debuffs start on bottom
+				buff:SetPoint(point.."LEFT", self.buffs, relativePoint.."LEFT", 0, -offsetY);
+			else
+				-- unit is not friendly or there are no buffs...debuffs start on top
+				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY);
+			end
+			self.debuffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0);
+			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
+			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
+				self.spellbarAnchor = buff;
+			end
+		elseif ( anchorIndex ~= (index-1) ) then
+			-- anchor index is not the previous index...must be a new row
+			buff:SetPoint(point.."LEFT", _G[debuffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY);
+			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
+			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
+				self.spellbarAnchor = buff;
+			end
+		else
+			-- anchor index is the previous index
+			buff:SetPoint(point.."LEFT", _G[debuffName..(index-1)], point.."RIGHT", offsetX, 0);
+		end
+	 
+		-- Resize
+		buff:SetWidth(size);
+		buff:SetHeight(size);
+		local debuffFrame =_G[debuffName..index.."Border"];
+		debuffFrame:SetWidth(size+2);
+		debuffFrame:SetHeight(size+2);
+	end
+
+	local function unit_targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+		unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+	end
+	hooksecurefunc("TargetFrame_UpdateDebuffAnchor", unit_targetUpdateDebuffAnchor)
+
+    if not Interface.settings.SkinInterface then return end
+
+	for i,v in pairs({
+		PlayerFrameTexture,
+		TargetFrameTextureFrameTexture,
+		PlayerFrameAlternateManaBarBorder,
+		PlayerFrameAlternateManaBarLeftBorder,
+		PlayerFrameAlternateManaBarRightBorder,
+		PaladinPowerBarFrameBG,
+        PaladinPowerBarFrameBankBG,
+		ComboPointPlayerFrame.Background,
+		ComboPointPlayerFrame.Combo1.PointOff,
+		ComboPointPlayerFrame.Combo2.PointOff,
+		ComboPointPlayerFrame.Combo3.PointOff,
+		ComboPointPlayerFrame.Combo4.PointOff,
+		ComboPointPlayerFrame.Combo5.PointOff,
+		ComboPointPlayerFrame.Combo6.PointOff,
+		AlternatePowerBarBorder,
+		AlternatePowerBarLeftBorder,
+		AlternatePowerBarRightBorder,
+		PetFrameTexture,
+		PartyMemberFrame1Texture,
+		PartyMemberFrame2Texture,
+		PartyMemberFrame3Texture,
+		PartyMemberFrame4Texture,
+		PartyMemberFrame1PetFrameTexture,
+		PartyMemberFrame2PetFrameTexture,
+		PartyMemberFrame3PetFrameTexture,
+		PartyMemberFrame4PetFrameTexture,
+		FocusFrameTextureFrameTexture,
+		TargetFrameToTTextureFrameTexture,
+		FocusFrameToTTextureFrameTexture,
+		Boss1TargetFrameTextureFrameTexture,
+		Boss2TargetFrameTextureFrameTexture,
+		Boss3TargetFrameTextureFrameTexture,
+		Boss4TargetFrameTextureFrameTexture,
+		Boss5TargetFrameTextureFrameTexture,
+		Boss1TargetFrameSpellBar.Border,
+		Boss2TargetFrameSpellBar.Border,
+		Boss3TargetFrameSpellBar.Border,
+		Boss4TargetFrameSpellBar.Border,
+		Boss5TargetFrameSpellBar.Border,
+		CastingBarFrame.Border,
+		FocusFrameSpellBar.Border,
+		TargetFrameSpellBar.Border,
+
+	}) do
+        v:SetVertexColor(.15, .15, .15)
+	end
+end 
+
+function Interface:PlayerFrame()
+
+	local IsMoveAnythingLoaded
+
+	if (IsAddOnLoaded("MoveAnything")) then
+		IsMoveAnythingLoaded = " |cffffd100/jokmove r" 
+	else
+		IsMoveAnythingLoaded = " |cffffd100/move |r"
+	end
+	
+	local PlayerFrame = PlayerFrame
+	PlayerFrame:SetMovable(true)
+	PlayerFrame:SetUserPlaced(true)
+
+	-- Remove integrated movement functions to avoid conflicts
+	_G.PlayerFrame_ResetUserPlacedPosition = function() 
+		Interface.settings.PlayerFrame = {
+			point = "TOPLEFT",
+			x = -19,
+			y = -6,
+		}
+		PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
+	end
+
+	
+	_G.PlayerFrame_SetLocked = function() print("use /move") end
+
+	local locked = true
+	local moving = nil
+
+	PlayerFrame:SetScript("OnMouseDown", function(self, button)
+		if locked then return end
+		if button == "LeftButton" then
+			PlayerFrame:ClearAllPoints()
+			PlayerFrame:StartMoving()
+			moving = true
+		end
+	end)
+
+	PlayerFrame:SetScript("OnMouseUp", function(self, button)
+		if moving then
+			moving = nil
+			PlayerFrame:StopMovingOrSizing()
+
+			local point, _, _, x, y = PlayerFrame:GetPoint(1)
+			Interface.settings.PlayerFrame.point = point
+			Interface.settings.PlayerFrame.x = x
+			Interface.settings.PlayerFrame.y = y
+		end
+	end)
+
+	PlayerFrame:ClearAllPoints()
+	PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
+
+	function PlayerFrame:Move()
+		if locked == false then
+			locked = true
+			PlayerFrame:SetFrameStrata("MEDIUM")
+			PlayerFrame:SetMovable(false)
+			MoveBackgroundFrame:Hide()
+		else
+			locked = false
+			PlayerFrame:SetFrameStrata("TOOLTIP")
+			PlayerFrame:SetMovable(true)
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
+		end
+	end
+end
+
+function Interface:TargetFrame()
+	_G.TargetFrame_ResetUserPlacedPosition = function() 
+	Interface.settings.TargetFrame = {
+			point = "TOPLEFT",
+			x = 250,
+			y = -6,
+		}
+		TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
+	end
+	_G.TargetFrame_SetLocked = function() print("use /move") end
+
+	local TargetFrame = TargetFrame
+	TargetFrame:SetMovable(true)
+	TargetFrame:SetUserPlaced(true)
+
+	local locked = true
+	local moving = nil
+
+	TargetFrame:SetScript("OnMouseDown", function(self, button)
+		if locked then return end
+		if button == "LeftButton" then
+			TargetFrame:ClearAllPoints()
+			TargetFrame:StartMoving()
+			moving = true
+		end
+	end)
+
+	TargetFrame:SetScript("OnMouseUp", function(self, button)
+		if moving then
+			moving = nil
+			TargetFrame:StopMovingOrSizing()
+
+			local point, _, _, x, y = TargetFrame:GetPoint(1)
+			Interface.settings.TargetFrame.point = point
+			Interface.settings.TargetFrame.x = x
+			Interface.settings.TargetFrame.y = y
+		end
+	end)
+
+	TargetFrame:ClearAllPoints()
+	TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
+
+	function TargetFrame:Move()
+		if locked == false then
+			locked = true
+			TargetFrame:SetMovable(false)
+			TargetFrame:SetFrameStrata("MEDIUM")
+			MoveBackgroundFrame:Hide()
+		else
+			locked = false
+			TargetFrame:SetFrameStrata("TOOLTIP")
+			TargetFrame:SetMovable(true)
+			MoveBackgroundFrame:SetFrameStrata("DIALOG")
+			MoveBackgroundFrame:Show()
+			if not UnitExists("target") then
+				SetPortraitTexture(TargetFramePortrait, "player")
+				TargetFrameTextureFrameName:SetText("test")
+				TargetFrameHealthBar:SetMinMaxValues(1, 99999999)
+				TargetFrameHealthBar:SetValue(random(11111111, 88888888))
+				
+				TargetFrame:Show()
+			end
+		end
+	end
+end
+
+function Interface:ColorUnitFrames()
+	local unit = {}
+	local AURA_START_X = 6;
+	local AURA_START_Y = 28;
+	local AURA_OFFSET_Y = 3;
+	local AURA_OFFSET_X = 4;
+	local LARGE_AURA_SIZE = 23
+	local SMALL_AURA_SIZE = 20
+	local AURA_ROW_WIDTH = 110;
+
+	PlayerFrame:SetScale(Interface.settings.UnitFrames.scale)
+	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
+	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
+
+	--HIDE COLORS BEHIND NAME
+	hooksecurefunc("TargetFrame_CheckFaction", function(self)
+	    self.nameBackground:SetVertexColor(0, 0, 0, 0.5);
+	end)
+
+	-- CLASS COLOR HP BAR
+	local function colour(statusbar, unit)
+        local _, class, c
+        if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
+            _, class = UnitClass(unit)
+            c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class]
+            statusbar:SetStatusBarColor(c.r, c.g, c.b)
+        end
+	end
+
+	hooksecurefunc("UnitFrameHealthBar_Update", colour)
+	hooksecurefunc("HealthBar_OnValueChanged", function(self)
+	    colour(self, self.unit)
+	end)
+
 	--BUFFS
 	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
 		local size
@@ -601,9 +970,7 @@ function Interface:UnitFrames()
 		end
     end)
 
-    if not Interface.settings.SkinInterface then return end
-
-	for i,v in pairs({
+    for i,v in pairs({
 		PlayerFrameTexture,
 		TargetFrameTextureFrameTexture,
 		PlayerFrameAlternateManaBarBorder,
@@ -650,173 +1017,6 @@ function Interface:UnitFrames()
 	}) do
         v:SetVertexColor(.15, .15, .15)
 	end
-end 
-
-function Interface:PlayerFrame()
-
-	local IsMoveAnythingLoaded
-
-	if (IsAddOnLoaded("MoveAnything")) then
-		IsMoveAnythingLoaded = " |cffffd100/jokmove r" 
-	else
-		IsMoveAnythingLoaded = " |cffffd100/move |r"
-	end
-	
-	local PlayerFrame = PlayerFrame
-	PlayerFrame:SetMovable(true)
-	PlayerFrame:SetUserPlaced(true)
-
-	-- Remove integrated movement functions to avoid conflicts
-	_G.PlayerFrame_ResetUserPlacedPosition = function() 
-		Interface.settings.PlayerFrame = {
-			point = "TOPLEFT",
-			x = -19,
-			y = -6,
-		}
-		PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
-	end
-
-	
-	_G.PlayerFrame_SetLocked = function() print("use /move") end
-
-	local locked = true
-	local moving = nil
-
-	PlayerFrame:SetScript("OnMouseDown", function(self, button)
-		if locked then return end
-		if button == "LeftButton" then
-			PlayerFrame:ClearAllPoints()
-			PlayerFrame:StartMoving()
-			moving = true
-		end
-	end)
-
-	PlayerFrame:SetScript("OnMouseUp", function(self, button)
-		if moving then
-			moving = nil
-			PlayerFrame:StopMovingOrSizing()
-
-			local point, _, _, x, y = PlayerFrame:GetPoint(1)
-			Interface.settings.PlayerFrame.point = point
-			Interface.settings.PlayerFrame.x = x
-			Interface.settings.PlayerFrame.y = y
-		end
-	end)
-
-	PlayerFrame:ClearAllPoints()
-	PlayerFrame:SetPoint(Interface.settings.PlayerFrame.point, Interface.settings.PlayerFrame.x, Interface.settings.PlayerFrame.y)
-
-	function PlayerFrame:Move()
-		if locked == false then
-			locked = true
-			PlayerFrame:SetFrameStrata("MEDIUM")
-			PlayerFrame:SetMovable(false)
-			MoveBackgroundFrame:Hide()
-		else
-			locked = false
-			PlayerFrame:SetFrameStrata("TOOLTIP")
-			PlayerFrame:SetMovable(true)
-			MoveBackgroundFrame:SetFrameStrata("DIALOG")
-			MoveBackgroundFrame:Show()
-		end
-	end
-end
-
-function Interface:TargetFrame()
-	_G.TargetFrame_ResetUserPlacedPosition = function() 
-	Interface.settings.TargetFrame = {
-			point = "TOPLEFT",
-			x = 250,
-			y = -6,
-		}
-		TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
-	end
-	_G.TargetFrame_SetLocked = function() print("use /move") end
-
-	local TargetFrame = TargetFrame
-	TargetFrame:SetMovable(true)
-	TargetFrame:SetUserPlaced(true)
-
-	local locked = true
-	local moving = nil
-
-	TargetFrame:SetScript("OnMouseDown", function(self, button)
-		if locked then return end
-		if button == "LeftButton" then
-			TargetFrame:ClearAllPoints()
-			TargetFrame:StartMoving()
-			moving = true
-		end
-	end)
-
-	TargetFrame:SetScript("OnMouseUp", function(self, button)
-		if moving then
-			moving = nil
-			TargetFrame:StopMovingOrSizing()
-
-			local point, _, _, x, y = TargetFrame:GetPoint(1)
-			Interface.settings.TargetFrame.point = point
-			Interface.settings.TargetFrame.x = x
-			Interface.settings.TargetFrame.y = y
-		end
-	end)
-
-	TargetFrame:ClearAllPoints()
-	TargetFrame:SetPoint(Interface.settings.TargetFrame.point, Interface.settings.TargetFrame.x, Interface.settings.TargetFrame.y)
-
-	function TargetFrame:Move()
-		if locked == false then
-			locked = true
-			TargetFrame:SetMovable(false)
-			TargetFrame:SetFrameStrata("MEDIUM")
-			MoveBackgroundFrame:Hide()
-		else
-			locked = false
-			TargetFrame:SetFrameStrata("TOOLTIP")
-			TargetFrame:SetMovable(true)
-			MoveBackgroundFrame:SetFrameStrata("DIALOG")
-			MoveBackgroundFrame:Show()
-			if not UnitExists("target") then
-				SetPortraitTexture(TargetFramePortrait, "player")
-				TargetFrameTextureFrameName:SetText("test")
-				TargetFrameHealthBar:SetMinMaxValues(1, 99999999)
-				TargetFrameHealthBar:SetValue(random(11111111, 88888888))
-				
-				TargetFrame:Show()
-			end
-		end
-	end
-end
-
-function Interface:ColorUnitFrames()
-	local AURA_START_X = 6;
-	local AURA_START_Y = 28;
-	local AURA_OFFSET_Y = 3;
-	local AURA_OFFSET_X = 4;
-	local LARGE_AURA_SIZE = 23
-	local SMALL_AURA_SIZE = 20
-	local AURA_ROW_WIDTH = 119;
-
-	--HIDE COLORS BEHIND NAME
-	hooksecurefunc("TargetFrame_CheckFaction", function(self)
-	    self.nameBackground:SetVertexColor(0, 0, 0, 0.5);
-	end)
-
-	-- CLASS COLOR HP BAR
-	local function colour(statusbar, unit)
-	        local _, class, c
-	        if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
-	            _, class = UnitClass(unit)
-	            c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class] or RAID_CLASS_COLORS[class]
-	            statusbar:SetStatusBarColor(c.r, c.g, c.b)
-	            --PlayerFrameHealthBar:SetStatusBarColor(0,1,0)
-	        end
-	end
-
-	hooksecurefunc("UnitFrameHealthBar_Update", colour)
-	hooksecurefunc("HealthBar_OnValueChanged", function(self)
-	    colour(self, self.unit)
-	end)
 end
 
 function Interface:ActionBars()
@@ -1234,66 +1434,6 @@ function Interface:Colors()
          		v:SetVertexColor(.14, .14, .14)
     end
     select(2, TimeManagerClockButton:GetRegions()):SetVertexColor(1,1,1)
-
-	-- local CF=CreateFrame("Frame")
-	-- CF:RegisterEvent("PLAYER_ENTERING_WORLD")
-	-- CF:RegisterEvent("GROUP_ROSTER_UPDATE")
-
-	-- function ColorRaid()
-	-- 	for g = 1, NUM_RAID_GROUPS do
-	-- 		local group = _G["CompactRaidGroup"..g.."BorderFrame"]
-	-- 		if group then
-	-- 			for _, region in pairs({group:GetRegions()}) do
-	-- 				if region:IsObjectType("Texture") then
-	-- 					region:SetVertexColor(.15, .15, .15)
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 		-- Groups Title
-	-- 		local group = _G["CompactRaidGroup"..g.."Title"]
-	-- 		if group then
-	-- 			for _, region in pairs({group:GetRegions()}) do
-	-- 				region:SetText(g)
-	-- 			end
-	-- 		end
-	-- 		for m = 1, 5 do
-	-- 			local frame = _G["CompactRaidGroup"..g.."Member"..m]
-	-- 			if frame then
-	-- 				groupcolored = true
-	-- 				for _, region in pairs({frame:GetRegions()}) do
-	-- 					if region:GetName():find("Border") then
-	-- 						region:SetVertexColor(.15, .15, .15)
-	-- 					end
-	-- 				end
-	-- 			end
-	-- 			local frame = _G["CompactRaidFrame"..m]
-	-- 			if frame then
-	-- 				singlecolored = true
-	-- 				for _, region in pairs({frame:GetRegions()}) do
-	-- 					if region:GetName():find("Border") then
-	-- 						region:SetVertexColor(.15, .15, .15)
-	-- 					end
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 	end
-	-- 	for _, region in pairs({CompactRaidFrameContainerBorderFrame:GetRegions()}) do
-	-- 		if region:IsObjectType("Texture") then
-	-- 			region:SetVertexColor(.15, .15, .15)
-	-- 		end
-	-- 	end
-	-- end
-	
-	-- CF:SetScript("OnEvent", function(self, event)
-	-- 	if event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
-	-- 		if CompactRaidGroup1 and not groupcolored == true then
-	-- 			ColorRaid()
-	-- 		end
-	-- 		if CompactRaidFrame1 and not singlecolored == true then
-	-- 			ColorRaid()
-	-- 		end
-	-- 	end
-	-- end)
 
 	for i,v in pairs({
 		Boss1TargetFrameSpellBar.BorderShield,
@@ -1992,33 +2132,9 @@ end
 
 function Interface:ReAnchor()
 
-	-- Objective Frame
-	-- these three lines define where to position the topright corner
-	-- negative x values go left, positive x values go right
-	-- negative y values go down, positive y values go up
-	-- local anchor = "TOPRIGHT"
-	-- local xOff = -3
-	-- local yOff = 0
-
- -- 	if IsAddOnLoaded("Blizzard_ObjectiveTracker") then
- --    	local tracker = ObjectiveTrackerFrame
- --    	tracker:ClearAllPoints()
- --    	tracker:SetPoint(anchor,UIParent,xOff,yOff)
- --    	hooksecurefunc(ObjectiveTrackerFrame,"SetPoint",function(self,anchorPoint,relativeTo,x,y)
- --      		if anchorPoint~=anchor and x~=xOff and y~=yOff then
- --      			if MultiBarLeft:IsShown() then
- --        			self:SetPoint("TOPRIGHT",MultiBarLeft, "TOPLEFT", xOff,yOff)
- --        		end
- --      		end
- --    	end)
- --  	end
-
   	-- ETC
   	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -58)
-
   	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
-
-	DurabilityFrame:SetScale(0.8)
 
   	for i,v in pairs({
 		MainMenuBarBackpackButton,
@@ -2027,9 +2143,6 @@ function Interface:ReAnchor()
   		CharacterBag2Slot,
   		CharacterBag3Slot,
   		MicroButtonAndBagsBar.MicroBagBar,
-  		MainMenuBarArtFrame.RightEndCap,
-		MainMenuBarArtFrame.LeftEndCap,
-		--MainMenuBarArtFrameBackground,
 	}) do
         v:Hide()
 	end	 	

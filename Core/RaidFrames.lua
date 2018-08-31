@@ -163,7 +163,7 @@ do
 		true,
 		function(state)
 			if state then
-				RaidFrames:FadeMore()
+				--RaidFrames:FadeMore()
 			end
 		end)
 end

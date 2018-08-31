@@ -25,10 +25,11 @@ local nameplates_aura_spells = {
     -- Mythic+ (Buffs)
         [277242] = true, -- Infested (G'huun)
         [263246] = true, -- Lightning Shield (Temple of Sethralis)
-        [260852] = true, -- Claim The Iris (Waycrest Manor)
+        [260805] = true, -- Claim The Iris (Waycrest Manor)
 
     -- Mythic+ (Debuffs)
         [256493] = true, -- Blazing Azerite (The MOTHERLODE!!!)
+        [277965] = true, -- Heavy Ordnance (Siege)
 
     -- Death Knight
         [47568] = true, -- Empower Runic Weapon

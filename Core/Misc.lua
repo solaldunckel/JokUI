@@ -154,27 +154,6 @@ do
 end
 
 do
-	Misc:RegisterFeature("HideOrderHallBar",
-		"Disable Order Hall Command Bar",
-		"Hides the information bar inside your class Order Hall.",
-		true,
-		false,
-		function(state)
-			if state then
-				if not InCombatLockdown() then
-					C_Timer.After(0.3, function()
-						LoadAddOn("Blizzard_OrderHallUI")
-						local b = OrderHallCommandBar
-						b:UnregisterAllEvents()
-						b:HookScript("OnShow", b.Hide)
-						b:Hide()
-					end)
-				end
-			end
-		end)
-end
-
-do
 	Misc:RegisterFeature("FillDeleteText",
 		"Automatically fills the 'DELETE' string",
 		"Automatically fills the 'DELETE' string when trying to delete a rare item.",
