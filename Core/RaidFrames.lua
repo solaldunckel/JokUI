@@ -7,7 +7,7 @@ local RaidFrames = JokUI:RegisterModule("Raid Frames")
 
 local features = {}
 
-local ABSORB_GLOW_ALPHA = 0.6;
+local ABSORB_GLOW_ALPHA = 0.5;
 local ABSORB_GLOW_OFFSET = -5;
 
 local font = STANDARD_TEXT_FONT
@@ -173,10 +173,11 @@ end
 -------------------------------------------------------------------------------
 
 function RaidFrames:ShowAbsorb()
-	hooksecurefunc("UnitFrame_Update", function(frame)
+	hooksecurefunc("UnitFrame_Update",
+	function(frame)
 		local absorbBar = frame.totalAbsorbBar;
 		if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-
+		
 		local absorbOverlay = frame.totalAbsorbBarOverlay;
 		if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
 		
@@ -193,9 +194,11 @@ function RaidFrames:ShowAbsorb()
 		  	absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0);
 		  	absorbGlow:SetAlpha(ABSORB_GLOW_ALPHA);
 	  	end
-	end)
+	end
+)
 
-	hooksecurefunc("CompactUnitFrame_UpdateAll", function(frame)
+hooksecurefunc("CompactUnitFrame_UpdateAll",
+	function(frame)
 		local absorbBar = frame.totalAbsorb;
 		if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 		
@@ -211,13 +214,16 @@ function RaidFrames:ShowAbsorb()
 		local absorbGlow = frame.overAbsorbGlow;
 	  	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
 			absorbGlow:ClearAllPoints();
+			absorbGlow:SetDrawLayer("ARTWORK", 2)
 			absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0);
 		  	absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0);
 		  	absorbGlow:SetAlpha(ABSORB_GLOW_ALPHA);
 	  	end
-	end)
+	end
+)
 
-	hooksecurefunc("UnitFrameHealPredictionBars_Update", function(frame)
+hooksecurefunc("UnitFrameHealPredictionBars_Update",
+	function(frame)
 		local absorbBar = frame.totalAbsorbBar;
 		if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 		
@@ -253,9 +259,12 @@ function RaidFrames:ShowAbsorb()
 		  		
 			--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
 		end
-	end)
 
-	hooksecurefunc("CompactUnitFrame_UpdateHealPrediction", function(frame)
+	end
+)
+
+hooksecurefunc("CompactUnitFrame_UpdateHealPrediction",
+	function(frame)
 		local absorbBar = frame.totalAbsorb;
 		if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 		
@@ -286,12 +295,15 @@ function RaidFrames:ShowAbsorb()
 			local barSize = totalAbsorb / maxHealth * totalWidth;
 			
 			absorbOverlay:SetWidth( barSize );
+			absorbOverlay:SetDrawLayer("ARTWORK", 2)
     		absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
 		  	absorbOverlay:Show();
 		  	
 		  	--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
 		end		
-	end)
+	end
+)
+
 end
 
 function RaidFrames:Buffs()

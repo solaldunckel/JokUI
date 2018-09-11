@@ -588,7 +588,7 @@ function Interface:UnitFrames()
 		TargetFrameSpellBar.Border,
 
 	}) do
-        v:SetVertexColor(.15, .15, .15)
+        v:SetVertexColor(.0, .0, .0)
 	end
 end 
 
@@ -1406,6 +1406,81 @@ function Interface:Chat()
 	for i = 1, 50 do
 		ToggleChatColorNamesByClassGroup(true, "CHANNEL" .. i)
 	end
+
+	-- URL CLICK
+	function formatURL(url)
+	    url = "|cff".."149bfd".."|Hurl:"..url.."|h["..url.."]|h|r ";
+	    return url;
+	end
+
+	-- derived from EasyUrl by jklaroe
+	function makeClickable(self, event, msg, ...)
+	    if string.find(msg, "(%a+)://(%S+)%s?") then
+	        return false, string.gsub(msg, "(%a+)://(%S+)%s?", formatURL("%1://%2")), ...
+	    end
+
+	    if string.find(msg, "www%.([_A-Za-z0-9-]+)%.(%S+)%s?") then
+	        return false, string.gsub(msg, "www%.([_A-Za-z0-9-]+)%.(%S+)%s?", formatURL("www.%1.%2")), ...
+	    end
+
+	    if string.find(msg, "([_A-Za-z0-9-%.]+)@([_A-Za-z0-9-]+)(%.+)([_A-Za-z0-9-%.]+)%s?") then
+	        return false, string.gsub(msg, "([_A-Za-z0-9-%.]+)@([_A-Za-z0-9-]+)(%.+)([_A-Za-z0-9-%.]+)%s?", formatURL("%1@%2%3%4")), ...
+	    end
+
+	    if string.find(msg, "(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?):(%d%d?%d?%d?%d?)%s?") then
+	        return false, string.gsub(msg, "(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?):(%d%d?%d?%d?%d?)%s?", formatURL("%1.%2.%3.%4:%5")), ...
+	    end
+
+	    if string.find(msg, "(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%s?") then
+	        return false, string.gsub(msg, "(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%.(%d%d?%d?)%s?", formatURL("%1.%2.%3.%4")), ...
+	    end
+	end
+
+	StaticPopupDialogs["CLICK_LINK_CLICKURL"] = {
+	    text = "Copy/Paste the link into your browser",
+	    button1 = "Close",
+	    OnAccept = function()
+	    end,
+	    timeout = 0,
+	    whileDead = true,
+	    hideOnEscape = true,
+	    preferredIndex = 3, 
+	    OnShow = function (self, data)
+	    self.editBox:SetText(data.url)
+	    self.editBox:HighlightText()
+	    end,
+	    hasEditBox = true
+	}
+
+	local SetItemRef_orig = SetItemRef;
+	function ClickURL_SetItemRef(link, text, button)
+	    if (string.sub(link, 1, 3) == "url") then
+	        local url = string.sub(link, 5);
+	        local d = {}
+	        d.url = url
+	        StaticPopup_Show("CLICK_LINK_CLICKURL", "", "", d)
+	    else
+	        SetItemRef_orig(link, text, button);
+	    end
+	end
+	SetItemRef = ClickURL_SetItemRef;
+
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_COMMUNITIES_CHANNEL", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_BATTLEGROUND", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", makeClickable)
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_BN", makeClickable)
 end
 
 function Interface:Colors()

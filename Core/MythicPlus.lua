@@ -27,18 +27,18 @@ local features = {}
 --]]
 
 local affixSchedule = {
-	{ 10, 8, 4, 16 }, -- Fortified / Sanguine / Necrotic / Infested
-	{ 9, 11, 2, 16 }, -- Tyrannical / Bursting / Skittish / Infested
-	{ 10, 5, 14, 16 }, -- Fortified / Teeming / Quaking / Infested
-	{ 9, 6, 4, 16 }, -- Tyrannical / Raging / Necrotic / Infested
-	{ 10, 7, 2, 16 }, -- Fortified / Bolstering / Skittish / Infested
-	{ 9, 5, 3, 16 }, -- Tyrannical / Teeming / Volcanic / Infested
-	{ 10, 8, 12, 16 }, -- Fortified / Sanguine / Grievous / Infested
-	{ 9, 7, 13, 16 }, -- Tyrannical / Bolstering / Explosive / Infested
-	{ 10, 11, 14, 16 }, -- Fortified / Bursting / Quaking / Infested
-	{ 9, 6, 3, 16 }, -- Tyrannical / Raging / Volcanic / Infested
-	{ 10, 5, 13, 16 }, -- Fortified / Teeming / Explosive / Infested
-	{ 9, 7, 12, 16 }, -- Tyrannical / Bolstering / Grievous / Infested
+	{ 8, 4, 10}, -- Fortified / Sanguine / Necrotic / Infested
+	{ 11, 2, 9}, -- Tyrannical / Bursting / Skittish / Infested
+	{ 5, 14, 10}, -- Fortified / Teeming / Quaking / Infested
+	{ 6, 4, 9}, -- Tyrannical / Raging / Necrotic / Infested
+	{ 7, 2, 10}, -- Fortified / Bolstering / Skittish / Infested
+	{ 5, 3, 9}, -- Tyrannical / Teeming / Volcanic / Infested
+	{ 8, 12, 10}, -- Fortified / Sanguine / Grievous / Infested
+	{ 7, 13, 9}, -- Tyrannical / Bolstering / Explosive / Infested
+	{ 14, 11, 10}, -- Fortified / Bursting / Quaking / Infested
+	{ 6, 3, 9}, -- Tyrannical / Raging / Volcanic / Infested
+	{ 5, 13, 10}, -- Fortified / Teeming / Explosive / Infested
+	{ 7, 12, 9}, -- Tyrannical / Bolstering / Grievous / Infested
 }
 
 local schedule = {
@@ -140,7 +140,8 @@ function MythicPlus:OnEnable()
 	end
 
 	self:Timer()
-	--self:Schedule()
+	self:Schedule()
+	self:GuildBest()
 	C_MythicPlus.RequestCurrentAffixes()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -158,9 +159,9 @@ function MythicPlus:ADDON_LOADED(event, addon)
 	if addon == "Blizzard_TalkingHeadUI" then
 		self:SyncFeature("MythicTalkingHead")
 	end
-	-- if addon == "Blizzard_ChallengesUI" then
-	-- 	self:Blizzard_ChallengesUI()
-	-- end
+	if addon == "Blizzard_ChallengesUI" then
+		self:Blizzard_ChallengesUI()
+	end
 end
 
 do
@@ -484,6 +485,8 @@ function MythicPlus:Schedule()
 
 		if C_MythicPlus.IsWeeklyRewardAvailable() then return end
 
+		ChallengesFrame.WeeklyInfo.Child.Label:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child, "TOP", -100, -25)
+
 		if keyLevel then
 			ownedKeystone = true
 		else
@@ -493,11 +496,20 @@ function MythicPlus:Schedule()
 		if ownedKeystone then
 			local MythicFrame = ChallengesFrame.WeeklyInfo.Child
 
-			MythicFrame.Label:SetPoint("TOPLEFT", MythicFrame, "TOPLEFT", 90, -55)
+			local dungeonName = C_ChallengeMode.GetMapUIInfo(keyMapID)
 
-			MythicFrame.RunStatus:Hide()
-			MythicFrame.WeeklyChest:SetPoint("TOPRIGHT", ChallengesFrame.WeeklyInfo.Child, "TOPRIGHT", -54,  -30)
-			MythicFrame.WeeklyChest:SetScale(0.9)
+			--print(dungeonName .. " (" .. keyLevel .. ")")
+
+			local key = CreateFrame('Frame', nil, ChallengesFrame)
+			key:SetPoint("BOTTOM", MythicFrame.RunStatus, "TOP", 0, 10)
+			key:SetWidth(200)
+			key:SetHeight(14)
+
+			key.text = key:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+			key.text:SetPoint("CENTER", key)
+			key.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+			key.text:SetText("Key: |cffffffff"..dungeonName .. " (" .. keyLevel .. ")|r")
+			key.text:SetTextColor(1,1,1)
 
 			local frame = CreateFrame("Frame", nil, ChallengesFrame)
 			frame:SetSize(200, 110)
@@ -507,7 +519,7 @@ function MythicPlus:Schedule()
 			local entries = {}
 			for i = 1, rowCount do
 				local entry = CreateFrame("Frame", nil, frame)
-				entry:SetSize(160, 56)
+				entry:SetSize(120, 56)
 
 				local text = entry:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 				text:SetWidth(150)
@@ -521,7 +533,7 @@ function MythicPlus:Schedule()
 
 				local affixes = {}
 				local prevAffix
-				for j = 4, 1, -1 do
+				for j = 3, 1, -1 do
 					local affix = makeAffix(entry)
 					if prevAffix then
 						affix:SetPoint("RIGHT", prevAffix, "LEFT", -8, 0)
@@ -534,7 +546,7 @@ function MythicPlus:Schedule()
 				entry.Affixes = affixes
 
 				if i == 1 then
-					entry:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child.Label, "BOTTOM", 0, -85)
+					entry:SetPoint("TOPRIGHT", ChallengesFrame.WeeklyInfo.Child, "TOPRIGHT", -50, -45)
 				else
 					entry:SetPoint("TOP", entries[i-1], "BOTTOM", 0, -22)
 				end
@@ -561,6 +573,121 @@ function MythicPlus:Schedule()
 			end
 		end		
 	end
+end
+
+function MythicPlus:GuildBest()
+	local function CreateLabel(text, parent, fontSize)
+	    local frame = CreateFrame("Frame", nil, parent)
+	    frame:SetWidth(190)
+	    frame:SetHeight(25)
+	    local fontString = frame:CreateFontString(nil, "OVERLAY", fontSize or "GameFontNormal")
+	    fontString:SetText(text)
+	    fontString:SetPoint("LEFT", frame, "LEFT", 0, 0)
+	    frame.label = fontString
+
+	    return frame
+	end
+
+	local function ChallengesFrame_AddGuildBest()
+	    if not ChallengesFrame or not ChallengesFrame:IsShown() then
+	        return
+	    end
+
+	    if RaiderIO_GuildBestFrame then
+	    	RaiderIO_GuildBestFrame:Hide()
+	    end
+
+	    local frame = ChallengesFrame.WeeklyInfo.Child
+	    -- Move the big center chest visual to the left
+	    frame.WeeklyChest:SetPoint("LEFT", frame, "LEFT", 70, -100)
+	    frame.WeeklyChest:SetScale(0.9)
+	    frame.RunStatus:SetPoint("TOP", frame.WeeklyChest, "TOP", 0, 5)
+	    -- Center status text to mid if its the long one
+	    if frame.WeeklyChest.CollectChest:IsShown() or frame.WeeklyChest.MissingKeystoneChest:IsShown() then
+	        frame.RunStatus:ClearAllPoints()
+	        frame.RunStatus:SetPoint("CENTER", frame, "TOP", 0, -90)
+	    end
+
+	    local container = _G["ChallengesFrameGuildBestFrame"]
+	    if not container then
+	        container = CreateFrame("Frame", "ChallengesFrameGuildBestFrame", frame)
+	        container:SetPoint("CENTER", frame, "CENTER", 160, -85)
+	        container:SetFrameStrata("DIALOG")
+	        container:SetSize(210, 130)
+
+	        container.bg = container:CreateTexture(nil, "BACKGROUND")
+	        container.bg:SetAllPoints()
+	        container.bg:SetAtlas("ChallengeMode-guild-background")
+	        container.bg:SetAlpha(0.4)
+
+	        container.TitleLabel = CreateLabel("Guild Best:", container, "GameFontNormalLarge")
+	        container.TitleLabel.label:ClearAllPoints()
+	        container.TitleLabel.label:SetPoint("CENTER", container.TitleLabel, "CENTER")
+	        container.TitleLabel:SetPoint("CENTER", container, "TOP", 0, -15)
+
+	        container.divider = container:CreateTexture(nil, "ARTWORK")
+	        container.divider:SetSize(192, 9)
+	        container.divider:SetAtlas("ChallengeMode-RankLineDivider", false)
+	        container.divider:SetPoint("TOP", 0, -26)
+	    end
+
+	    local guildsBest = C_ChallengeMode.GetGuildLeaders()
+
+	    if not guildsBest or #guildsBest == 0 then
+	        local unavail = container.Unavail or CreateLabel("No data available", container)
+	        unavail:SetPoint("CENTER", container, "TOP", 0, -50)
+	        unavail.label:ClearAllPoints()
+	        unavail.label:SetPoint("CENTER", unavail, "CENTER")
+	        unavail:Show()
+	        container.Unavail = unavail
+	        return
+	    elseif container.Unavail then
+	        container.Unavail.label:SetText("")
+	        container.Unavail.label:Hide()
+	    end
+
+	    for i, attempt in ipairs(guildsBest) do
+	        local dungeonName = C_ChallengeMode.GetMapUIInfo(attempt.mapChallengeModeID) or "Unknown"
+	        if dungeonName:len() > 25 then
+	            dungeonName = strsub(dungeonName, 1, 22) .. "..."
+	        end
+
+	        local keystoneLevel = " +" .. tostring(attempt.keystoneLevel)
+
+	        local labelFrame = container["Dungeon" .. tostring(i)] or CreateLabel(dungeonName, container)
+	        container["Dungeon" .. tostring(i)] = labelFrame
+	        labelFrame.label:SetText(dungeonName)
+
+	        labelFrame.keyLabel = labelFrame.keyLabel or labelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	        labelFrame.keyLabel:SetText(keystoneLevel)
+	        labelFrame.keyLabel:SetPoint("RIGHT", labelFrame, "RIGHT", 0, 0)
+
+	        labelFrame:SetPoint("LEFT", container, "TOPLEFT", 10, -26 + (-i * 20))
+	        labelFrame:SetScript("OnEnter", function(self) 
+	            GameTooltip:SetText(" ");
+	            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", -45, 5);
+
+	            GameTooltip_SetTitle(GameTooltip, dungeonName .. " +" .. tostring(attempt.keystoneLevel), NORMAL_FONT_COLOR);
+	            for j, member in ipairs(attempt.members) do
+	                GameTooltip:AddLine(RAID_CLASS_COLORS[member.classFileName]:WrapTextInColorCode(member.name)); 
+	            end
+
+	            GameTooltip:Show();
+	        end)
+	        labelFrame:SetScript("OnLeave", function() 
+	            GameTooltip:Hide();
+	        end)
+	    end
+	end
+
+	-- Hook load and open of the Challenges frame
+	local GuildBestListenerFrame = _G["MythicPlusGuildBestListener"] or CreateFrame("Frame", "MythicPlusGuildBestListener", UIParent)
+	GuildBestListenerFrame:RegisterEvent('ADDON_LOADED')
+	GuildBestListenerFrame:SetScript('OnEvent', function(self, event, name)
+	    if event == "ADDON_LOADED" and name == "Blizzard_ChallengesUI" then
+	        hooksecurefunc("ChallengesFrame_Update", ChallengesFrame_AddGuildBest)
+	    end
+	end)
 end
 
 function MythicPlus:Progress()

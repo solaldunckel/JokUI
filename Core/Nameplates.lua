@@ -13,101 +13,106 @@ local floor = floor
 local ceil = ceil
 
 local castbarFont = SystemFont_Shadow_Small:GetFont()
-local texturePath = "Interface\\AddOns\\JokUI\\media\\nameplates\\"
+local texturePath = "Interface\\TargetingFrame\\"
 local statusBar = texturePath.."UI-StatusBar"
 
 local nameplates_aura_spells = {
 
-	-- Add missing class debuffs 
-		[214621] = true, -- Schism
-        [228358] = true, -- Flurry
+    -- BUFFS/DEBUFFS
 
-    -- Mythic+ (Buffs)
-        [277242] = true, -- Infested (G'huun)
-        [263246] = true, -- Lightning Shield (Temple of Sethralis)
-        [260805] = true, -- Claim The Iris (Waycrest Manor)
+    	-- Add missing class debuffs 
+    		[214621] = true, -- Schism
+            [228358] = true, -- Flurry
 
-    -- Mythic+ (Debuffs)
-        [256493] = true, -- Blazing Azerite (The MOTHERLODE!!!)
-        [277965] = true, -- Heavy Ordnance (Siege)
+        -- Mythic+ (Buffs)
+            [277242] = true, -- Infested (G'huun)
+            [226510] = true, -- Sanguine Ichor (Affix)
+            [263246] = true, -- Lightning Shield (Temple of Sethralis)
+            [260805] = true, -- Claim The Iris (Waycrest Manor)
 
-    -- Death Knight
-        [47568] = true, -- Empower Runic Weapon
-        [51271] = true, -- Pillar of Frost
-        [48707] = true, -- AMS
-        [48792] = true, -- IBF
+        -- Mythic+ (Debuffs)
+            [256493] = true, -- Blazing Azerite (The MOTHERLODE!!!)
+            [277965] = true, -- Heavy Ordnance (Siege)
 
-    -- Demon Hunter
-        [212800] = true, -- Blur
+    -- PVP BUFFS
 
-    -- Druid
-        [194223] = true, -- Celestial Alignment
-        [22812] = true, -- Barskin
-        [61336] = true, -- Survival Instincts
-        [102342] = true, -- Ironbark
-        [102560] = true, -- Incarn (MK)
-        [102543] = true, -- Incarn (Feral)
+        -- Death Knight
+            [47568] = true, -- Empower Runic Weapon
+            [51271] = true, -- Pillar of Frost
+            [48707] = true, -- AMS
+            [48792] = true, -- IBF
 
-    -- Hunter
-        [193526] = true, -- Trueshot
-        [19574] = true, -- Bestial Wrath
-        [186265] = true, -- Turtle
+        -- Demon Hunter
+            [212800] = true, -- Blur
 
-    -- Mage
-        [12472] = true, -- Icy Veins
-        [190319] = true, -- Combustion
-        [12042] = true, -- Arcane Power
-        [45438] = true, -- Ice Block
-        [198111] = true, -- Temporal Shield
+        -- Druid
+            [194223] = true, -- Celestial Alignment
+            [22812] = true, -- Barskin
+            [61336] = true, -- Survival Instincts
+            [102342] = true, -- Ironbark
+            [102560] = true, -- Incarn (MK)
+            [102543] = true, -- Incarn (Feral)
 
-    -- Monk
-        [201318] = true, -- Fortifying Brew
-        [122470] = true, -- Touch of Karma
-        [122783] = true, -- Diffuse Magic
-        [216113] = true, -- Way of the Crane
+        -- Hunter
+            [193526] = true, -- Trueshot
+            [19574] = true, -- Bestial Wrath
+            [186265] = true, -- Turtle
 
-    -- Paladin
-        [31884] = true, -- Avenging Wrath
-        [210294] = true, -- Divine Favor
-        [1022] = true, -- Blessing of Protection
-        [6940] = true, -- Sacrifice
-        [498] = true, -- Divine Protection
-        [642] = true, -- Divine Shield
-        [184662] = true, -- Shield of Vengeance
+        -- Mage
+            [12472] = true, -- Icy Veins
+            [190319] = true, -- Combustion
+            [12042] = true, -- Arcane Power
+            [45438] = true, -- Ice Block
+            [198111] = true, -- Temporal Shield
 
-    -- Priest
-        [200183] = true, -- Apotheosis
-        [33206] = true, -- Pain Suppression
-        [47788] = true, -- Guardian Spirit
-        [47536] = true, -- Rapture
-        [47585] = true, -- Dispersion
-        [197862] = true, -- Archangel
+        -- Monk
+            [201318] = true, -- Fortifying Brew
+            [122470] = true, -- Touch of Karma
+            [122783] = true, -- Diffuse Magic
+            [216113] = true, -- Way of the Crane
 
-    -- Rogue
-        [199754] = true, -- Riposte
-        [5277] = true, -- Evasion
-        [31224] = true, -- Cloak of Shadows
-        [13750] = true, -- Adrenaline Rush
-        [121471] = true, -- Shadow Blades
+        -- Paladin
+            [31884] = true, -- Avenging Wrath
+            [210294] = true, -- Divine Favor
+            [1022] = true, -- Blessing of Protection
+            [6940] = true, -- Sacrifice
+            [498] = true, -- Divine Protection
+            [642] = true, -- Divine Shield
+            [184662] = true, -- Shield of Vengeance
 
-    -- Shaman
-        [2825] = true, -- Bloodlust
-        [108271] = true, -- Astral Shift
+        -- Priest
+            [200183] = true, -- Apotheosis
+            [33206] = true, -- Pain Suppression
+            [47788] = true, -- Guardian Spirit
+            [47536] = true, -- Rapture
+            [47585] = true, -- Dispersion
+            [197862] = true, -- Archangel
 
-    -- Warlock
-        [212295] = true, -- Nether Ward
-        [104773] = true, -- Unending Resolve
-        [196098] = true, -- Soul Harvest
-        [113860] = true, -- Dark Soul : Misery
+        -- Rogue
+            [199754] = true, -- Riposte
+            [5277] = true, -- Evasion
+            [31224] = true, -- Cloak of Shadows
+            [13750] = true, -- Adrenaline Rush
+            [121471] = true, -- Shadow Blades
 
-    -- Warrior 
-        [118038] = true, -- Die by the Sword
-        [184364] = true, -- Enraged Regeneration
-        [23920] = true, -- Spell Reflect
-        [107574] = true, -- Avatar
-        [1719] = true, -- Recklessness
-        [227847] = true, -- Bladestorm
-        [197690] = true, -- Def Stance
+        -- Shaman
+            [2825] = true, -- Bloodlust
+            [108271] = true, -- Astral Shift
+
+        -- Warlock
+            [212295] = true, -- Nether Ward
+            [104773] = true, -- Unending Resolve
+            [196098] = true, -- Soul Harvest
+            [113860] = true, -- Dark Soul : Misery
+
+        -- Warrior 
+            [118038] = true, -- Die by the Sword
+            [184364] = true, -- Enraged Regeneration
+            [23920] = true, -- Spell Reflect
+            [107574] = true, -- Avatar
+            [1719] = true, -- Recklessness
+            [227847] = true, -- Bladestorm
+            [197690] = true, -- Def Stance
 };
 
 local nameplateScale = GetCVar("nameplateGlobalScale")
@@ -709,6 +714,12 @@ end
 
 function Nameplates:SkinPlates(frame)
 
+    -- -- Only Name Fix
+
+    -- if not UnitIsPlayer(frame.displayedUnit) then
+    --     frame.healthBar:Show()
+    -- end
+
     -- Name
 
     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
@@ -717,17 +728,12 @@ function Nameplates:SkinPlates(frame)
 
     frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
     frame.healthBar:SetStatusBarTexture(statusBar)
+    frame.selectionHighlight:SetTexture(statusBar)    
     
     -- Abbreviate Long Names. 
 
     frame.name:SetText(Nameplates:Abbrev(frame.name:GetText(),24))
-
-    -- Only Name Fix
-
-    if not UnitIsPlayer(frame.displayedUnit) and GetCVar("nameplateShowOnlyNames") == 1  then
-        frame.healthBar:Show()
-    end
-
+   
     -- Friendly Player Name.
     
     if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player")) then
@@ -739,12 +745,6 @@ function Nameplates:SkinPlates(frame)
         if Nameplates.settings.hideHealth then
             frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
             frame.healthBar:Hide()
-            -- if IsActiveBattlefieldArena() then
-            --     frame.healthBar:Show()
-            --     frame.healthBar:SetHeight(3)
-            --     frame.healthBar:SetScale(0.8)
-            --     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 3)
-            -- end
         else
             frame.healthBar:Show()
             frame.healthBar:SetHeight(4)
@@ -873,7 +873,7 @@ function Nameplates:Highlight(frame)
     SetBorderColor(frame, frame.optionTable.selectedBorderColor:GetRGBA());
 
     frame:SetScript('OnUpdate', function(frame)
-        if not UnitExists('mouseover') or not UnitIsUnit('mouseover', frame.displayedUnit) then           
+        if not UnitExists('mouseover') or not UnitIsUnit('mouseover', frame.displayedUnit) then   
             if not UnitIsUnit(frame.displayedUnit, "target") then
                 frame.selectionHighlight:Hide()
                 SetBorderColor(frame, frame.optionTable.defaultBorderColor:GetRGBA());
@@ -902,12 +902,15 @@ function Nameplates:PLAYER_ENTERING_WORLD()
 
     SetCVar("nameplateHorizontalScale", 0.4)
     SetCVar("nameplateVerticalScale", 1.1)
+
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         local _, instanceType = IsInInstance()
         if instanceType == "party" or instanceType == "raid" then
+            SetCVar("nameplateShowOnlyNames", 0)
             C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
         else
+            SetCVar("nameplateShowOnlyNames", 0)
             C_NamePlate.SetNamePlateFriendlySize(120, 0.1)
         end
     end
