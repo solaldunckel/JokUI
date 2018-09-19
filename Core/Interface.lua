@@ -878,8 +878,8 @@ function Interface:BuffPlayerFrame()
 	local AURA_SPACING_Y = 2;
 	local MAX_ROW_SIZE = 5;
 
-	local BuffsFrame = CreateFrame("Frame", "PlayerFrameBuffs");
-	local DebuffsFrame = CreateFrame("Frame", "PlayerFrameDebuffs");
+	local BuffsFrame = CreateFrame("Frame", "XarBarBuffs");
+	local DebuffsFrame = CreateFrame("Frame", "XarBarDebuffs");
 	BuffsFrame:SetSize(10, 10);
 	DebuffsFrame:SetSize(10, 10);
 
@@ -887,11 +887,7 @@ function Interface:BuffPlayerFrame()
 		local buff = _G[buffName..index];
 		
 		if ( index == 1 ) then
-			if ( numDebuffs == 0 ) then
-				buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
-			else
-				buff:SetPoint("TOPLEFT", DebuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-			end
+			buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
 			BuffsFrame:SetPoint("TOPLEFT", buff, "TOPLEFT", 0, 0);
 			BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
 		elseif ( newRow ) then
@@ -910,13 +906,7 @@ function Interface:BuffPlayerFrame()
 		local debuff = _G[debuffName..index];
 
 		if ( index == 1 ) then
-			if ( numBuffs > 0 ) then
-				-- XarBar.db.profile.buffsOnTop is true and there are buffs... debuffs start on bottom
-				debuff:SetPoint("TOPLEFT", BuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-			else
-				-- XarBar.db.profile.buffsOnTop is false or there are no buffs... debuffs start on top
-				debuff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
-			end
+			debuff:SetPoint("TOPLEFT", BuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
 			DebuffsFrame:SetPoint("TOPLEFT", debuff, "TOPLEFT", 0, 0);
 			DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
 		elseif ( newRow ) then
@@ -978,7 +968,7 @@ function Interface:BuffPlayerFrame()
 		for i = 1, 32 do
 			local buffName, icon, count, _, duration, expirationTime = UnitBuff(self.unit, i, nil);
 			if ( buffName ) then
-				frameName = "PlayerFrameBuff"..(i);
+				frameName = "XarBarBuff"..(i);
 				frame = _G[frameName];
 				if ( not frame ) then
 					if ( not icon ) then
@@ -1021,7 +1011,7 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		for i = numBuffs + 1, MAX_BUFFS do
-			local frame = _G["PlayerFrameBuff"..i];
+			local frame = _G["XarBarBuff"..i];
 			if ( frame ) then
 				frame:Hide();
 			else
@@ -1036,7 +1026,7 @@ function Interface:BuffPlayerFrame()
 		for i = 1, 16 do
 			local debuffName, icon, count, debuffType, duration, expirationTime = UnitDebuff(self.unit, i, nil);
 			if ( debuffName ) then
-				frameName = "PlayerFrameDebuff"..(i);
+				frameName = "XarBarDebuff"..(i);
 				frame = _G[frameName];
 				if ( not frame ) then
 					if ( not icon ) then
@@ -1088,7 +1078,7 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		for i = numDebuffs + 1, MAX_DEBUFFS do
-			local frame = _G["PlayerFrameDebuff"..i];
+			local frame = _G["XarBarDebuff"..i];
 			if ( frame ) then
 				frame:Hide();
 			else
@@ -1097,13 +1087,13 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		-- update buff positions
-		UpdateAuraPositions(self, "PlayerFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
+		UpdateAuraPositions(self, "XarBarBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
 		
 		-- update debuff positions
-		UpdateAuraPositions(self, "PlayerFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
+		UpdateAuraPositions(self, "XarBarDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
 	end
 
-	local frame = CreateFrame("Frame", "PlayerBuffFrame", UIParent)
+	local frame = CreateFrame("Frame", nil, UIParent)
 
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	frame:RegisterEvent("UNIT_AURA")
