@@ -878,8 +878,8 @@ function Interface:BuffPlayerFrame()
 	local AURA_SPACING_Y = 2;
 	local MAX_ROW_SIZE = 5;
 
-	local BuffsFrame = CreateFrame("Frame", "XarBarBuffs");
-	local DebuffsFrame = CreateFrame("Frame", "XarBarDebuffs");
+	local BuffsFrame = CreateFrame("Frame", "PlayerFrameBuffs");
+	local DebuffsFrame = CreateFrame("Frame", "PlayerFrameDebuffs");
 	BuffsFrame:SetSize(10, 10);
 	DebuffsFrame:SetSize(10, 10);
 
@@ -968,7 +968,7 @@ function Interface:BuffPlayerFrame()
 		for i = 1, 32 do
 			local buffName, icon, count, _, duration, expirationTime = UnitBuff(self.unit, i, nil);
 			if ( buffName ) then
-				frameName = "XarBarBuff"..(i);
+				frameName = "PlayerFrameBuff"..(i);
 				frame = _G[frameName];
 				if ( not frame ) then
 					if ( not icon ) then
@@ -1011,7 +1011,7 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		for i = numBuffs + 1, MAX_BUFFS do
-			local frame = _G["XarBarBuff"..i];
+			local frame = _G["PlayerFrameBuff"..i];
 			if ( frame ) then
 				frame:Hide();
 			else
@@ -1026,7 +1026,7 @@ function Interface:BuffPlayerFrame()
 		for i = 1, 16 do
 			local debuffName, icon, count, debuffType, duration, expirationTime = UnitDebuff(self.unit, i, nil);
 			if ( debuffName ) then
-				frameName = "XarBarDebuff"..(i);
+				frameName = "PlayerFrameDebuff"..(i);
 				frame = _G[frameName];
 				if ( not frame ) then
 					if ( not icon ) then
@@ -1078,7 +1078,7 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		for i = numDebuffs + 1, MAX_DEBUFFS do
-			local frame = _G["XarBarDebuff"..i];
+			local frame = _G["PlayerFrameDebuff"..i];
 			if ( frame ) then
 				frame:Hide();
 			else
@@ -1087,10 +1087,10 @@ function Interface:BuffPlayerFrame()
 		end
 		
 		-- update buff positions
-		UpdateAuraPositions(self, "XarBarBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
+		UpdateAuraPositions(self, "PlayerFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
 		
 		-- update debuff positions
-		UpdateAuraPositions(self, "XarBarDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
+		UpdateAuraPositions(self, "PlayerFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
 	end
 
 	local frame = CreateFrame("Frame", nil, UIParent)
