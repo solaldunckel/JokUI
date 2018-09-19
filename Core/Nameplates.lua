@@ -716,14 +716,13 @@ function Nameplates:SkinPlates(frame)
 
     -- -- Only Name Fix
 
-    -- if not UnitIsPlayer(frame.displayedUnit) then
-    --     frame.healthBar:Show()
-    -- end
+        frame.healthBar:Show()
 
     -- Name
 
     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
     frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
+
      -- Health Bar Height
 
     frame.healthBar:SetHeight(Nameplates.settings.healthHeight)
@@ -819,9 +818,9 @@ function Nameplates:ThreatColor(frame)
                 r, g, b = classColor.r, classColor.g, classColor.b
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
                 r, g, b = 0.5, 0.5, 0.5
-            elseif raidMarker then
-                local markerColor = markerColors[tostring(raidMarker)]
-                r, g, b = markerColor.r, markerColor.g, markerColor.b
+            --elseif raidMarker then
+                --local markerColor = markerColors[tostring(raidMarker)]
+                --r, g, b = markerColor.r, markerColor.g, markerColor.b
             elseif ( frame.optionTable.colorHealthBySelection ) then
                 if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then
                     local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
@@ -907,7 +906,7 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
         local _, instanceType = IsInInstance()
         if instanceType == "party" or instanceType == "raid" then
-            SetCVar("nameplateShowOnlyNames", 0)
+            SetCVar("nameplateShowOnlyNames", 1)
             C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
         else
             SetCVar("nameplateShowOnlyNames", 0)

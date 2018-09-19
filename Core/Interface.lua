@@ -144,7 +144,8 @@ function Interface:OnEnable()
 	self:CastBars()
 	self:ReAnchor()
 	self:BossFrame()
-	self:ActionBars()
+	self:BuffPlayerFrame()
+	--self:ActionBars()
 	self:Mover()
 end
 
@@ -225,7 +226,7 @@ function Interface:UnitFrames()
 	local AURA_OFFSET_Y = 2;
 	local AURA_OFFSET_X = 2;
 	local LARGE_AURA_SIZE = 24
-	local SMALL_AURA_SIZE = 21
+	local SMALL_AURA_SIZE = 20
 	local AURA_ROW_WIDTH = 110;
 
 	hooksecurefunc("PlayerFrame_UpdateStatus", function()
@@ -729,15 +730,8 @@ function Interface:TargetFrame()
 end
 
 function Interface:ColorUnitFrames()
-	local unit = {}
-	local AURA_START_X = 6;
-	local AURA_START_Y = 28;
-	local AURA_OFFSET_Y = 3;
-	local AURA_OFFSET_X = 4;
-	local LARGE_AURA_SIZE = 23
-	local SMALL_AURA_SIZE = 20
-	local AURA_ROW_WIDTH = 110;
 
+	-- SCALE
 	PlayerFrame:SetScale(Interface.settings.UnitFrames.scale)
 	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
@@ -762,261 +756,384 @@ function Interface:ColorUnitFrames()
 	    colour(self, self.unit)
 	end)
 
-	--BUFFS
-	function unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-		local size
-		local offsetY = AURA_OFFSET_Y
-		local offsetX = AURA_OFFSET_X
-		local rowWidth = 0
-		local maxRowWidth = AURA_ROW_WIDTH
-		local firstBuffOnRow = 1
+	-- HIT INDICATOR
+	PlayerFrame:UnregisterEvent("UNIT_COMBAT")
+	PetFrame:UnregisterEvent("UNIT_COMBAT")
+
+	-- AURA POSITION
+	local AURA_START_X = 5;
+	local AURA_START_Y = 32;
+	local AURA_OFFSET_X = 2;
+	local AURA_OFFSET_Y = 1;
+	local LARGE_AURA_SIZE = 21;
+	local SMALL_AURA_SIZE = 21;
+	local AURA_ROW_WIDTH = 122;
+	local TOT_AURA_ROW_WIDTH = 101;
+	local NUM_TOT_AURA_ROWS = 2;	-- TODO: replace with TOT_AURA_ROW_HEIGHT functionality if this becomes a problem
+
+	function TargetFrame_UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
+		-- a lot of this complexity is in place to allow the auras to wrap around the target of target frame if it's shown
+
+		-- Position auras
+		local size;
+		local offsetY = AURA_OFFSET_Y;
+		local offsetX = AURA_OFFSET_X;
+		-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
+		local rowWidth = 0;
+		local firstBuffOnRow = 1;
 		for i=1, numAuras do
+			-- update size and offset info based on large aura status
 			if ( largeAuraList[i] ) then
-				size = LARGE_AURA_SIZE
-				offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
+				size = LARGE_AURA_SIZE;
+				offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y;
 			else
-				size = SMALL_AURA_SIZE
+				size = SMALL_AURA_SIZE;
 			end
+
+			-- anchor the current aura
 			if ( i == 1 ) then
-				rowWidth = size
-				self.auraRows = self.auraRows + 1
+				rowWidth = size;
+				self.auraRows = self.auraRows + 1;
 			else
-				rowWidth = rowWidth + size + offsetX
+				rowWidth = rowWidth + size + offsetX;
 			end
 			if ( rowWidth > maxRowWidth ) then
-				updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically)
-				rowWidth = size
-				self.auraRows = self.auraRows + 1
-				firstBuffOnRow = i
-				offsetY = AURA_OFFSET_Y
+				-- this aura would cause the current row to exceed the max row width, so make this aura
+				-- the start of a new row instead
+				updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically);
+
+				rowWidth = size;
+				self.auraRows = self.auraRows + 1;
+				firstBuffOnRow = i;
+				offsetY = AURA_OFFSET_Y;
+
+				if ( self.auraRows > NUM_TOT_AURA_ROWS ) then
+					-- if we exceed the number of tot rows, then reset the max row width
+					-- note: don't have to check if we have tot because AURA_ROW_WIDTH is the default anyway
+					maxRowWidth = AURA_ROW_WIDTH;
+				end
 			else
-				updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+				updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically);
 			end
 		end
 	end
 
-	local function unit_targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-		unit:targetUpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-	end
-	hooksecurefunc("TargetFrame_UpdateAuraPositions", unit_targetUpdateAuraPositions)
+ --    for i,v in pairs({
+	-- 	PlayerFrameTexture,
+	-- 	TargetFrameTextureFrameTexture,
+	-- 	PlayerFrameAlternateManaBarBorder,
+	-- 	PlayerFrameAlternateManaBarLeftBorder,
+	-- 	PlayerFrameAlternateManaBarRightBorder,
+	-- 	PaladinPowerBarFrameBG,
+ --        PaladinPowerBarFrameBankBG,
+	-- 	ComboPointPlayerFrame.Background,
+	-- 	ComboPointPlayerFrame.Combo1.PointOff,
+	-- 	ComboPointPlayerFrame.Combo2.PointOff,
+	-- 	ComboPointPlayerFrame.Combo3.PointOff,
+	-- 	ComboPointPlayerFrame.Combo4.PointOff,
+	-- 	ComboPointPlayerFrame.Combo5.PointOff,
+	-- 	ComboPointPlayerFrame.Combo6.PointOff,
+	-- 	AlternatePowerBarBorder,
+	-- 	AlternatePowerBarLeftBorder,
+	-- 	AlternatePowerBarRightBorder,
+	-- 	PetFrameTexture,
+	-- 	PartyMemberFrame1Texture,
+	-- 	PartyMemberFrame2Texture,
+	-- 	PartyMemberFrame3Texture,
+	-- 	PartyMemberFrame4Texture,
+	-- 	PartyMemberFrame1PetFrameTexture,
+	-- 	PartyMemberFrame2PetFrameTexture,
+	-- 	PartyMemberFrame3PetFrameTexture,
+	-- 	PartyMemberFrame4PetFrameTexture,
+	-- 	FocusFrameTextureFrameTexture,
+	-- 	TargetFrameToTTextureFrameTexture,
+	-- 	FocusFrameToTTextureFrameTexture,
+	-- 	Boss1TargetFrameTextureFrameTexture,
+	-- 	Boss2TargetFrameTextureFrameTexture,
+	-- 	Boss3TargetFrameTextureFrameTexture,
+	-- 	Boss4TargetFrameTextureFrameTexture,
+	-- 	Boss5TargetFrameTextureFrameTexture,
+	-- 	Boss1TargetFrameSpellBar.Border,
+	-- 	Boss2TargetFrameSpellBar.Border,
+	-- 	Boss3TargetFrameSpellBar.Border,
+	-- 	Boss4TargetFrameSpellBar.Border,
+	-- 	Boss5TargetFrameSpellBar.Border,
+	-- 	CastingBarFrame.Border,
+	-- 	FocusFrameSpellBar.Border,
+	-- 	TargetFrameSpellBar.Border,
 
-	function unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-		local point, relativePoint
-		local startY, auraOffsetY
-		if ( mirrorVertically ) then
-			point = "BOTTOM"
-			relativePoint = "TOP"
-			startY = -6
-			offsetY = -offsetY
-			auraOffsetY = -AURA_OFFSET_Y
-		else
-			point = "TOP"
-			relativePoint="BOTTOM"
-			startY = AURA_START_Y
-			auraOffsetY = AURA_OFFSET_Y
-		end
-		 
-		local buff = _G[buffName..index]
+	-- }) do
+        --v:SetVertexColor(.0, .0, .0)
+	--end
+end
+
+function Interface:BuffPlayerFrame()
+	local MAX_BUFFS = 32;
+	local MAX_DEBUFFS = 32;
+
+	local AURA_START_X = 107;
+	local AURA_START_Y = 32
+	local AURA_ICON_SIZE = 21;
+	local AURA_SPACING_X = 2;
+	local AURA_SPACING_Y = 2;
+	local MAX_ROW_SIZE = 5;
+
+	local BuffsFrame = CreateFrame("Frame", "PlayerFrameBuffs");
+	local DebuffsFrame = CreateFrame("Frame", "PlayerFrameDebuffs");
+	BuffsFrame:SetSize(10, 10);
+	DebuffsFrame:SetSize(10, 10);
+
+	local function UpdateBuffAnchor(self, buffName, index, numDebuffs, newRow, startX, startY)
+		local buff = _G[buffName..index];
+		
 		if ( index == 1 ) then
-			if ( UnitIsFriend("player", self.unit) or numDebuffs == 0 ) then
-				-- unit is friendly or there are no debuffs...buffs start on top
-				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY)		   
+			if ( numDebuffs == 0 ) then
+				buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
 			else
-				-- unit is not friendly and we have debuffs...buffs start on bottom
-				buff:SetPoint(point.."LEFT", self.debuffs, relativePoint.."LEFT", 0, -offsetY)
+				buff:SetPoint("TOPLEFT", DebuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
 			end
-			self.buffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0)
-			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
-			self.spellbarAnchor = buff
-		elseif ( anchorIndex ~= (index-1) ) then
-			-- anchor index is not the previous index...must be a new row
-			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY)
-			self.buffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY)
-			self.spellbarAnchor = buff
+			BuffsFrame:SetPoint("TOPLEFT", buff, "TOPLEFT", 0, 0);
+			BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+		elseif ( newRow ) then
+			buff:SetPoint("TOPLEFT", _G[buffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+			BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
 		else
-			-- anchor index is the previous index
-			buff:SetPoint(point.."LEFT", _G[buffName..anchorIndex], point.."RIGHT", offsetX, 0)
+			buff:SetPoint("TOPLEFT", _G[buffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X, 0);
 		end
 
-		buff:SetWidth(size)
-		buff:SetHeight(size)
-	end
-
-	local function unit_targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-		unit:targetUpdateBuffAnchor(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-	end
-	hooksecurefunc("TargetFrame_UpdateBuffAnchor", unit_targetUpdateBuffAnchor)
-
-	function unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-		local buff = _G[debuffName..index];
-		local isFriend = UnitIsFriend("player", self.unit);
-		 
-		--For mirroring vertically
-		local point, relativePoint;
-		local startY, auraOffsetY;
-		if ( mirrorVertically ) then
-			point = "BOTTOM";
-			relativePoint = "TOP";
-			startY = -8;
-			offsetY = - offsetY;
-			auraOffsetY = -AURA_OFFSET_Y;
-		else
-			point = "TOP";
-			relativePoint="BOTTOM";
-			startY = AURA_START_Y;
-			auraOffsetY = AURA_OFFSET_Y;
-		end
-		 
-		if ( index == 1 ) then
-			if ( isFriend and numBuffs > 0 ) then
-				-- unit is friendly and there are buffs...debuffs start on bottom
-				buff:SetPoint(point.."LEFT", self.buffs, relativePoint.."LEFT", 0, -offsetY);
-			else
-				-- unit is not friendly or there are no buffs...debuffs start on top
-				buff:SetPoint(point.."LEFT", self, relativePoint.."LEFT", AURA_START_X, startY);
-			end
-			self.debuffs:SetPoint(point.."LEFT", buff, point.."LEFT", 0, 0);
-			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
-			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
-				self.spellbarAnchor = buff;
-			end
-		elseif ( anchorIndex ~= (index-1) ) then
-			-- anchor index is not the previous index...must be a new row
-			buff:SetPoint(point.."LEFT", _G[debuffName..anchorIndex], relativePoint.."LEFT", 0, -offsetY);
-			self.debuffs:SetPoint(relativePoint.."LEFT", buff, relativePoint.."LEFT", 0, -auraOffsetY);
-			if ( ( isFriend ) or ( not isFriend and numBuffs == 0) ) then
-				self.spellbarAnchor = buff;
-			end
-		else
-			-- anchor index is the previous index
-			buff:SetPoint(point.."LEFT", _G[debuffName..(index-1)], point.."RIGHT", offsetX, 0);
-		end
-	 
 		-- Resize
-		buff:SetWidth(size);
-		buff:SetHeight(size);
+		buff:SetWidth(AURA_ICON_SIZE);
+		buff:SetHeight(AURA_ICON_SIZE);
+	end
+
+	local function UpdateDebuffAnchor(self, debuffName, index, numBuffs, newRow, startX, startY)
+		local debuff = _G[debuffName..index];
+
+		if ( index == 1 ) then
+			if ( numBuffs > 0 ) then
+				-- XarBar.db.profile.buffsOnTop is true and there are buffs... debuffs start on bottom
+				debuff:SetPoint("TOPLEFT", BuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+			else
+				-- XarBar.db.profile.buffsOnTop is false or there are no buffs... debuffs start on top
+				debuff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
+			end
+			DebuffsFrame:SetPoint("TOPLEFT", debuff, "TOPLEFT", 0, 0);
+			DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+		elseif ( newRow ) then
+			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+			DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+		else
+			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X + 1, 0);
+		end
+
+		-- Resize
+		debuff:SetWidth(AURA_ICON_SIZE);
+		debuff:SetHeight(AURA_ICON_SIZE);
+		
 		local debuffFrame =_G[debuffName..index.."Border"];
-		debuffFrame:SetWidth(size+2);
-		debuffFrame:SetHeight(size+2);
+		debuffFrame:SetWidth(AURA_ICON_SIZE+2);
+		debuffFrame:SetHeight(AURA_ICON_SIZE+2);
 	end
 
-	local function unit_targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
-		unit:targetUpdateDebuffAnchor(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY, mirrorVertically)
+	local function UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, updateFunc)
+		local startX, startY;
+		if ( PetFrame and PetFrame:IsShown() ) then
+			startX, startY = AURA_START_X, -8;
+		elseif ( PlayerFrameAlternateManaBar and PlayerFrameAlternateManaBar:IsShown() ) then -- Manabar
+			startX, startY = AURA_START_X, AURA_START_Y-12;
+		elseif ( ComboPointPlayerFrame and ComboPointPlayerFrame:IsShown() ) then -- Combos
+			startX, startY = AURA_START_X, AURA_START_Y-18;
+		elseif ( RuneFrame and RuneFrame:IsShown() ) then 
+			startX, startY = AURA_START_X, AURA_START_Y-23;
+		else
+			startX, startY = AURA_START_X, AURA_START_Y;
+		end
+
+		-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
+		local rowSize = 0;
+		for i=1, numAuras do
+			-- anchor the current aura
+			if ( i == 1 ) then
+				rowSize = 1;
+			else
+				rowSize = rowSize + 1;
+			end
+			if ( rowSize > MAX_ROW_SIZE ) then
+				-- this aura would cause the current row to exceed the max row size, so make this aura
+				-- the start of a new row instead
+				rowSize = 1;
+				updateFunc(self, auraName, i, numOppositeAuras, true, startX, startY);
+			else
+				updateFunc(self, auraName, i, numOppositeAuras, false, startX, startY);
+			end
+		end
 	end
-	hooksecurefunc("TargetFrame_UpdateDebuffAnchor", unit_targetUpdateDebuffAnchor)
 
-	--backdrop
+	local function UpdateAuras()
+		local self = PlayerFrame;
+		local frame, frameName;
+		local frameIcon, frameCount, frameCooldown;
+		local numBuffs = 0;
+		
+		for i = 1, 32 do
+			local buffName, icon, count, _, duration, expirationTime = UnitBuff(self.unit, i, nil);
+			if ( buffName ) then
+				frameName = "PlayerFrameBuff"..(i);
+				frame = _G[frameName];
+				if ( not frame ) then
+					if ( not icon ) then
+						break;
+					else
+						frame = CreateFrame("Button", frameName, self, "TargetBuffFrameTemplate");
+						frame.unit = self.unit;
+					end
+				end
+				if ( icon ) then
+					frame:SetID(i);
+					
+					-- set the icon
+					frameIcon = _G[frameName.."Icon"];
+					frameIcon:SetTexture(icon);
+					
+					-- set the count
+					frameCount = _G[frameName.."Count"];
+					if ( count > 1 ) then
+						frameCount:SetText(count);
+						frameCount:Show();
+					else
+						frameCount:Hide();
+					end
+					
+					-- Handle cooldowns
+					frameCooldown = _G[frameName.."Cooldown"];
+					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
+					
+					numBuffs = numBuffs + 1;
 
-    local backdrop = {
-		bgFile = nil,
-		edgeFile = "Interface\\AddOns\\JokUI\\media\\textures\\outer_shadow",
-		tile = false,
-		tileSize = 32,
-		edgeSize = 4,
-		insets = {
-			left = 4,
-			right = 4,
-			top = 4,
-			bottom = 4,
-		},
-    }
+					frame:ClearAllPoints();
+					frame:Show();
+				else
+					frame:Hide();
+				end
+			else
+				break;
+			end
+		end
+		
+		for i = numBuffs + 1, MAX_BUFFS do
+			local frame = _G["PlayerFrameBuff"..i];
+			if ( frame ) then
+				frame:Hide();
+			else
+				break;
+			end
+		end
+		
+		local color;
+		local frameBorder;
+		local numDebuffs = 0;
+		
+		for i = 1, 16 do
+			local debuffName, icon, count, debuffType, duration, expirationTime = UnitDebuff(self.unit, i, nil);
+			if ( debuffName ) then
+				frameName = "PlayerFrameDebuff"..(i);
+				frame = _G[frameName];
+				if ( not frame ) then
+					if ( not icon ) then
+						break;
+					else
+						frame = CreateFrame("Button", frameName, self, "TargetDebuffFrameTemplate");
+						frame.unit = self.unit;
+					end
+				end
+				if ( icon ) then
+					frame:SetID(i);
+					
+					-- set the icon
+					frameIcon = _G[frameName.."Icon"];
+					frameIcon:SetTexture(icon);
+					
+					-- set the count
+					frameCount = _G[frameName.."Count"];
+					if ( count > 1 ) then
+						frameCount:SetText(count);
+						frameCount:Show();
+					else
+						frameCount:Hide();
+					end
+					
+					-- Handle cooldowns
+					frameCooldown = _G[frameName.."Cooldown"];
+					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
+					
+					-- set debuff type color
+					if ( debuffType ) then
+						color = DebuffTypeColor[debuffType];
+					else
+						color = DebuffTypeColor["none"];
+					end
+					frameBorder = _G[frameName.."Border"];
+					frameBorder:SetVertexColor(color.r, color.g, color.b);
+					
+					numDebuffs = numDebuffs + 1;
 
-	-- apply aura frame texture func
-
-    local function applySkin(b)
-		if not b or (b and b.styled) then return end
-		--button name
-		local name = b:GetName()
-		if (name:match("Debuff")) then
-			b.debuff = true
-	   	else
-	   		b.buff = true
+					frame:ClearAllPoints();
+					frame:Show();
+				else
+					frame:Hide();
+				end
+			else
+				break;
+			end
 		end
-		--icon
-		local icon = _G[name.."Icon"]
-		icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-		icon:SetDrawLayer("BACKGROUND",-7)
-		b.icon = icon
-		--border
-		local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-		border:SetTexture("Interface\\AddOns\\JokUI\\media\\textures\\gloss")
-		border:SetTexCoord(0, 1, 0, 1)
-		border:SetDrawLayer("BACKGROUND",- 7)
-		if b.buff then
-			border:SetAlpha(0.5)
+		
+		for i = numDebuffs + 1, MAX_DEBUFFS do
+			local frame = _G["PlayerFrameDebuff"..i];
+			if ( frame ) then
+				frame:Hide();
+			else
+				break;
+			end
 		end
-		border:ClearAllPoints()
-		border:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
-		border:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
-		b.border = border
-    end
-  
-    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
-		for i = 1, MAX_TARGET_BUFFS do
-			b = _G["TargetFrameBuff"..i]
-			applySkin(b)
-		end
-		for i = 1, MAX_TARGET_DEBUFFS do
-			b = _G["TargetFrameDebuff"..i]
-			applySkin(b)
-		end
-		for i = 1, MAX_TARGET_BUFFS do
-			b = _G["FocusFrameBuff"..i]
-			applySkin(b)
-		end
-		for i = 1, MAX_TARGET_DEBUFFS do
-			b = _G["FocusFrameDebuff"..i]
-			applySkin(b)
-		end
-    end)
-
-    for i,v in pairs({
-		PlayerFrameTexture,
-		TargetFrameTextureFrameTexture,
-		PlayerFrameAlternateManaBarBorder,
-		PlayerFrameAlternateManaBarLeftBorder,
-		PlayerFrameAlternateManaBarRightBorder,
-		PaladinPowerBarFrameBG,
-        PaladinPowerBarFrameBankBG,
-		ComboPointPlayerFrame.Background,
-		ComboPointPlayerFrame.Combo1.PointOff,
-		ComboPointPlayerFrame.Combo2.PointOff,
-		ComboPointPlayerFrame.Combo3.PointOff,
-		ComboPointPlayerFrame.Combo4.PointOff,
-		ComboPointPlayerFrame.Combo5.PointOff,
-		ComboPointPlayerFrame.Combo6.PointOff,
-		AlternatePowerBarBorder,
-		AlternatePowerBarLeftBorder,
-		AlternatePowerBarRightBorder,
-		PetFrameTexture,
-		PartyMemberFrame1Texture,
-		PartyMemberFrame2Texture,
-		PartyMemberFrame3Texture,
-		PartyMemberFrame4Texture,
-		PartyMemberFrame1PetFrameTexture,
-		PartyMemberFrame2PetFrameTexture,
-		PartyMemberFrame3PetFrameTexture,
-		PartyMemberFrame4PetFrameTexture,
-		FocusFrameTextureFrameTexture,
-		TargetFrameToTTextureFrameTexture,
-		FocusFrameToTTextureFrameTexture,
-		Boss1TargetFrameTextureFrameTexture,
-		Boss2TargetFrameTextureFrameTexture,
-		Boss3TargetFrameTextureFrameTexture,
-		Boss4TargetFrameTextureFrameTexture,
-		Boss5TargetFrameTextureFrameTexture,
-		Boss1TargetFrameSpellBar.Border,
-		Boss2TargetFrameSpellBar.Border,
-		Boss3TargetFrameSpellBar.Border,
-		Boss4TargetFrameSpellBar.Border,
-		Boss5TargetFrameSpellBar.Border,
-		CastingBarFrame.Border,
-		FocusFrameSpellBar.Border,
-		TargetFrameSpellBar.Border,
-
-	}) do
-        v:SetVertexColor(.15, .15, .15)
+		
+		-- update buff positions
+		UpdateAuraPositions(self, "PlayerFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
+		
+		-- update debuff positions
+		UpdateAuraPositions(self, "PlayerFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
 	end
+
+	local frame = CreateFrame("Frame", "PlayerBuffFrame", UIParent)
+
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:RegisterEvent("UNIT_AURA")
+	frame:RegisterEvent("UNIT_PET")
+	frame:RegisterEvent("UNIT_ENTERED_VEHICLE")
+	frame:RegisterEvent("UNIT_EXITED_VEHICLE")
+
+	frame:SetScript("OnEvent", function(self, event, ...)
+		local arg1 = ...;
+
+		if ( event == "PLAYER_ENTERING_WORLD" ) then
+			UpdateAuras();
+		elseif ( event == "UNIT_AURA" ) then
+			if ( arg1 == "player" ) then
+				UpdateAuras();
+			end
+		elseif ( event == "UNIT_PET" ) then
+			if ( arg1 == "player" ) then
+				UpdateAuras();
+			end
+		elseif ( event == "UNIT_ENTERED_VEHICLE" ) then
+			if ( arg1 == "player" ) then
+				UpdateAuras();
+			end
+		elseif ( event == "UNIT_EXITED_VEHICLE" ) then
+			if ( arg1 == "player" ) then
+				UpdateAuras();
+			end
+		end
+	end)
 end
 
 function Interface:ActionBars()

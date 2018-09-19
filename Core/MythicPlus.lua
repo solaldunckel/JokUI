@@ -485,6 +485,37 @@ function MythicPlus:Schedule()
 
 		if C_MythicPlus.IsWeeklyRewardAvailable() then return end
 
+		-- Add EJ Button
+		local button = CreateFrame("Button", "EJ_Button", ChallengesFrame.WeeklyInfo.Child)
+        button:SetPoint("TOPRIGHT", ChallengesFrame.WeeklyInfo.Child, "TOPRIGHT", 2, -10)
+        button:SetWidth(80)
+        button:SetHeight(20)
+        
+        button:SetText("Journal")
+        button:SetNormalFontObject("GameFontNormalSmall")
+        
+        local ntex = button:CreateTexture()
+		ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
+		ntex:SetTexCoord(0, 0.625, 0, 0.6875)
+		ntex:SetAllPoints()	
+		button:SetNormalTexture(ntex)
+		
+		local htex = button:CreateTexture()
+		htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
+		htex:SetTexCoord(0, 0.625, 0, 0.6875)
+		htex:SetAllPoints()
+		button:SetHighlightTexture(htex)
+		
+		local ptex = button:CreateTexture()
+		ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
+		ptex:SetTexCoord(0, 0.625, 0, 0.6875)
+		ptex:SetAllPoints()
+		button:SetPushedTexture(ptex)
+
+		button:SetScript("OnMouseDown", function()
+			
+		end)
+
 		ChallengesFrame.WeeklyInfo.Child.Label:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child, "TOP", -100, -25)
 
 		if keyLevel then
@@ -500,7 +531,7 @@ function MythicPlus:Schedule()
 
 			--print(dungeonName .. " (" .. keyLevel .. ")")
 
-			local key = CreateFrame('Frame', nil, ChallengesFrame)
+			local key = CreateFrame('Frame', nil, MythicFrame)
 			key:SetPoint("BOTTOM", MythicFrame.RunStatus, "TOP", 0, 10)
 			key:SetWidth(200)
 			key:SetHeight(14)
@@ -508,7 +539,7 @@ function MythicPlus:Schedule()
 			key.text = key:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			key.text:SetPoint("CENTER", key)
 			key.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-			key.text:SetText("Key: |cffffffff"..dungeonName .. " (" .. keyLevel .. ")|r")
+			key.text:SetText("|cffF0CE1CKey: |r"..dungeonName .. " (" .. keyLevel .. ")")
 			key.text:SetTextColor(1,1,1)
 
 			local frame = CreateFrame("Frame", nil, ChallengesFrame)

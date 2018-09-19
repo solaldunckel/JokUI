@@ -2417,50 +2417,6 @@ function Misc:TeleportCloak()
 end
 
 function Misc:Quests()
-
-	local mapIDs = {
-		862, -- Zuldazar
-		863, -- Nazmir
-		864, -- Voldun
-		1165, -- Zuldazar (Dazar'alor)
-	}
-	 -- Hook objective tracker
-	
-	function SetBlockHeader_hook()
-	  for i = 1, GetNumQuestWatches() do
-	   local questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isStory, isOnMap, hasLocalPOI = GetQuestWatchInfo(i)
-	   if ( not questID ) then
-	    break
-	   end
-	   local oldBlock = QUEST_TRACKER_MODULE:GetExistingBlock(questID)
-	   if oldBlock then
-	    local oldBlockHeight = oldBlock.height
-	    local oldHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, title, nil, OBJECTIVE_TRACKER_COLOR["Header"])
-
-	    local newTitle = title
-	    
-	    local playerMap = C_Map.GetBestMapForUnit("player")
-	    local questLine 
-	    if playerMap then
-	    	questline = C_QuestLine.GetQuestLineInfo(questID, playerMap)
-		    if not questLine then
-		    	for k, j in pairs(mapIDs) do
-		    		local questLine = C_QuestLine.GetQuestLineInfo(questID, k)
-		    		if questLine then
-		    			newTitle = "["..questLine["questLineName"].."] "..title
-		    		end
-		    	end
-		    end
-	   	end
-	      
-
-	    local newHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, newTitle, nil, OBJECTIVE_TRACKER_COLOR["Header"])
-	    oldBlock:SetHeight(oldBlockHeight + newHeight - oldHeight);
-	   end
-	  end
-	end
-	hooksecurefunc(QUEST_TRACKER_MODULE, "Update", SetBlockHeader_hook)
-
 	local QuestNum = CreateFrame("Frame")
 	QuestNum:RegisterEvent("PLAYER_ENTERING_WORLD")
 	QuestNum:RegisterEvent("QUEST_LOG_UPDATE")
