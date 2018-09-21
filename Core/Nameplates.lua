@@ -710,6 +710,20 @@ function Nameplates:UpdateCastbarTimer(frame)
     end
 end
 
+local function PlayerIsTank(unit)
+    local assignedRole = UnitGroupRolesAssigned(unit)
+    return assignedRole == "TANK"
+end
+
+function Nameplates:UseOffTankColor(unit)
+    if ( UnitPlayerOrPetInRaid(unit) or UnitPlayerOrPetInParty(unit) ) then
+        if ( not UnitIsUnit("player", unit) and PlayerIsTank("player") and PlayerIsTank(unit) ) then
+            return true
+        end
+    end
+    return false
+end
+
 -----------------------------------------
 
 function Nameplates:SkinPlates(frame)
@@ -819,17 +833,19 @@ function Nameplates:ThreatColor(frame)
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
                 r, g, b = 0.5, 0.5, 0.5
             elseif ( frame.optionTable.colorHealthBySelection ) then
-                if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then
+                if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then    
+                    local target = frame.displayedUnit.."target"
                     local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
-                    local targetUnit = frame.displayedUnit.."-target"
                     if ( isTanking and threatStatus ) then
                         if ( threatStatus >= 3 ) then
                             r, g, b = 0.5, 0.75, 0.95
                         elseif ( threatStatus == 2 ) then
                             r, g, b = 1.0, 0.6, 0.2
                         end
-                    elseif UnitGroupRolesAssigned(targetUnit) == "TANK" and not UnitIsUnit(frame.displayedUnit, "player") then
-                        r, g, b = 1, 0, 1
+                    elseif ( Nameplates:UseOffTankColor(target) ) then
+                        r, g, b = 1.0, 0.0, 1.0
+                    else
+                        r, g, b = 1.0, 0.0, 0.0
                     end
                 else
                     r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors)
