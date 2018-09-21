@@ -155,19 +155,6 @@ do
 		end)
 end
 
-do
-	RaidFrames:RegisterFeature("FadeMore",
-		"Raid Fade More",
-		"Improve the range fade on Raid Frames.",
-		true,
-		true,
-		function(state)
-			if state then
-				--RaidFrames:FadeMore()
-			end
-		end)
-end
-
 -------------------------------------------------------------------------------
 -- Functions
 -------------------------------------------------------------------------------
@@ -329,27 +316,6 @@ function RaidFrames:Buffs()
 		debuffFrame:SetScale(RaidFrames.settings.Buffs.debuffscale)
 	end
 	hooksecurefunc("CompactUnitFrame_UtilSetDebuff", CompactUnitFrame_UtilSetDebuff_Hook)
-end
-	
-function RaidFrames:FadeMore()
-
-	local group = {
-		part = true, -- party, only check char 1 to 4
-		raid = true,	
-	}
-
-	hooksecurefunc("CompactUnitFrame_UpdateInRange", function(frame)
-		if not group[strsub(frame.displayedUnit, 1, 4)] then return end -- ignore player, nameplates
-		local inRange, checkedRange = UnitInRange(frame.displayedUnit)
-		
-		if checkedRange and not inRange then
-			frame:SetAlpha(RaidFrames.settings.RaidFade.fadealpha)
-			frame.background:SetAlpha(RaidFrames.settings.RaidFade.backgroundalpha)
-		else
-			frame:SetAlpha(1)
-			frame.background:SetAlpha(1)
-		end
-	end)
 end
 
 function RaidFrames:Misc()

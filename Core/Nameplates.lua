@@ -818,20 +818,18 @@ function Nameplates:ThreatColor(frame)
                 r, g, b = classColor.r, classColor.g, classColor.b
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
                 r, g, b = 0.5, 0.5, 0.5
-            --elseif raidMarker then
-                --local markerColor = markerColors[tostring(raidMarker)]
-                --r, g, b = markerColor.r, markerColor.g, markerColor.b
             elseif ( frame.optionTable.colorHealthBySelection ) then
                 if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then
                     local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
+                    local targetUnit = frame.displayedUnit.."-target"
                     if ( isTanking and threatStatus ) then
                         if ( threatStatus >= 3 ) then
                             r, g, b = 0.5, 0.75, 0.95
                         elseif ( threatStatus == 2 ) then
                             r, g, b = 1.0, 0.6, 0.2
                         end
-                    else
-                        r, g, b = 1.0, 0.0, 0.0
+                    elseif UnitGroupRolesAssigned(targetUnit) == "TANK" and not UnitIsUnit(frame.displayedUnit, "player") then
+                        r, g, b = 1, 0, 1
                     end
                 else
                     r, g, b = UnitSelectionColor(frame.unit, frame.optionTable.colorHealthWithExtendedColors)
@@ -899,8 +897,8 @@ function Nameplates:PLAYER_ENTERING_WORLD()
 
     C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth,45)
 
-    SetCVar("nameplateHorizontalScale", 0.4)
-    SetCVar("nameplateVerticalScale", 1.1)
+    -- SetCVar("nameplateHorizontalScale", 0.4)
+    -- SetCVar("nameplateVerticalScale", 1.1)
 
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
@@ -1044,15 +1042,15 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
             for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
                 local token = plateFrame.namePlateUnitToken
                 if (plateFrame.UnitFrame.castBar:IsShown()) then
-                    for u in Nameplates:GroupMembers() do
-                        if UnitIsUnit(sourceName, u) then
+                    --for u in Nameplates:GroupMembers() do
+                        --if UnitIsUnit(sourceName, u) then
                             if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
                                 if (UnitGUID(token) == targetGUID) then
                                     plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
                                 end
                             end
-                        end
-                    end
+                       -- end
+                   -- end
                 end
             end
         elseif event == "SPELL_CAST_START" or event == "SPELL_CAST_SUCCESS" or event == "SPELL_CAST_FAILED" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then

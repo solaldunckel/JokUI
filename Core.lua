@@ -63,7 +63,7 @@ function Core:MoveAllFrames(cmd)
     PlayerFrame:Move()
     TargetFrame:Move()
     SGrid(64)
-    BossFrameMove()
+    --BossFrameMove()
 
     StaticPopup_Show ("Lock")
 	if not MoveBackgroundFrame:IsShown() then
