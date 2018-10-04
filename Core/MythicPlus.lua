@@ -27,18 +27,18 @@ local features = {}
 --]]
 
 local affixSchedule = {
-	{ 8, 4, 10}, -- Fortified / Sanguine / Necrotic / Infested
-	{ 11, 2, 9}, -- Tyrannical / Bursting / Skittish / Infested
-	{ 5, 14, 10}, -- Fortified / Teeming / Quaking / Infested
-	{ 6, 4, 9}, -- Tyrannical / Raging / Necrotic / Infested
-	{ 7, 2, 10}, -- Fortified / Bolstering / Skittish / Infested
-	{ 5, 3, 9}, -- Tyrannical / Teeming / Volcanic / Infested
-	{ 8, 12, 10}, -- Fortified / Sanguine / Grievous / Infested
-	{ 7, 13, 9}, -- Tyrannical / Bolstering / Explosive / Infested
-	{ 14, 11, 10}, -- Fortified / Bursting / Quaking / Infested
-	{ 6, 3, 9}, -- Tyrannical / Raging / Volcanic / Infested
-	{ 5, 13, 10}, -- Fortified / Teeming / Explosive / Infested
-	{ 7, 12, 9}, -- Tyrannical / Bolstering / Grievous / Infested
+	{ 9, 8, 4 }, -- Fortified / Sanguine / Necrotic / Infested
+	{ 9, 11, 2 }, -- Tyrannical / Bursting / Skittish / Infested
+	{ 10, 5, 14 }, -- Fortified / Teeming / Quaking / Infested
+	{ 9, 6, 4 }, -- Tyrannical / Raging / Necrotic / Infested
+	{ 10, 7, 2 }, -- Fortified / Bolstering / Skittish / Infested
+	{ 9, 5, 3 }, -- Tyrannical / Teeming / Volcanic / Infested
+	{ 10, 8, 12 }, -- Fortified / Sanguine / Grievous / Infested
+	{ 9, 7, 13 }, -- Tyrannical / Bolstering / Explosive / Infested
+	{ 10, 14, 11 }, -- Fortified / Bursting / Quaking / Infested
+	{ 9, 6, 3 }, -- Tyrannical / Raging / Volcanic / Infested
+	{ 10, 5, 13 }, -- Fortified / Teeming / Explosive / Infested
+	{ 9, 7, 12 }, -- Tyrannical / Bolstering / Grievous / Infested
 }
 
 local schedule = {
@@ -516,6 +516,8 @@ function MythicPlus:Schedule()
 			
 		end)
 
+		button:Hide()
+
 		ChallengesFrame.WeeklyInfo.Child.Label:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child, "TOP", -100, -25)
 
 		if keyLevel then
@@ -727,6 +729,7 @@ function MythicPlus:Progress()
 
 	local quantity = 0
 	local lastKill = {0} -- To be populated later, do not remove the initial value. The zero means inconclusive/invalid data.
+	local currentPullUpdateTimer = 0
 	local activeNameplates = {}
 
 	--
@@ -753,6 +756,12 @@ function MythicPlus:Progress()
 		local targetType, _,_,_,_, npcID = strsplit("-", guid or "")
 		if targetType == "Creature" or targetType == "Vehicle" and npcID then
 			return tonumber(npcID)
+		end
+	end
+
+	local function isValidTarget(targetToken)
+		if UnitCanAttack("player", targetToken) and not UnitIsDead(targetToken) then
+			return true
 		end
 	end
 
@@ -803,9 +812,16 @@ function MythicPlus:Progress()
 		local progInfo = getProgressInfo()
 		if progInfo then
 			local currentQuantity, maxQuantity = getCurrentQuantity(), getMaxQuantity()
-			local progress = currentQuantity / maxQuantity
-			return progress * 100
+			local progress = currentQuantity
+			return progress
 		end
+	end
+
+	local function getEnemyForcesPercentage()
+		-- Returns exact float value of current enemies killed progress (1-100).
+		local quantity, maxQuantity = getCurrentQuantity(), getMaxQuantity()
+		local progress = quantity / maxQuantity
+		return progress * 100
 	end
 
 	--
@@ -900,38 +916,94 @@ function MythicPlus:Progress()
 	---
 
 	local function getTooltipMessage(npcID)
-		local tempMessage = "|cFF82E0FFProgress : "
-		local estProg = getEstimatedProgress(npcID)
+		local text
 		local rawProg = getExactProgress(npcID)
-		if not estProg then
-			return tempMessage .. "No record."
+		if not rawProg then
+			text = string.format("%s : +%s", "- Enemy Forces", "n/a")
+		else
+			text = string.format("%s : +%s", "- Enemy Forces", rawProg)
 		end
-		tempMessage = string.format("%s%s / %.2f%s", tempMessage, rawProg, estProg, "%")
-		return tempMessage
+		return text
 	end
 		
 	local function onNPCTooltip(self)
-		local unit = select(2, self:GetUnit())
-		if unit then
-			local time = GetTime()
-			if not last or last < time - 0.3 then
-    			last = time
+		local scenarioType = select(10, C_Scenario.GetInfo())
+		if scenarioType == LE_SCENARIO_TYPE_CHALLENGE_MODE then
+			local unit = select(2, self:GetUnit())
+			if unit then
 				local guid = UnitGUID(unit)
 				npcID = getNPCID(guid)
-				if npcID and isMythicPlus() and UnitCanAttack("player", unit) and not UnitIsDead(unit) then
+				if npcID and isValidTarget(npcID) then
 					local tooltipMessage = getTooltipMessage(npcID)
+					local forcesFormat = format(" - %s: %%s", "Enemy Forces")
 					if tooltipMessage then
-						GameTooltip:AddDoubleLine(tooltipMessage)
-	    				GameTooltip:Show()
+						local matcher = format(forcesFormat, "%d+%%")
+						for i=2, self:NumLines() do
+							local tiptext = _G["GameTooltipTextLeft"..i]
+							local linetext = tiptext and tiptext:GetText()
+
+							if linetext and linetext:match(matcher) then
+								tiptext:SetText(tooltipMessage)
+								self:Show()
+							end
+						end
 					end
 				end
 			end
-		end
+		end		
 	end
 
 	---
 	--- NAMEPLATES
 	---
+
+	local function isTargetPulled(target)
+		local threat = UnitThreatSituation("player", target) or -1 -- Is nil if we're not on their aggro table, so make it -1 instead.
+		if isValidTarget(target) and (threat >= 0 or UnitPlayerControlled(target.."target")) then
+			return true
+		end
+		return false
+	end
+		
+	local function getPulledUnits()
+		local tempList = {}
+		for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
+			if nameplate.UnitFrame.unitExists then
+				if isTargetPulled(nameplate.UnitFrame.displayedUnit) then
+					table.insert(tempList, UnitGUID(nameplate.UnitFrame.displayedUnit))
+				end
+			end
+		end
+		return tempList
+	end
+
+	local function getPulledProgress(pulledUnits)
+		local estProg = 0
+		for _, guid in pairs(pulledUnits) do
+			npcID = getNPCID(guid)
+			if npcID then
+				estProg = estProg + (getExactProgress(npcID) or 0)
+			end
+		end
+		return estProg
+	end
+
+	local function updateCurrentPullEstimate()
+		local pulledUnits = getPulledUnits()
+		local estProg = getPulledProgress(pulledUnits)
+		local curProg = getEnemyForcesProgress()
+		local perProg = getEnemyForcesPercentage()
+		local totProg = estProg + curProg
+		local maxProg = getMaxQuantity()
+		if estProg == 0 then
+			tempMessage = string.format("%.2f%s - %s/%s", perProg, "%", curProg, maxProg)
+		else
+			tempMessage = string.format("%s + %s = %s/%s", curProg, estProg, totProg, maxProg)
+		end
+		if not curProg == maxProg then
+			ScenarioObjectiveBlock.currentLine.Bar.Label:SetText(tempMessage)
+		end
+	end
 
 	local function createNameplateText(token)
 		local npcID = getNPCID(UnitGUID(token))
@@ -976,6 +1048,12 @@ function MythicPlus:Progress()
 		return false
 	end
 
+	local function updateNameplateValues()
+		for token,_ in pairs(activeNameplates) do
+			updateNameplateValue(token)
+		end
+	end
+
 	local function updateNameplatePosition(token)
 		local nameplate = C_NamePlate.GetNamePlateForUnit(token)
 		if nameplate.UnitFrame.unitExists and activeNameplates[token] ~= nil then
@@ -997,6 +1075,22 @@ function MythicPlus:Progress()
 	local function onRemoveNameplate(token)
 		removeNameplateText(token)
 		activeNameplates[token] = nil -- This line has been made superflous tbh.
+	end
+
+	local function removeNameplates()
+		for token,_ in pairs(activeNameplates) do
+			removeNameplateText(token)
+		end
+	end
+
+	local function updateNameplates()
+		if isMythicPlus() then
+			for token,_ in pairs(activeNameplates) do
+				updateNameplatePosition(token)
+			end
+		else
+			removeNameplates()
+		end
 	end
 
 	---
@@ -1030,8 +1124,6 @@ function MythicPlus:Progress()
 	end		
 
 	local function onCombatLogEvent()
-		--local _,combatType,_,_,_,_,_, destGUID, destName = unpack(args)
-		--if combatType == "UNIT_DIED" then
 		local timestamp, combatType, something, srcGUID, srcName, srcFlags, something2, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo()
 		if combatType == "PARTY_KILL" then
 			if not isMythicPlus() then return end
@@ -1062,6 +1154,7 @@ function MythicPlus:Progress()
 	MythicProgress:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+	MythicProgress:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 	function MythicProgress:OnEvent(event, ...)
 		args={...}
@@ -1075,9 +1168,26 @@ function MythicPlus:Progress()
 			onAddNameplate(...)
 		elseif event == "NAME_PLATE_UNIT_REMOVED" then
 			onRemoveNameplate(...)
+		elseif event == "PLAYER_REGEN_ENABLED" then
+			local numSteps = select(3, C_Scenario.GetStepInfo())
+			local criteriaString, _, completed, _, totalQuantity, _, _, quantityString, _, _, _, _, isWeightedProgress = C_Scenario.GetCriteriaInfo(numSteps)
+			local currentQuantity = getEnemyForcesProgress()
+			if (isWeightedProgress and not completed) and currentQuantity and totalQuantity then
+				ScenarioObjectiveBlock.currentLine.Bar.Label:SetFormattedText("%.2f%% - %d/%d", currentQuantity/totalQuantity*100, currentQuantity, totalQuantity)
+			end
 		end
 	end
 
+	function MythicProgress:OnUpdate(elapsed)
+		if not isMythicPlus() then return end
+		currentPullUpdateTimer = currentPullUpdateTimer + elapsed * 1000 
+		if currentPullUpdateTimer >= 200 then
+			currentPullUpdateTimer = 0
+			updateCurrentPullEstimate()
+		end
+	end
+
+	MythicProgress:SetScript("OnUpdate", MythicProgress.OnUpdate)
 	MythicProgress:SetScript("OnEvent", MythicProgress.OnEvent)
 	GameTooltip:HookScript("OnTooltipSetUnit", onNPCTooltip)
 end

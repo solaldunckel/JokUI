@@ -16,9 +16,7 @@ local font = STANDARD_TEXT_FONT
 local interface_defaults = {
     profile = {
     	UnitFrames = {
-    		righttext = 16,
     		scale = 1.1,
-    		enable = true, 
     	},
     	CastBars = {
     		player = { x = 0, y = 175},
@@ -58,17 +56,6 @@ local interface_config = {
         inline = true,
         order = 2,
         args = {
-        	enable = {
-				type = "toggle",
-				name = "Enable",
-				width = "full",
-		        descStyle = "inline",
-				order = 0,
-				set = function(info,val) Interface.settings.UnitFrames.enable = val
-				StaticPopup_Show ("ReloadUI_Popup")
-				end,
-				get = function(info) return Interface.settings.UnitFrames.enable end
-			},
             scale = {
                 type = "range",
                 isPercent = true,
@@ -80,22 +67,11 @@ local interface_config = {
                 order = 1,
                 set = function(info,val) 
                     Interface.settings.UnitFrames.scale = val
+                    PlayerFrame:SetScale(val)
+					TargetFrame:SetScale(val)
+					FocusFrame:SetScale(val)
                 end,
                 get = function(info) return Interface.settings.UnitFrames.scale end
-            },
-            righttext = {
-                type = "range",
-                name = "Right Text",
-                desc = "",
-                min = 8,
-                max = 20,
-                step = 1,
-                order = 2,
-                set = function(info,val) 
-                    Interface.settings.UnitFrames.righttext = val
-                    StaticPopup_Show ("ReloadUI_Popup")
-                end,
-                get = function(info) return Interface.settings.UnitFrames.righttext end
             },			
         },
     },
@@ -112,16 +88,10 @@ function Interface:OnEnable()
 		self:SyncFeature(name)
 	end
 
-	if Interface.settings.UnitFrames.enable then
-		self:UnitFrames()
-		self:BuffPlayerFrame()
-		self:PlayerFrame()
-		self:TargetFrame()
-	else
-		self:PlayerFrame()
-		self:TargetFrame()
-	end
-	
+	self:UnitFrames()
+	self:BuffPlayerFrame()
+	self:PlayerFrame()
+	self:TargetFrame()	
 	self:Chat()
 	self:Minimap()
 	self:Buffs()
@@ -206,6 +176,9 @@ function Interface:UnitFrames()
 	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 
+	PlayerPVPIcon:SetAlpha(0)
+	FocusFrameTextureFramePVPIcon:SetAlpha(0)
+
 	--HIDE COLORS BEHIND NAME
 	hooksecurefunc("TargetFrame_CheckFaction", function(self)
 	    self.nameBackground:SetVertexColor(0, 0, 0, 0.5);
@@ -213,6 +186,7 @@ function Interface:UnitFrames()
 
 	-- CLASS COLOR HP BAR
 	local function colour(statusbar, unit)
+		if self.isBossFrame then return end
         local _, class, c
         if UnitIsPlayer(unit) and UnitIsConnected(unit) and unit == statusbar.unit and UnitClass(unit) then
             _, class = UnitClass(unit)
@@ -1004,41 +978,6 @@ function Interface:CastBars()
 end
 
 function Interface:Minimap()
-	hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
-		self:GetNormalTexture():SetTexture(nil)
-		self:GetPushedTexture():SetTexture(nil)
-		if not gb then
-			gb = CreateFrame("Frame", nil, GarrisonLandingPageMinimapButton)
-			gb:SetFrameLevel(GarrisonLandingPageMinimapButton:GetFrameLevel() - 1)
-			gb:SetPoint("CENTER", 0, 0)
-			gb:SetSize(36,36)
-
-			gb.icon = gb:CreateTexture(nil, "ARTWORK")
-			gb.icon:SetPoint("CENTER", 0, 0)
-			gb.icon:SetSize(36,36)
-	
-			gb.border = CreateFrame("Frame", nil, gb)
-			gb.border:SetFrameLevel(gb:GetFrameLevel() + 1)
-			gb.border:SetAllPoints()
-
-			gb.border.texture = gb.border:CreateTexture(nil, "ARTWORK")
-			gb.border.texture:SetTexture("Interface\\PlayerFrame\\UI-PlayerFrame-Deathknight-Ring")
-			gb.border.texture:SetVertexColor(.1,.1,.1)
-			gb.border.texture:SetPoint("CENTER", 1, -2)
-			gb.border.texture:SetSize(45,45)
-		end
-		if (C_Garrison.GetLandingPageGarrisonType() == 2) then
-			if select(1,UnitFactionGroup("player")) == "Alliance" then	
-				SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61573)))
-			elseif select(1,UnitFactionGroup("player")) == "Horde" then
-				SetPortraitToTexture(gb.icon, select(3,GetSpellInfo(61574)))
-			end
-		else
-			local t = CLASS_ICON_TCOORDS[select(2,UnitClass("player"))]
-        	gb.icon:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
-        	gb.icon:SetTexCoord(unpack(t))
-		end
-	end)
 
 	-- GarrisonLandingPageMinimapButton:SetScript("OnMouseUp", function(self, button)
 	-- 	if button == "RightButton" then

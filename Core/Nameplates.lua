@@ -23,6 +23,10 @@ local nameplates_aura_spells = {
     	-- Add missing class debuffs 
     		[214621] = true, -- Schism
             [228358] = true, -- Flurry
+            [79140] = true, -- Vendetta
+
+            -- Azerite
+            	[280817] = true, -- Battlefield Focus
 
         -- Mythic+ (Buffs)
             [277242] = true, -- Infested (G'huun)
@@ -504,17 +508,8 @@ end
 function Nameplates:OnEnable()
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("RAID_TARGET_UPDATE")
-    self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-    self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
-    --self:RegisterEvent('UNIT_FACTION')
-
-    --self:RegisterEvent('NAME_PLATE_CREATED')
-    --self:RegisterEvent('NAME_PLATE_UNIT_ADDED')
-    --self:RegisterEvent('NAME_PLATE_UNIT_REMOVED')
-    --self:RegisterEvent('UNIT_THREAT_LIST_UPDATE')
-    --self:RegisterEvent('UNIT_AURA')    
+    self:RegisterEvent('UPDATE_MOUSEOVER_UNIT') 
 
     self:SecureHook('CompactUnitFrame_UpdateName')
     self:SecureHook('CompactUnitFrame_UpdateHealthColor')
@@ -527,7 +522,7 @@ function Nameplates:OnEnable()
     SetCVar("nameplateLargerScale", Nameplates.settings.importantScale)
     SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
     SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)
-    SetCVar("nameplateHorizontalScale", Nameplates.settings.healthWidth)        
+    SetCVar("nameplateHorizontalScale", 1)        
     SetCVar("nameplateMotion", Nameplates.settings.overlap)
     SetCVar("nameplateShowEnemyGuardians", Nameplates.settings.enemyguardian)
     SetCVar("nameplateShowEnemyTotems", Nameplates.settings.enemytotem)
@@ -538,23 +533,12 @@ function Nameplates:OnEnable()
     SetCVar("nameplateShowDebuffsOnFriendly", 0)
 
     SetCVar("nameplateShowAll", 1)
-    SetCVar("NameplatePersonalShowAlways", 0)
+    --SetCVar("NameplatePersonalShowAlways", 0)
 end
 
 -------------------------------------------------------------------------------
 -- Functions
 -------------------------------------------------------------------------------
-
-local markerColors = {
-    ["1"] = { r = 0.85, g = 0.81, b = 0.27 },
-    ["2"] = { r = 0.93, g = 0.51, b = 0.06 },
-    ["3"] = { r = 0.7, g = 0.06, b = 0.84 },
-    ["4"] = { r = 0.14, g = 0.66, b = 0.14 },
-    ["5"] = { r = 0.60, g = 0.75, b = 0.85 },
-    ["6"] = { r = 0.0, g = 0.64, b = 1 },
-    ["7"] = { r = 0.82, g = 0.18, b = 0.18 },
-    ["8"] = { r = 0.89, g = 0.83, b = 0.74 },
-}
 
 -- Format Time
 
@@ -670,7 +654,7 @@ end
 -- Is Showing Resource Frame?
 
 function Nameplates:IsShowingResourcesOnTarget()
-    if GetCVar("nameplateResourceOnTarget") == 1 and GetCVar("nameplateShowSelf") == 1 then
+    if GetCVar("nameplateResourceOnTarget") == "1" and GetCVar("nameplateShowSelf") == "1" then
         return true
     end
 end
@@ -724,13 +708,92 @@ function Nameplates:UseOffTankColor(unit)
     return false
 end
 
+local moblist = {
+	-- Mythic +
+		-- Atal'dazar	
+			[127757] = {tag = "DANGEROUS"}, -- Reanimated Honor Guard
+			[122971] = {tag = "DANGEROUS"}, -- Dazar'ai Juggernaut
+			[128434] = {tag = "OTHER"}, -- Feasting Skyscreamer
+
+		-- Freehold
+			[127111] = {tag = "DANGEROUS"}, -- Irontide Oarsman
+			[129527] = {tag = "DANGEROUS"}, -- Bilge Rat Buccaneer
+
+		-- King's Rest
+			[134174] = {tag = "DANGEROUS"}, -- Shadow-Borne Witch Doctor
+			[135167] = {tag = "DANGEROUS"}, -- Spectral Berserker	
+			[135235] = {tag = "DANGEROUS"}, -- Spectral Beastmaster
+			[137591] = {tag = "DANGEROUS"}, -- Healing Tide Totem
+			[135764] = {tag = "DANGEROUS"}, -- Explosive Totem
+
+		-- Siege of Boralus
+			[138255] = {tag = "OTHER"}, -- Ashvane Spotter
+			[128969] = {tag = "DANGEROUS"}, -- Ashvane Commander
+			[138465] = {tag = "DANGEROUS"}, -- Ashvane Cannoneer
+			[132530] = {tag = "DANGEROUS"}, -- Kul Tiran Vanguard
+
+		-- Temple of Sethralis 
+			[135846] = {tag = "OTHER"}, -- Sand-Crusted Striker
+			[134364] = {tag = "DANGEROUS"}, -- Faithless Tender
+			[139946] = {tag = "DANGEROUS"}, -- Heart Guardian
+			[135007] = {tag = "DANGEROUS"}, -- Orb Guardian
+
+		-- The Underrot
+			[130909] = {tag = "DANGEROUS"}, -- Fetid Maggot
+				
+    [113966] = {tag = "DANGEROUS"}, -- Training Dummy
+    [92166] = {tag = "OTHER"}, -- Training Dummy
+}
+
+function Nameplates:GetNpcID(unit)
+    local npcID = select(6, strsplit("-", UnitGUID(unit)))
+
+    return tonumber(npcID)
+end
+
+function Nameplates:IsDangerous(unit)
+	local npcID = self:GetNpcID(unit)
+
+	for k, npcs in pairs(moblist) do
+		if k == npcID then
+			return true
+		end
+    end
+end
+
+function Nameplates:DangerousColor(unit)
+	local r, g, b
+	local dangerousColor = {r = 0.0, g = 1.0, b = 0.0}
+	local otherColor = {r = 0.0, g = 0.7, b = 1.0}
+
+	local npcID = self:GetNpcID(unit)
+
+	for k, npcs in pairs(moblist) do
+		local tag = npcs["tag"]
+
+		if k == npcID then
+			if tag == "DANGEROUS" then			
+				r, g, b = dangerousColor.r, dangerousColor.g, dangerousColor.b
+			elseif tag == "OTHER" then
+				r, g, b = otherColor.r, otherColor.g, otherColor.b
+			end			
+		end
+    end
+    return r, g, b
+end
+
 -----------------------------------------
 
 function Nameplates:SkinPlates(frame)
 
-    -- -- Only Name Fix
+	if self:IsDangerous(frame.displayedUnit) then
+		frame.name:SetTextColor(self:DangerousColor(frame.displayedUnit))
+		frame.healthBar:SetStatusBarColor(self:DangerousColor(frame.displayedUnit))
+	end
 
-        frame.healthBar:Show()
+    -- Only Name Fix
+
+    frame.healthBar:Show()
 
     -- Name
 
@@ -817,6 +880,8 @@ end
 
 function Nameplates:ThreatColor(frame)
     local r, g, b
+    local npcID = self:GetNpcID(frame.displayedUnit)
+
     if ( not UnitIsConnected(frame.unit) ) then
         r, g, b = 0.5, 0.5, 0.5
     else
@@ -832,6 +897,8 @@ function Nameplates:ThreatColor(frame)
                 r, g, b = classColor.r, classColor.g, classColor.b
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
                 r, g, b = 0.5, 0.5, 0.5
+            elseif ( Nameplates:IsDangerous(frame.displayedUnit) ) then
+				r, g, b = Nameplates:DangerousColor(frame.displayedUnit)
             elseif ( frame.optionTable.colorHealthBySelection ) then
                 if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then    
                     local target = frame.displayedUnit.."target"
@@ -900,21 +967,13 @@ end
 -- SKIN
 -------------------------------------------------------------------------------
 
-function Nameplates:RAID_TARGET_UPDATE()
-    self:UpdateRaidMarkerColoring() 
-    --
-end
-
 function Nameplates:PLAYER_ENTERING_WORLD()
 
-     -- Remove Larger Nameplates Function (thx Plater)
+    -- Remove Larger Nameplates Function (thx Plater)
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger:Disable()
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
 
-    C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth,45)
-
-    -- SetCVar("nameplateHorizontalScale", 0.4)
-    -- SetCVar("nameplateVerticalScale", 1.1)
+    C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth, 45)
 
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
@@ -943,15 +1002,6 @@ function Nameplates:PLAYER_ENTERING_WORLD()
             SetCVar("nameplateShowSelf", 0)
         end
     end
-
-    -- Resource Frame SetPoint
-    NamePlateTargetResourceFrame:SetScale(0.8)
-    hooksecurefunc(NamePlateDriverFrame, "OnLoad", function()
-        if UnitExists("target") and not UnitIsPlayer("target") and Nameplates:IsShowingResourcesOnTarget() then
-            local namePlateTarget = C_NamePlate.GetNamePlateForUnit("target", issecure());
-            NamePlateTargetResourceFrame:SetPoint("BOTTOM", namePlateTarget.UnitFrame.name, "TOP", 0, -2);
-        end
-    end)
 end
 
 function Nameplates:CompactUnitFrame_UpdateName(frame)
@@ -968,87 +1018,12 @@ function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
     self:ThreatColor(frame) 
 end
 
-function Nameplates:NAME_PLATE_CREATED(_, plate)
-    local nameplate = plate
-    local frame = nameplate.UnitFrame
-
-    if ( frame:IsForbidden() ) then return end
-    if UnitIsUnit('player', frame:GetName()) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-
-    self:SkinPlates(frame)
-    self:SkinCastBar(frame)
-end
-
-function Nameplates:NAME_PLATE_UNIT_ADDED(_, token)
-    local nameplate = C_NamePlate.GetNamePlateForUnit(token)
-    local frame = nameplate.UnitFrame
-
-    if ( frame:IsForbidden() ) then return end
-    if Nameplates:IsPet(frame.displayedUnit) then return end
-    if UnitIsUnit('player', frame:GetName()) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-
-    --self:SkinPlates(frame)
-    --self:SkinCastBar(frame)  
-end
-
-function Nameplates:NAME_PLATE_UNIT_REMOVED(_, token)
-    local nameplate = C_NamePlate.GetNamePlateForUnit(token)
-    local frame = nameplate.UnitFrame
-
-    if ( frame:IsForbidden() ) then return end
-    if UnitIsUnit('player', frame:GetName()) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-
-    self:SkinPlates(frame) 
-    self:SkinCastBar(frame)
-end
-
-function Nameplates:UNIT_THREAT_LIST_UPDATE(_, token)
-    if token and token:match("nameplate") then
-        local nameplate = C_NamePlate.GetNamePlateForUnit(token)
-        local frame = nameplate.UnitFrame
-
-        if ( frame:IsForbidden() ) then return end
-
-        self:ThreatColor(frame)
-    end
-end
-
-function Nameplates:PLAYER_TARGET_CHANGED()
-    -- for _, frame in pairs(C_NamePlate.GetNamePlates()) do
-    --     if frame == C_NamePlate.GetNamePlateForUnit("target") or not UnitExists("target") or frame == C_NamePlate.GetNamePlateForUnit("player") then
-    --         frame.UnitFrame:SetAlpha(1)
-    --     else
-    --         frame.UnitFrame:SetAlpha(Nameplates.settings.nameplateAlpha)
-    --     end
-    -- end
-end
-
-function Nameplates:UNIT_AURA(_, unit)
-    local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
+function Nameplates:UPDATE_MOUSEOVER_UNIT()
+    local nameplate = C_NamePlate.GetNamePlateForUnit('mouseover')
     if not nameplate then return end
+
     local frame = nameplate.UnitFrame
-
-    if ( frame:IsForbidden() ) then return end
-    if Nameplates:IsPet(frame.displayedUnit) then return end
-    if UnitIsUnit('player', frame:GetName()) then return end
-    if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
-
-
-end
-
-function Nameplates:UNIT_FACTION(_, unit)
-	local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
-    if not nameplate then return end
-    local frame = nameplate.UnitFrame
-
-    if ( UnitCanAttack(frame.displayedUnit,"player") ) then
-        DefaultCompactNamePlateFrameSetup(frame, DefaultCompactNamePlateEnemyFrameOptions)
-        self:SkinPlates(frame) 
-    	self:SkinCastBar(frame)
-    end
+    self:Highlight(frame)
 end
 
 function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
@@ -1091,14 +1066,6 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
             end
         end       
     end
-end
-
-function Nameplates:UPDATE_MOUSEOVER_UNIT()
-    local nameplate = C_NamePlate.GetNamePlateForUnit('mouseover')
-    if not nameplate then return end
-
-    local frame = nameplate.UnitFrame
-    self:Highlight(frame)
 end
 
 function Nameplates:ExtraAuras()
@@ -1440,6 +1407,8 @@ function Nameplates:ExtraAuras()
         local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
         local unitFrame = namePlate.suf
 
+        if namePlate.UnitFrame:IsForbidden() then return end
+
         namePlate.UnitFrame.BuffFrame:Hide()
         SetUnit(unitFrame, unit)
         UpdateAuras(unitFrame)
@@ -1453,10 +1422,14 @@ function Nameplates:ExtraAuras()
     local function OnTargetChanged()
         for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
             if ( not frame.UnitFrame:IsForbidden() ) then
-                if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
-                elseif ( frame.UnitFrame.displayedUnit ) then
-                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+                if Nameplates:IsShowingResourcesOnTarget() and UnitIsUnit(frame.UnitFrame.displayedUnit, "target") then
+                    frame.suf.debuff:SetPoint("BOTTOM", NamePlateTargetResourceFrame, "TOP", 0, 5)
+                else   
+                    if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+                        frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+                    elseif ( frame.UnitFrame.displayedUnit ) then
+                        frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+                    end
                 end
             end
         end  
@@ -1466,10 +1439,14 @@ function Nameplates:ExtraAuras()
         local frame = C_NamePlate.GetNamePlateForUnit(unit, issecure())
         if ( not frame ) then return end 
         if ( not frame.UnitFrame:IsForbidden() ) then
-            if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-                frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
-            elseif ( frame.UnitFrame.displayedUnit ) then
-                frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+            if Nameplates:IsShowingResourcesOnTarget() and UnitIsUnit(frame.UnitFrame.displayedUnit, "target") then
+                frame.suf.debuff:SetPoint("BOTTOM", NamePlateTargetResourceFrame, "TOP", 0, 5)
+            else                      
+                if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
+                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+                elseif ( frame.UnitFrame.displayedUnit ) then
+                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+                end
             end
         end
     end

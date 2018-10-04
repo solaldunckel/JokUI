@@ -17,15 +17,7 @@ local font = STANDARD_TEXT_FONT
 -------------------------------------------------------------------------------
 
 local raidframes_defaults = {
-    profile = {
-    	Buffs = {
-        	debuffscale = 1,
-        	buffscale = 1,
-    	},   
-        RaidFade = {
-        	fadealpha = .3,	
-			backgroundalpha = .7,
-    	},                
+    profile = {        
     }
 }
 
@@ -42,283 +34,18 @@ local raidframes_config = {
         fontSize = "medium",
         order = 1,
     },
-    buffScale = {
-		type = "range",
-		isPercent = false,
-		name = "Buff Size",
-		desc = "",
-		min = 0.5,
-		max = 1.5,
-		step = 0.1,
-		order = 3,
-		set = function(info,val) RaidFrames.settings.Buffs.buffscale = val
-		end,
-		get = function(info) return RaidFrames.settings.Buffs.buffscale end
-	},
-	debuffScale = {
-		type = "range",
-		isPercent = false,
-		name = "Debuff Size",
-		desc = "",
-		min = 0.5,
-		max = 1.5,
-		step = 0.1,
-		order = 4,
-		set = function(info,val) RaidFrames.settings.Buffs.debuffscale = val
-		end,
-		get = function(info) return RaidFrames.settings.Buffs.debuffscale end
-	},
-	fadealpha = {
-		type = "range",
-		isPercent = false,
-		name = "Alpha",
-		desc = "",
-		min = 0,
-		max = 1,
-		step = 0.05,
-		order = 13,
-		disabled = function(info) return not RaidFrames.settings.FadeMore end,
-		set = function(info,val) RaidFrames.settings.RaidFade.fadealpha = val
-		end,
-		get = function(info) return RaidFrames.settings.RaidFade.fadealpha end
-	},
-	backgroundalpha = {
-		type = "range",
-		isPercent = false,
-		name = "Background Alpha",
-		desc = "",
-		min = 0,
-		max = 1,
-		step = 0.05,
-		order = 14,
-		disabled = function(info) return not RaidFrames.settings.FadeMore end,
-		set = function(info,val) RaidFrames.settings.RaidFade.backgroundalpha = val
-		end,
-		get = function(info) return RaidFrames.settings.RaidFade.backgroundalpha end
-	},
 }
 
 function RaidFrames:OnInitialize()
     self.db = JokUI.db:RegisterNamespace("Raid Frames", raidframes_defaults)
     self.settings = self.db.profile
-    JokUI.Config:Register("Raid Frames", raidframes_config)
+    --JokUI.Config:Register("Raid Frames", raidframes_config)
 end
 
 function RaidFrames:OnEnable()
-	for name in pairs(features) do
-		self:SyncFeature(name)
-	end
-
-	self:Buffs()
-	self:Misc()
-end
-
-do
-	local order = 10
-	function RaidFrames:RegisterFeature(name, short, long, default, reload, fn)
-		raidframes_config[name] = {
-			type = "toggle",
-			name = short,
-			descStyle = "inline",
-			desc = "|cffaaaaaa" .. long,
-			width = "full",
-			get = function() return RaidFrames.settings[name] end,
-			set = function(_, v)
-				RaidFrames.settings[name] = v
-				RaidFrames:SyncFeature(name)
-				if reload then
-					StaticPopup_Show ("ReloadUI_Popup")
-				end
-			end,
-			order = order
-		}
-		raidframes_defaults.profile[name] = default
-		order = order + 1
-		features[name] = fn
-	end
-end
-
-function RaidFrames:SyncFeature(name)
-	features[name](RaidFrames.settings[name])
-end
-
-do
-	RaidFrames:RegisterFeature("ShowAbsorb",
-		"Show Absorb",
-		"Show an absorb texture on Raid Frames.",
-		true,
-		true,
-		function(state)
-			if state then
-				RaidFrames:ShowAbsorb()
-			end
-		end)
-end
-
--------------------------------------------------------------------------------
--- Functions
--------------------------------------------------------------------------------
-
-function RaidFrames:ShowAbsorb()
-	hooksecurefunc("UnitFrame_Update",
-		function(frame)
-			local absorbBar = frame.totalAbsorbBar;
-			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-			
-			local absorbOverlay = frame.totalAbsorbBarOverlay;
-			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
-			
-			local healthBar = frame.healthbar;
-			if ( not healthBar or healthBar:IsForbidden() ) then return end
-			
-			absorbOverlay:SetParent(healthBar);
-			absorbOverlay:ClearAllPoints();		--we'll be attaching the overlay on heal prediction update.
-		  	
-		  	local absorbGlow = frame.overAbsorbGlow;
-		  	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
-				absorbGlow:ClearAllPoints();
-				absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0);
-			  	absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0);
-			  	absorbGlow:SetAlpha(ABSORB_GLOW_ALPHA);
-		  	end
-		end
-	)
-
-	hooksecurefunc("CompactUnitFrame_UpdateAll",
-		function(frame)
-			local absorbBar = frame.totalAbsorb;
-			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-			
-			local absorbOverlay = frame.totalAbsorbOverlay;
-			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
-			
-			local healthBar = frame.healthBar;
-			if ( not healthBar or healthBar:IsForbidden() ) then return end
-			
-			absorbOverlay:SetParent(healthBar);
-			absorbOverlay:ClearAllPoints();		--we'll be attaching the overlay on heal prediction update.
-			
-			local absorbGlow = frame.overAbsorbGlow;
-		  	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
-				absorbGlow:ClearAllPoints();
-				absorbGlow:SetDrawLayer("ARTWORK", 2)
-				absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0);
-			  	absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0);
-			  	absorbGlow:SetAlpha(ABSORB_GLOW_ALPHA);
-		  	end
-		end
-	)
-
-	hooksecurefunc("UnitFrameHealPredictionBars_Update",
-		function(frame)
-			local absorbBar = frame.totalAbsorbBar;
-			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-			
-			local absorbOverlay = frame.totalAbsorbBarOverlay;
-			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
-			
-			local healthBar = frame.healthbar;
-			if ( not healthBar or healthBar:IsForbidden() ) then return end
-			
-			local _, maxHealth = healthBar:GetMinMaxValues();
-			if ( maxHealth <= 0 ) then return end
-			
-			local totalAbsorb = UnitGetTotalAbsorbs(frame.unit) or 0;
-			if( totalAbsorb > maxHealth ) then
-				totalAbsorb = maxHealth;
-			end
-					
-			if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
-				
-				if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
-			  		absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
-			  		absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
-				else
-					absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-		    		absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);	    			
-				end
-
-				local totalWidth, totalHeight = healthBar:GetSize();			
-				local barSize = totalAbsorb / maxHealth * totalWidth;
-				
-				absorbOverlay:SetWidth( barSize );
-	    		absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
-			  	absorbOverlay:Show();			
-			  		
-				--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
-			end
-
-		end)
-
-	hooksecurefunc("CompactUnitFrame_UpdateHealPrediction",
-		function(frame)
-			local absorbBar = frame.totalAbsorb;
-			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
-			
-			local absorbOverlay = frame.totalAbsorbOverlay;
-			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
-			
-			local healthBar = frame.healthBar;
-			if ( not healthBar or healthBar:IsForbidden() ) then return end
-			
-			local _, maxHealth = healthBar:GetMinMaxValues();
-			if ( maxHealth <= 0 ) then return end
-			
-			local totalAbsorb = UnitGetTotalAbsorbs(frame.displayedUnit) or 0;
-			if( totalAbsorb > maxHealth ) then
-				totalAbsorb = maxHealth;
-			end
-			
-			if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
-				if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
-			  		absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
-			  		absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
-				else
-					absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-		    		absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);	    			
-				end
-
-				local totalWidth, totalHeight = healthBar:GetSize();			
-				local barSize = totalAbsorb / maxHealth * totalWidth;
-				
-				absorbOverlay:SetWidth( barSize );
-				absorbOverlay:SetDrawLayer("ARTWORK", 2)
-	    		absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
-			  	absorbOverlay:Show();
-			  	
-			  	--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
-			end		
-		end)
-end
-
-function RaidFrames:Buffs()
-	local blacklist = {
-    };
-
-	--Compact Unit Frame
-	function CompactUnitFrame_UtilSetBuff_Hook(buffFrame, unit, index, filter)
-		local buffName, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal,
-		spellId, canApplyAura, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod, _ = UnitBuff(unit, index, filter)
-
-		buffFrame:SetScale(RaidFrames.settings.Buffs.buffscale)
-
-		if blacklist[spellId] then
-			buffFrame:Hide()
-		end
-
-	end
-	hooksecurefunc("CompactUnitFrame_UtilSetBuff", CompactUnitFrame_UtilSetBuff_Hook)
-
-	function CompactUnitFrame_UtilSetDebuff_Hook(debuffFrame, unit, index, filter)
-		local buffName, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal,
-		spellId, canApplyAura, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod, _ = UnitDebuff(unit, index, filter)
-
-		debuffFrame:SetScale(RaidFrames.settings.Buffs.debuffscale)
-	end
-	hooksecurefunc("CompactUnitFrame_UtilSetDebuff", CompactUnitFrame_UtilSetDebuff_Hook)
-end
-
-function RaidFrames:Misc()
+	-- for name in pairs(features) do
+	-- 	self:SyncFeature(name)
+	-- end
 
 	-- RAID FRAMES SIZE DEFAULT SLIDER
 	local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
@@ -327,3 +54,117 @@ function RaidFrames:Misc()
 	h:SetMinMaxValues(1,200) 
 	w:SetMinMaxValues(1,200)
 end
+
+-- do
+-- 	local order = 10
+-- 	function RaidFrames:RegisterFeature(name, short, long, default, reload, fn)
+-- 		raidframes_config[name] = {
+-- 			type = "toggle",
+-- 			name = short,
+-- 			descStyle = "inline",
+-- 			desc = "|cffaaaaaa" .. long,
+-- 			width = "full",
+-- 			get = function() return RaidFrames.settings[name] end,
+-- 			set = function(_, v)
+-- 				RaidFrames.settings[name] = v
+-- 				RaidFrames:SyncFeature(name)
+-- 				if reload then
+-- 					StaticPopup_Show ("ReloadUI_Popup")
+-- 				end
+-- 			end,
+-- 			order = order
+-- 		}
+-- 		raidframes_defaults.profile[name] = default
+-- 		order = order + 1
+-- 		features[name] = fn
+-- 	end
+-- end
+
+-- function RaidFrames:SyncFeature(name)
+-- 	features[name](RaidFrames.settings[name])
+-- end
+
+-- do
+-- 	RaidFrames:RegisterFeature("ShowAbsorb",
+-- 		"Show Absorb",
+-- 		"Show an absorb texture on Raid Frames.",
+-- 		true,
+-- 		true,
+-- 		function(state)
+-- 			if state then
+-- 				RaidFrames:ShowAbsorb()
+-- 			end
+-- 		end)
+-- end
+
+-- -------------------------------------------------------------------------------
+-- -- Functions
+-- -------------------------------------------------------------------------------
+
+-- function RaidFrames:ShowAbsorb()
+
+-- 	hooksecurefunc("CompactUnitFrame_UpdateAll",
+-- 		function(frame)
+-- 			local absorbBar = frame.totalAbsorb;
+-- 			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+			
+-- 			local absorbOverlay = frame.totalAbsorbOverlay;
+-- 			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+			
+-- 			local healthBar = frame.healthBar;
+-- 			if ( not healthBar or healthBar:IsForbidden() ) then return end
+			
+-- 			absorbOverlay:SetParent(healthBar);
+-- 			absorbOverlay:ClearAllPoints();		--we'll be attaching the overlay on heal prediction update.
+			
+-- 			local absorbGlow = frame.overAbsorbGlow;
+-- 		  	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
+-- 				absorbGlow:ClearAllPoints();
+-- 				absorbGlow:SetDrawLayer("ARTWORK", 2)
+-- 				absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0);
+-- 			  	absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0);
+-- 			  	absorbGlow:SetAlpha(ABSORB_GLOW_ALPHA);
+-- 		  	end
+-- 		end
+-- 	)
+
+-- 	hooksecurefunc("CompactUnitFrame_UpdateHealPrediction",
+-- 		function(frame)
+-- 			local absorbBar = frame.totalAbsorb;
+-- 			if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+			
+-- 			local absorbOverlay = frame.totalAbsorbOverlay;
+-- 			if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+			
+-- 			local healthBar = frame.healthBar;
+-- 			if ( not healthBar or healthBar:IsForbidden() ) then return end
+			
+-- 			local _, maxHealth = healthBar:GetMinMaxValues();
+-- 			if ( maxHealth <= 0 ) then return end
+			
+-- 			local totalAbsorb = UnitGetTotalAbsorbs(frame.displayedUnit) or 0;
+-- 			if( totalAbsorb > maxHealth ) then
+-- 				totalAbsorb = maxHealth;
+-- 			end
+			
+-- 			if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
+-- 				if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
+-- 			  		absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+-- 			  		absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+-- 				else
+-- 					absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+-- 		    		absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);	    			
+-- 				end
+
+-- 				local totalWidth, totalHeight = healthBar:GetSize();			
+-- 				local barSize = totalAbsorb / maxHealth * totalWidth;
+				
+-- 				absorbOverlay:SetWidth( barSize );
+-- 				absorbOverlay:SetDrawLayer("ARTWORK", 2)
+-- 	    		absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+-- 			  	absorbOverlay:Show();
+			  	
+-- 			  	--frame.overAbsorbGlow:Show();	--uncomment this if you want to ALWAYS show the glow to the left of the shield overlay
+-- 			end		
+-- 		end)
+-- end
