@@ -30,6 +30,7 @@ local nameplates_aura_spells = {
 
         -- Mythic+ (Buffs)
             [277242] = true, -- Infested (G'huun)
+            [209859] = true, -- Bolster (Affix)
             [226510] = true, -- Sanguine Ichor (Affix)
             [263246] = true, -- Lightning Shield (Temple of Sethralis)
             [260805] = true, -- Claim The Iris (Waycrest Manor)
@@ -130,7 +131,6 @@ local nameplates_defaults = {
         enable = true,
         nameSize = 10,
         friendlyName = true,
-        hideHealth = true,
         arenanumber = true,
         globalScale = 1,
         targetScale = 1,
@@ -236,18 +236,6 @@ local nameplates_config = {
                 Nameplates:ForceUpdate()
                 end,
                 get = function(info) return Nameplates.settings.clickthroughfriendly end
-            },
-            hideHealth = {
-                type = "toggle",
-                name = "Hide Friendly Health",
-                desc = "|cffaaaaaa Hide the health bar for Friendly Nameplates. |r",
-                descStyle = "inline",
-                width = "full",
-                order = 2,
-                set = function(info,val) Nameplates.settings.hideHealth = val
-                Nameplates:ForceUpdate()
-                end,
-                get = function(info) return Nameplates.settings.hideHealth end
             },
         },
     },
@@ -713,7 +701,7 @@ local moblist = {
 		-- Atal'dazar	
 			[127757] = {tag = "DANGEROUS"}, -- Reanimated Honor Guard
 			[122971] = {tag = "DANGEROUS"}, -- Dazar'ai Juggernaut
-			[128434] = {tag = "OTHER"}, -- Feasting Skyscreamer
+			[128434] = {tag = "DANGEROUS"}, -- Feasting Skyscreamer
 
 		-- Freehold
 			[127111] = {tag = "DANGEROUS"}, -- Irontide Oarsman
@@ -763,7 +751,7 @@ end
 
 function Nameplates:DangerousColor(unit)
 	local r, g, b
-	local dangerousColor = {r = 0.0, g = 1.0, b = 0.0}
+	local dangerousColor = {r = 1.0, g = 0.7, b = 0.0}
 	local otherColor = {r = 0.0, g = 0.7, b = 1.0}
 
 	local npcID = self:GetNpcID(unit)
@@ -818,13 +806,8 @@ function Nameplates:SkinPlates(frame)
         frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
         frame:SetAlpha(1)
         -- 
-        if Nameplates.settings.hideHealth then
-            frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
-            frame.healthBar:Hide()
-        else
-            frame.healthBar:Show()
-            frame.healthBar:SetHeight(4)
-        end
+        frame.name:SetPoint("BOTTOM", frame.castBar, "TOP", 0, 4)
+        frame.healthBar:Hide()
     end
     
     --Enemy Player Name.
@@ -1015,14 +998,15 @@ end
 function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
     if ( frame:IsForbidden() ) then return end
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
+
     self:ThreatColor(frame) 
 end
 
 function Nameplates:UPDATE_MOUSEOVER_UNIT()
     local nameplate = C_NamePlate.GetNamePlateForUnit('mouseover')
     if not nameplate then return end
+	local frame = nameplate.UnitFrame
 
-    local frame = nameplate.UnitFrame
     self:Highlight(frame)
 end
 
@@ -1233,6 +1217,8 @@ function Nameplates:ExtraAuras()
         local i = 1
         local j = 1
 
+        -- Debuffs
+
         for index = 1, BUFF_MAX_DISPLAY do
             local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')  
             if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or nameplateShowAll then
@@ -1245,6 +1231,8 @@ function Nameplates:ExtraAuras()
         end      
         
         for index = i, #unitFrame.debuff.Aura_Icons do unitFrame.debuff.Aura_Icons[index]:Hide() end
+
+        -- Buffs
         
         for index = 1, BUFF_MAX_DISPLAY do         
             local name, _, _, _, duration, expire, caster, canStealOrPurge, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
@@ -1257,6 +1245,10 @@ function Nameplates:ExtraAuras()
             end
         end
 
+        for index = j, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
+
+        -- Frame Size
+
         if i == 1 then
             unitFrame.debuff:SetHeight(0.1)
         elseif i > 1 then
@@ -1268,8 +1260,7 @@ function Nameplates:ExtraAuras()
         elseif j > 1 then
             unitFrame.buff:SetHeight(15)
         end
-
-        for index = j, #unitFrame.buff.Aura_Icons do unitFrame.buff.Aura_Icons[index]:Hide() end
+       
     end
 
     local function NamePlate_OnEvent(self, event, arg1, ...)

@@ -88,6 +88,13 @@ function Interface:OnEnable()
 		self:SyncFeature(name)
 	end
 
+	-- RAID FRAMES SIZE DEFAULT SLIDER
+	local n,w,h="CompactUnitFrameProfilesGeneralOptionsFrame" h,w=
+	_G[n.."HeightSlider"],
+	_G[n.."WidthSlider"] 
+	h:SetMinMaxValues(1,200) 
+	w:SetMinMaxValues(1,200)
+
 	self:UnitFrames()
 	self:BuffPlayerFrame()
 	self:PlayerFrame()
@@ -98,6 +105,7 @@ function Interface:OnEnable()
 	self:CastBars()
 	self:ReAnchor()
 	self:Mover()
+	self:AutoQuest()
 end
 
 do
@@ -127,43 +135,6 @@ end
 
 function Interface:SyncFeature(name)
 	features[name](Interface.settings[name])
-end
-
-do
-	Interface:RegisterFeature("AutoQuest",
-		"Auto Turn/Pick Quests",
-		"Automatically pick and turn in quests. (Use SHIFT to bypass)",
-		false,
-		true,
-		function(state)
-			if state then
-				Interface:AutoQuest()
-			end
-		end)
-end
-
-do
-	Interface:RegisterFeature("Hide ExtraActionButton Texture",
-		"Hide ExtraActionButton Texture",
-		"Hide ExtraActionButton Texture.",
-		false,
-		true,
-		function(state)
-			if state then
-				local ZoneAbilityFrame = ZoneAbilityFrame.SpellButton.Style
-				hooksecurefunc(ZoneAbilityFrame, "SetTexture", function(self, texture)
-      				if texture then
-        				self:SetTexture(nil)
-      				end
-   				end)
-   				local style = ExtraActionButton1.style
-				hooksecurefunc(style, "SetTexture", function(self, texture)
-      				if texture then
-        				self:SetTexture(nil)
-      				end
-   				end)
-			end
-		end)
 end
 
 -------------------------------------------------------------------------------
@@ -203,323 +174,268 @@ function Interface:UnitFrames()
 	-- HIT INDICATOR
 	PlayerFrame:UnregisterEvent("UNIT_COMBAT")
 	PetFrame:UnregisterEvent("UNIT_COMBAT")
-
-	-- AURA POSITION
-	local AURA_START_X = 5;
-	local AURA_START_Y = 32;
-	local AURA_OFFSET_X = 2;
-	local AURA_OFFSET_Y = 1;
-	local LARGE_AURA_SIZE = 21;
-	local SMALL_AURA_SIZE = 21;
-	local AURA_ROW_WIDTH = 122;
-	local TOT_AURA_ROW_WIDTH = 101;
-	local NUM_TOT_AURA_ROWS = 2;	-- TODO: replace with TOT_AURA_ROW_HEIGHT functionality if this becomes a problem
-
-	function TargetFrame_UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc, maxRowWidth, offsetX, mirrorAurasVertically)
-		-- a lot of this complexity is in place to allow the auras to wrap around the target of target frame if it's shown
-
-		-- Position auras
-		local size;
-		local offsetY = AURA_OFFSET_Y;
-		local offsetX = AURA_OFFSET_X;
-		-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
-		local rowWidth = 0;
-		local firstBuffOnRow = 1;
-		for i=1, numAuras do
-			-- update size and offset info based on large aura status
-			if ( largeAuraList[i] ) then
-				size = LARGE_AURA_SIZE;
-				offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y;
-			else
-				size = SMALL_AURA_SIZE;
-			end
-
-			-- anchor the current aura
-			if ( i == 1 ) then
-				rowWidth = size;
-				self.auraRows = self.auraRows + 1;
-			else
-				rowWidth = rowWidth + size + offsetX;
-			end
-			if ( rowWidth > maxRowWidth ) then
-				-- this aura would cause the current row to exceed the max row width, so make this aura
-				-- the start of a new row instead
-				updateFunc(self, auraName, i, numOppositeAuras, firstBuffOnRow, size, offsetX, offsetY, mirrorAurasVertically);
-
-				rowWidth = size;
-				self.auraRows = self.auraRows + 1;
-				firstBuffOnRow = i;
-				offsetY = AURA_OFFSET_Y;
-
-				if ( self.auraRows > NUM_TOT_AURA_ROWS ) then
-					-- if we exceed the number of tot rows, then reset the max row width
-					-- note: don't have to check if we have tot because AURA_ROW_WIDTH is the default anyway
-					maxRowWidth = AURA_ROW_WIDTH;
-				end
-			else
-				updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically);
-			end
-		end
-	end
 end 
 
 function Interface:BuffPlayerFrame()
-	local MAX_BUFFS = 32;
-	local MAX_DEBUFFS = 32;
+	-- local MAX_BUFFS = 32;
+	-- local MAX_DEBUFFS = 32;
 
-	local AURA_START_X = 107;
-	local AURA_START_Y = 32
-	local AURA_ICON_SIZE = 21;
-	local AURA_SPACING_X = 2;
-	local AURA_SPACING_Y = 2;
-	local MAX_ROW_SIZE = 5;
+	-- local AURA_START_X = 107;
+	-- local AURA_START_Y = 32
+	-- local AURA_ICON_SIZE = 21;
+	-- local AURA_SPACING_X = 2;
+	-- local AURA_SPACING_Y = 2;
+	-- local MAX_ROW_SIZE = 5;
 
-	local BuffsFrame = CreateFrame("Frame", "PlayerFrameBuffs");
-	local DebuffsFrame = CreateFrame("Frame", "PlayerFrameDebuffs");
-	BuffsFrame:SetSize(10, 10);
-	DebuffsFrame:SetSize(10, 10);
+	-- local BuffsFrame = CreateFrame("Frame", "PlayerFrameBuffs");
+	-- local DebuffsFrame = CreateFrame("Frame", "PlayerFrameDebuffs");
+	-- BuffsFrame:SetSize(10, 10);
+	-- DebuffsFrame:SetSize(10, 10);
 
-	local function UpdateBuffAnchor(self, buffName, index, numDebuffs, newRow, startX, startY)
-		local buff = _G[buffName..index];
+	-- local function UpdateBuffAnchor(self, buffName, index, numDebuffs, newRow, startX, startY)
+	-- 	local buff = _G[buffName..index];
 		
-		if ( index == 1 ) then
-			buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
-			BuffsFrame:SetPoint("TOPLEFT", buff, "TOPLEFT", 0, 0);
-			BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-		elseif ( newRow ) then
-			buff:SetPoint("TOPLEFT", _G[buffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-			BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-		else
-			buff:SetPoint("TOPLEFT", _G[buffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X, 0);
-		end
+	-- 	if ( index == 1 ) then
+	-- 		buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
+	-- 		BuffsFrame:SetPoint("TOPLEFT", buff, "TOPLEFT", 0, 0);
+	-- 		BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 	elseif ( newRow ) then
+	-- 		buff:SetPoint("TOPLEFT", _G[buffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 		BuffsFrame:SetPoint("BOTTOMLEFT", buff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 	else
+	-- 		buff:SetPoint("TOPLEFT", _G[buffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X, 0);
+	-- 	end
 
-		-- Resize
-		buff:SetWidth(AURA_ICON_SIZE);
-		buff:SetHeight(AURA_ICON_SIZE);
-	end
+	-- 	-- Resize
+	-- 	buff:SetWidth(AURA_ICON_SIZE);
+	-- 	buff:SetHeight(AURA_ICON_SIZE);
+	-- end
 
-	local function UpdateDebuffAnchor(self, debuffName, index, numBuffs, newRow, startX, startY)
-		local debuff = _G[debuffName..index];
+	-- local function UpdateDebuffAnchor(self, debuffName, index, numBuffs, newRow, startX, startY)
+	-- 	local debuff = _G[debuffName..index];
 
-		if ( index == 1 ) then
-			debuff:SetPoint("TOPLEFT", BuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-			DebuffsFrame:SetPoint("TOPLEFT", debuff, "TOPLEFT", 0, 0);
-			DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-		elseif ( newRow ) then
-			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-			DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
-		else
-			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X + 1, 0);
-		end
+	-- 	if ( index == 1 ) then
+	-- 		debuff:SetPoint("TOPLEFT", BuffsFrame, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 		DebuffsFrame:SetPoint("TOPLEFT", debuff, "TOPLEFT", 0, 0);
+	-- 		DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 	elseif ( newRow ) then
+	-- 		debuff:SetPoint("TOPLEFT", _G[debuffName..(index - MAX_ROW_SIZE)], "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 		DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -AURA_SPACING_Y);
+	-- 	else
+	-- 		debuff:SetPoint("TOPLEFT", _G[debuffName..(index - 1)], "TOPRIGHT", AURA_SPACING_X + 1, 0);
+	-- 	end
 
-		-- Resize
-		debuff:SetWidth(AURA_ICON_SIZE);
-		debuff:SetHeight(AURA_ICON_SIZE);
+	-- 	-- Resize
+	-- 	debuff:SetWidth(AURA_ICON_SIZE);
+	-- 	debuff:SetHeight(AURA_ICON_SIZE);
 		
-		local debuffFrame =_G[debuffName..index.."Border"];
-		debuffFrame:SetWidth(AURA_ICON_SIZE+2);
-		debuffFrame:SetHeight(AURA_ICON_SIZE+2);
-	end
+	-- 	local debuffFrame =_G[debuffName..index.."Border"];
+	-- 	debuffFrame:SetWidth(AURA_ICON_SIZE+2);
+	-- 	debuffFrame:SetHeight(AURA_ICON_SIZE+2);
+	-- end
 
-	local function UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, updateFunc)
-		local startX, startY;
-		if ( PetFrame and PetFrame:IsShown() ) then
-			startX, startY = AURA_START_X, -8;
-		elseif ( PlayerFrameAlternateManaBar and PlayerFrameAlternateManaBar:IsShown() ) then -- Manabar
-			startX, startY = AURA_START_X, AURA_START_Y-12;
-		elseif ( ComboPointPlayerFrame and ComboPointPlayerFrame:IsShown() ) then -- Combos
-			startX, startY = AURA_START_X, AURA_START_Y-18;
-		elseif ( RuneFrame and RuneFrame:IsShown() ) then 
-			startX, startY = AURA_START_X, AURA_START_Y-23;
-		else
-			startX, startY = AURA_START_X, AURA_START_Y;
-		end
+	-- local function UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, updateFunc)
+	-- 	local startX, startY;
+	-- 	if ( PetFrame and PetFrame:IsShown() ) then
+	-- 		startX, startY = AURA_START_X, -8;
+	-- 	elseif ( PlayerFrameAlternateManaBar and PlayerFrameAlternateManaBar:IsShown() ) then -- Manabar
+	-- 		startX, startY = AURA_START_X, AURA_START_Y-12;
+	-- 	elseif ( ComboPointPlayerFrame and ComboPointPlayerFrame:IsShown() ) then -- Combos
+	-- 		startX, startY = AURA_START_X, AURA_START_Y-18;
+	-- 	elseif ( RuneFrame and RuneFrame:IsShown() ) then 
+	-- 		startX, startY = AURA_START_X, AURA_START_Y-23;
+	-- 	else
+	-- 		startX, startY = AURA_START_X, AURA_START_Y;
+	-- 	end
 
-		-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
-		local rowSize = 0;
-		for i=1, numAuras do
-			-- anchor the current aura
-			if ( i == 1 ) then
-				rowSize = 1;
-			else
-				rowSize = rowSize + 1;
-			end
-			if ( rowSize > MAX_ROW_SIZE ) then
-				-- this aura would cause the current row to exceed the max row size, so make this aura
-				-- the start of a new row instead
-				rowSize = 1;
-				updateFunc(self, auraName, i, numOppositeAuras, true, startX, startY);
-			else
-				updateFunc(self, auraName, i, numOppositeAuras, false, startX, startY);
-			end
-		end
-	end
+	-- 	-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
+	-- 	local rowSize = 0;
+	-- 	for i=1, numAuras do
+	-- 		-- anchor the current aura
+	-- 		if ( i == 1 ) then
+	-- 			rowSize = 1;
+	-- 		else
+	-- 			rowSize = rowSize + 1;
+	-- 		end
+	-- 		if ( rowSize > MAX_ROW_SIZE ) then
+	-- 			-- this aura would cause the current row to exceed the max row size, so make this aura
+	-- 			-- the start of a new row instead
+	-- 			rowSize = 1;
+	-- 			updateFunc(self, auraName, i, numOppositeAuras, true, startX, startY);
+	-- 		else
+	-- 			updateFunc(self, auraName, i, numOppositeAuras, false, startX, startY);
+	-- 		end
+	-- 	end
+	-- end
 
-	local function UpdateAuras()
-		local self = PlayerFrame;
-		local frame, frameName;
-		local frameIcon, frameCount, frameCooldown;
-		local numBuffs = 0;
+	-- local function UpdateAuras()
+	-- 	local self = PlayerFrame;
+	-- 	local frame, frameName;
+	-- 	local frameIcon, frameCount, frameCooldown;
+	-- 	local numBuffs = 0;
 		
-		for i = 1, 32 do
-			local buffName, icon, count, _, duration, expirationTime = UnitBuff(self.unit, i, nil);
-			if ( buffName ) then
-				frameName = "PlayerFrameBuff"..(i);
-				frame = _G[frameName];
-				if ( not frame ) then
-					if ( not icon ) then
-						break;
-					else
-						frame = CreateFrame("Button", frameName, self, "TargetBuffFrameTemplate");
-						frame.unit = self.unit;
-					end
-				end
-				if ( icon ) then
-					frame:SetID(i);
+	-- 	for i = 1, 32 do
+	-- 		local buffName, icon, count, _, duration, expirationTime, _, _, _, spellID = UnitBuff(self.unit, i, nil);
+	-- 		if ( buffName ) then
+	-- 			frameName = "PlayerFrameBuff"..(i);
+	-- 			frame = _G[frameName];
+	-- 			if ( not frame ) then
+	-- 				if ( not icon ) then
+	-- 					break;
+	-- 				else
+	-- 					frame = CreateFrame("Button", frameName, self, "TargetBuffFrameTemplate");
+	-- 					frame.unit = self.unit;
+	-- 				end
+	-- 			end
+	-- 			if ( icon ) then
+	-- 				frame:SetID(i);
+	-- 				if spellID == 269083 
+	-- 					or spellID == 186401
+	-- 					or spellID == 264408
+	-- 					then break end
+	-- 				-- set the icon
+	-- 				frameIcon = _G[frameName.."Icon"];
+	-- 				frameIcon:SetTexture(icon);
 					
-					-- set the icon
-					frameIcon = _G[frameName.."Icon"];
-					frameIcon:SetTexture(icon);
+	-- 				-- set the count
+	-- 				frameCount = _G[frameName.."Count"];
+	-- 				if ( count > 1 ) then
+	-- 					frameCount:SetText(count);
+	-- 					frameCount:Show();
+	-- 				else
+	-- 					frameCount:Hide();
+	-- 				end
 					
-					-- set the count
-					frameCount = _G[frameName.."Count"];
-					if ( count > 1 ) then
-						frameCount:SetText(count);
-						frameCount:Show();
-					else
-						frameCount:Hide();
-					end
+	-- 				-- Handle cooldowns
+	-- 				frameCooldown = _G[frameName.."Cooldown"];
+	-- 				CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
 					
-					-- Handle cooldowns
-					frameCooldown = _G[frameName.."Cooldown"];
-					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
-					
-					numBuffs = numBuffs + 1;
+	-- 				numBuffs = numBuffs + 1;
 
-					frame:ClearAllPoints();
-					frame:Show();
-				else
-					frame:Hide();
-				end
-			else
-				break;
-			end
-		end
+	-- 				frame:ClearAllPoints();
+	-- 				frame:Show();
+	-- 			else
+	-- 				frame:Hide();
+	-- 			end
+	-- 		else
+	-- 			break;
+	-- 		end
+	-- 	end
 		
-		for i = numBuffs + 1, MAX_BUFFS do
-			local frame = _G["PlayerFrameBuff"..i];
-			if ( frame ) then
-				frame:Hide();
-			else
-				break;
-			end
-		end
+	-- 	for i = numBuffs + 1, MAX_BUFFS do
+	-- 		local frame = _G["PlayerFrameBuff"..i];
+	-- 		if ( frame ) then
+	-- 			frame:Hide();
+	-- 		else
+	-- 			break;
+	-- 		end
+	-- 	end
 		
-		local color;
-		local frameBorder;
-		local numDebuffs = 0;
+	-- 	local color;
+	-- 	local frameBorder;
+	-- 	local numDebuffs = 0;
 		
-		for i = 1, 16 do
-			local debuffName, icon, count, debuffType, duration, expirationTime = UnitDebuff(self.unit, i, nil);
-			if ( debuffName ) then
-				frameName = "PlayerFrameDebuff"..(i);
-				frame = _G[frameName];
-				if ( not frame ) then
-					if ( not icon ) then
-						break;
-					else
-						frame = CreateFrame("Button", frameName, self, "TargetDebuffFrameTemplate");
-						frame.unit = self.unit;
-					end
-				end
-				if ( icon ) then
-					frame:SetID(i);
+	-- 	for i = 1, 16 do
+	-- 		local debuffName, icon, count, debuffType, duration, expirationTime = UnitDebuff(self.unit, i, nil);
+	-- 		if ( debuffName ) then
+	-- 			frameName = "PlayerFrameDebuff"..(i);
+	-- 			frame = _G[frameName];
+	-- 			if ( not frame ) then
+	-- 				if ( not icon ) then
+	-- 					break;
+	-- 				else
+	-- 					frame = CreateFrame("Button", frameName, self, "TargetDebuffFrameTemplate");
+	-- 					frame.unit = self.unit;
+	-- 				end
+	-- 			end
+	-- 			if ( icon ) then
+	-- 				frame:SetID(i);
 					
-					-- set the icon
-					frameIcon = _G[frameName.."Icon"];
-					frameIcon:SetTexture(icon);
+	-- 				-- set the icon
+	-- 				frameIcon = _G[frameName.."Icon"];
+	-- 				frameIcon:SetTexture(icon);
 					
-					-- set the count
-					frameCount = _G[frameName.."Count"];
-					if ( count > 1 ) then
-						frameCount:SetText(count);
-						frameCount:Show();
-					else
-						frameCount:Hide();
-					end
+	-- 				-- set the count
+	-- 				frameCount = _G[frameName.."Count"];
+	-- 				if ( count > 1 ) then
+	-- 					frameCount:SetText(count);
+	-- 					frameCount:Show();
+	-- 				else
+	-- 					frameCount:Hide();
+	-- 				end
 					
-					-- Handle cooldowns
-					frameCooldown = _G[frameName.."Cooldown"];
-					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
+	-- 				-- Handle cooldowns
+	-- 				frameCooldown = _G[frameName.."Cooldown"];
+	-- 				CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
 					
-					-- set debuff type color
-					if ( debuffType ) then
-						color = DebuffTypeColor[debuffType];
-					else
-						color = DebuffTypeColor["none"];
-					end
-					frameBorder = _G[frameName.."Border"];
-					frameBorder:SetVertexColor(color.r, color.g, color.b);
+	-- 				-- set debuff type color
+	-- 				if ( debuffType ) then
+	-- 					color = DebuffTypeColor[debuffType];
+	-- 				else
+	-- 					color = DebuffTypeColor["none"];
+	-- 				end
+	-- 				frameBorder = _G[frameName.."Border"];
+	-- 				frameBorder:SetVertexColor(color.r, color.g, color.b);
 					
-					numDebuffs = numDebuffs + 1;
+	-- 				numDebuffs = numDebuffs + 1;
 
-					frame:ClearAllPoints();
-					frame:Show();
-				else
-					frame:Hide();
-				end
-			else
-				break;
-			end
-		end
+	-- 				frame:ClearAllPoints();
+	-- 				frame:Show();
+	-- 			else
+	-- 				frame:Hide();
+	-- 			end
+	-- 		else
+	-- 			break;
+	-- 		end
+	-- 	end
 		
-		for i = numDebuffs + 1, MAX_DEBUFFS do
-			local frame = _G["PlayerFrameDebuff"..i];
-			if ( frame ) then
-				frame:Hide();
-			else
-				break;
-			end
-		end
+	-- 	for i = numDebuffs + 1, MAX_DEBUFFS do
+	-- 		local frame = _G["PlayerFrameDebuff"..i];
+	-- 		if ( frame ) then
+	-- 			frame:Hide();
+	-- 		else
+	-- 			break;
+	-- 		end
+	-- 	end
 		
-		-- update buff positions
-		UpdateAuraPositions(self, "PlayerFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
+	-- 	-- update buff positions
+	-- 	UpdateAuraPositions(self, "PlayerFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
 		
-		-- update debuff positions
-		UpdateAuraPositions(self, "PlayerFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
-	end
+	-- 	-- update debuff positions
+	-- 	UpdateAuraPositions(self, "PlayerFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
+	-- end
 
-	local frame = CreateFrame("Frame", nil, UIParent)
+	-- local frame = CreateFrame("Frame", nil, UIParent)
 
-	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	frame:RegisterEvent("UNIT_AURA")
-	frame:RegisterEvent("UNIT_PET")
-	frame:RegisterEvent("UNIT_ENTERED_VEHICLE")
-	frame:RegisterEvent("UNIT_EXITED_VEHICLE")
+	-- frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	-- frame:RegisterEvent("UNIT_AURA")
+	-- frame:RegisterEvent("UNIT_PET")
+	-- frame:RegisterEvent("UNIT_ENTERED_VEHICLE")
+	-- frame:RegisterEvent("UNIT_EXITED_VEHICLE")
 
-	frame:SetScript("OnEvent", function(self, event, ...)
-		local arg1 = ...;
+	-- frame:SetScript("OnEvent", function(self, event, ...)
+	-- 	local arg1 = ...;
 
-		if ( event == "PLAYER_ENTERING_WORLD" ) then
-			UpdateAuras();
-		elseif ( event == "UNIT_AURA" ) then
-			if ( arg1 == "player" ) then
-				UpdateAuras();
-			end
-		elseif ( event == "UNIT_PET" ) then
-			if ( arg1 == "player" ) then
-				UpdateAuras();
-			end
-		elseif ( event == "UNIT_ENTERED_VEHICLE" ) then
-			if ( arg1 == "player" ) then
-				UpdateAuras();
-			end
-		elseif ( event == "UNIT_EXITED_VEHICLE" ) then
-			if ( arg1 == "player" ) then
-				UpdateAuras();
-			end
-		end
-	end)
+	-- 	if ( event == "PLAYER_ENTERING_WORLD" ) then
+	-- 		UpdateAuras();
+	-- 	elseif ( event == "UNIT_AURA" ) then
+	-- 		if ( arg1 == "player" ) then
+	-- 			UpdateAuras();
+	-- 		end
+	-- 	elseif ( event == "UNIT_PET" ) then
+	-- 		if ( arg1 == "player" ) then
+	-- 			UpdateAuras();
+	-- 		end
+	-- 	elseif ( event == "UNIT_ENTERED_VEHICLE" ) then
+	-- 		if ( arg1 == "player" ) then
+	-- 			UpdateAuras();
+	-- 		end
+	-- 	elseif ( event == "UNIT_EXITED_VEHICLE" ) then
+	-- 		if ( arg1 == "player" ) then
+	-- 			UpdateAuras();
+	-- 		end
+	-- 	end
+	-- end)
 end
 
 function Interface:PlayerFrame()
@@ -816,103 +732,6 @@ function Interface:CastBars()
 
 	if not InCombatLockdown() then
 
-		-- -- Channels Ticks
-
-		-- local sparkfactory = {
-		-- 	__index = function(t,k)
-		-- 		local spark = CastingBarFrame:CreateTexture(nil, 'OVERLAY')
-		-- 		t[k] = spark
-		-- 		spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
-		-- 		spark:SetVertexColor(1, 1, 1, 1)
-		-- 		spark:SetBlendMode('ADD')
-		-- 		spark:SetWidth(10)
-		-- 		spark:SetHeight(15*2.2)
-		-- 		return spark
-		-- 	end
-		-- }
-		-- local barticks = setmetatable({}, sparkfactory)
-
-		-- local function setBarTicks(ticknum)
-		-- 	if( ticknum and ticknum > 0) then
-		-- 		local delta = ( CastingBarFrame:GetWidth() / ticknum )
-		-- 		for k = 1,ticknum do
-		-- 			local t = barticks[k]
-		-- 			t:ClearAllPoints()
-		-- 			t:SetPoint("CENTER", CastingBarFrame, "LEFT", delta * k, 0 )
-		-- 			t:Show()
-		-- 		end
-		-- 	else
-		-- 		barticks[1].Hide = nil
-		-- 		for i=1,#barticks do
-		-- 			barticks[i]:Hide()
-		-- 		end
-		-- 	end
-		-- end
-
-		-- -- TODO: this will need updates for Cataclysm
-		-- local channelingTicks = {
-		-- 	-- warlock
-		-- 	[GetSpellInfo(198590)] = 5, -- drain soul
-		-- 	[GetSpellInfo(234153)] = 5, -- drain life
-		-- 	-- druid
-		-- 	[GetSpellInfo(740)] = 4, -- Tranquility
-		-- 	-- priest
-		-- 	[GetSpellInfo(15407)] = 3, -- mind flay
-		-- 	[GetSpellInfo(48045)] = 5, -- mind sear
-		-- 	[GetSpellInfo(47540)] = 2, -- penance
-		-- 	-- mage
-		-- 	[GetSpellInfo(5143)] = 5, -- arcane missiles
-		-- 	[GetSpellInfo(12051)] = 4, -- evocation
-		-- }
-
-		-- local function getChannelingTicks(spell)			
-		-- 	return channelingTicks[spell] or 0
-		-- end
-
-		-- local function isTalentSelected(class, spec, talentID)
-		-- 	local specIndex = GetSpecialization()
-		-- 	local _, className = UnitClass("player")
-		-- 	if className == class and specIndex == spec then 
-		-- 		local _, _, _, selected = GetTalentInfoByID(talentID, specIndex)
-		-- 		if selected then
-		-- 			return true
-		-- 		else
-		-- 			return false
-		-- 		end
-		-- 	end
-		-- end
-
-		-- local frame = CreateFrame("Frame", "ChannelTicks", UIParent)
-
-		-- frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-		-- frame:RegisterEvent("UNIT_SPELLCAST_FAILED")
-		-- frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-		-- frame:RegisterEvent("UNIT_SPELLCAST_START")
-		-- frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-		-- frame:RegisterEvent("PLAYER_TALENT_UPDATE")		
-
-		-- frame:SetScript("OnEvent", function(self, event, ...)
-		-- 	if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TALENT_UPDATE" then
-		-- 		if isTalentSelected("PRIEST", 1, 19752) then
-		-- 			channelingTicks[GetSpellInfo(47540)] = 3
-		-- 		else
-		-- 			channelingTicks[GetSpellInfo(47540)] = 2
-		-- 		end
-		-- 	elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
-		-- 		local unit = ...
-		-- 		if unit == "player" then
-		-- 			local spell = UnitChannelInfo(unit)
-		-- 			CastingBarFrame.channelingTicks = getChannelingTicks(spell)
-		-- 			setBarTicks(CastingBarFrame.channelingTicks)
-		-- 		end
-		-- 	elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
-		-- 		local unit = ...
-		-- 		if unit == "player" then
-		-- 			setBarTicks(0)
-		-- 		end
-		-- 	end
-		-- end)
-
 		UIPARENT_MANAGED_FRAME_POSITIONS["CastingBarFrame"] = nil
 
 		-- Player Castbar
@@ -978,17 +797,6 @@ function Interface:CastBars()
 end
 
 function Interface:Minimap()
-
-	-- GarrisonLandingPageMinimapButton:SetScript("OnMouseUp", function(self, button)
-	-- 	if button == "RightButton" then
-	-- 		if (GarrisonLandingPage and GarrisonLandingPage:IsShown()) then
-	-- 			HideUIPanel(GarrisonLandingPage);
-	-- 			print("test")
-	-- 		else
-	-- 			ShowGarrisonLandingPage(LE_GARRISON_TYPE_6_0)
-	-- 		end
-	-- 	end	
-	-- end)
 
 	MinimapBorderTop:Hide()	
 	MinimapZoomIn:Hide()

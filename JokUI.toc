@@ -25,7 +25,6 @@ Core.lua
 Config.lua
 
 Core\Nameplates.lua
-Core\RaidFrames.lua
 Core\MythicPlus.lua
 Core\Misc.lua
 Core\Interface.lua
