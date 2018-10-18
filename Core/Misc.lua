@@ -1406,6 +1406,7 @@ function Misc:Friends()
 	end
 
 	local function addonTooltip(self)
+		local dataValid = false
 		GameTooltip:ClearLines()
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 
