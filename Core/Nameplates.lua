@@ -120,6 +120,43 @@ local nameplates_aura_spells = {
             [197690] = true, -- Def Stance
 };
 
+local moblist = {
+    -- Mythic +
+        -- Atal'dazar   
+            [127757] = {tag = "DANGEROUS"}, -- Reanimated Honor Guard
+            [122971] = {tag = "DANGEROUS"}, -- Dazar'ai Juggernaut
+            [128434] = {tag = "DANGEROUS"}, -- Feasting Skyscreamer
+
+        -- Freehold
+            [127111] = {tag = "DANGEROUS"}, -- Irontide Oarsman
+            [129527] = {tag = "DANGEROUS"}, -- Bilge Rat Buccaneer
+
+        -- King's Rest
+            [134174] = {tag = "DANGEROUS"}, -- Shadow-Borne Witch Doctor
+            [135167] = {tag = "DANGEROUS"}, -- Spectral Berserker   
+            [135235] = {tag = "DANGEROUS"}, -- Spectral Beastmaster
+            [137591] = {tag = "DANGEROUS"}, -- Healing Tide Totem
+            [135764] = {tag = "DANGEROUS"}, -- Explosive Totem
+
+        -- Siege of Boralus
+            [138255] = {tag = "OTHER"}, -- Ashvane Spotter
+            [128969] = {tag = "DANGEROUS"}, -- Ashvane Commander
+            [138465] = {tag = "DANGEROUS"}, -- Ashvane Cannoneer
+            [132530] = {tag = "DANGEROUS"}, -- Kul Tiran Vanguard
+
+        -- Temple of Sethralis 
+            [135846] = {tag = "OTHER"}, -- Sand-Crusted Striker
+            [134364] = {tag = "DANGEROUS"}, -- Faithless Tender
+            [139946] = {tag = "DANGEROUS"}, -- Heart Guardian
+            [135007] = {tag = "DANGEROUS"}, -- Orb Guardian
+
+        -- The Underrot
+            [130909] = {tag = "DANGEROUS"}, -- Fetid Maggot
+                
+    [113966] = {tag = "DANGEROUS"}, -- Training Dummy
+    [92166] = {tag = "OTHER"}, -- Training Dummy
+}
+
 local nameplateScale = GetCVar("nameplateGlobalScale")
 
 -------------------------------------------------------------------------------
@@ -501,6 +538,7 @@ function Nameplates:OnEnable()
 
     self:SecureHook('CompactUnitFrame_UpdateName')
     self:SecureHook('CompactUnitFrame_UpdateHealthColor')
+    self:SecureHook('ClassNameplateManaBar_OnUpdate')  
 
     self:Buffs()
 
@@ -510,7 +548,7 @@ function Nameplates:OnEnable()
     SetCVar("nameplateLargerScale", Nameplates.settings.importantScale)
     SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
     SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)
-    SetCVar("nameplateHorizontalScale", 1)        
+    --SetCVar("nameplateHorizontalScale", 1)        
     SetCVar("nameplateMotion", Nameplates.settings.overlap)
     SetCVar("nameplateShowEnemyGuardians", Nameplates.settings.enemyguardian)
     SetCVar("nameplateShowEnemyTotems", Nameplates.settings.enemytotem)
@@ -682,43 +720,6 @@ function Nameplates:UpdateCastbarTimer(frame)
     end
 end
 
-local moblist = {
-	-- Mythic +
-		-- Atal'dazar	
-			[127757] = {tag = "DANGEROUS"}, -- Reanimated Honor Guard
-			[122971] = {tag = "DANGEROUS"}, -- Dazar'ai Juggernaut
-			[128434] = {tag = "DANGEROUS"}, -- Feasting Skyscreamer
-
-		-- Freehold
-			[127111] = {tag = "DANGEROUS"}, -- Irontide Oarsman
-			[129527] = {tag = "DANGEROUS"}, -- Bilge Rat Buccaneer
-
-		-- King's Rest
-			[134174] = {tag = "DANGEROUS"}, -- Shadow-Borne Witch Doctor
-			[135167] = {tag = "DANGEROUS"}, -- Spectral Berserker	
-			[135235] = {tag = "DANGEROUS"}, -- Spectral Beastmaster
-			[137591] = {tag = "DANGEROUS"}, -- Healing Tide Totem
-			[135764] = {tag = "DANGEROUS"}, -- Explosive Totem
-
-		-- Siege of Boralus
-			[138255] = {tag = "OTHER"}, -- Ashvane Spotter
-			[128969] = {tag = "DANGEROUS"}, -- Ashvane Commander
-			[138465] = {tag = "DANGEROUS"}, -- Ashvane Cannoneer
-			[132530] = {tag = "DANGEROUS"}, -- Kul Tiran Vanguard
-
-		-- Temple of Sethralis 
-			[135846] = {tag = "OTHER"}, -- Sand-Crusted Striker
-			[134364] = {tag = "DANGEROUS"}, -- Faithless Tender
-			[139946] = {tag = "DANGEROUS"}, -- Heart Guardian
-			[135007] = {tag = "DANGEROUS"}, -- Orb Guardian
-
-		-- The Underrot
-			[130909] = {tag = "DANGEROUS"}, -- Fetid Maggot
-				
-    [113966] = {tag = "DANGEROUS"}, -- Training Dummy
-    [92166] = {tag = "OTHER"}, -- Training Dummy
-}
-
 function Nameplates:GetNpcID(unit)
     local npcID = select(6, strsplit("-", UnitGUID(unit)))
 
@@ -759,10 +760,6 @@ end
 -----------------------------------------
 
 function Nameplates:SkinPlates(frame)
-    if UnitIsUnit(frame.displayedUnit, "player") then
-        frame:SetAlpha(1)
-        return 
-    end
 
 	if self:IsDangerous(frame.displayedUnit) then
 		frame.name:SetTextColor(self:DangerousColor(frame.displayedUnit))
@@ -819,10 +816,6 @@ function Nameplates:SkinPlates(frame)
                 break 
             end 
         end 
-    end
-
-    if UnitIsUnit(frame.displayedUnit, "player") then
-        frame:SetScale(1.3)
     end
 end
 
@@ -944,32 +937,6 @@ end
 -- SKIN
 -------------------------------------------------------------------------------
 
-local lunarStrike = GetSpellInfo(194153)
-local solarWrath = GetSpellInfo(190984)
-
-hooksecurefunc("ClassNameplateManaBar_OnUpdate", function(self) 
-    local spellCast = UnitCastingInfo('player')
-    local currValueAP = UnitPower("player", self.powerType);
-    local currValue = UnitPower("player", self.powerType);
-
-    if spellCast == lunarStrike then
-        currValueAP = currValue + 12
-    elseif spellCast == solarWrath then
-        currValueAP = currValue + 8
-    end
-    if ( currValue ~= currValueAP and spellCast ) then
-        self.forceUpdate = nil;
-
-        self.FeedbackFrame:StartFeedbackAnim(currValue or 0, currValueAP);
-        if ( self.FullPowerFrame.active ) then
-            self.FullPowerFrame:StartAnimIfFull(self.currValue or 0, currValue);
-        end
-        self.currValue = currValue;
-    else
-        self.FeedbackFrame.GainGlowTexture:Hide()
-    end
-end);
-
 function Nameplates:PLAYER_ENTERING_WORLD()
 
     -- Remove Larger Nameplates Function (thx Plater)
@@ -977,6 +944,8 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
 
     C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth, 45)
+    C_NamePlate.SetNamePlateSelfSize(150, 60)
+    C_NamePlate.SetNamePlateSelfClickThrough(true)
 
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
@@ -1020,6 +989,34 @@ function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
     if ( not Nameplates:FrameIsNameplate(frame.displayedUnit) ) then return end
 
     self:ThreatColor(frame) 
+end
+
+function Nameplates:ClassNameplateManaBar_OnUpdate(self)
+    if class == "DRUID" then 
+        local lunarStrike = GetSpellInfo(194153)
+        local solarWrath = GetSpellInfo(190984)
+
+        local spellCast = UnitCastingInfo('player')
+        local currValueAP = UnitPower("player", self.powerType);
+        local currValue = UnitPower("player", self.powerType);
+
+        if spellCast == lunarStrike then
+            currValueAP = currValue + 12
+        elseif spellCast == solarWrath then
+            currValueAP = currValue + 8
+        end
+        if ( currValue ~= currValueAP and spellCast ) then
+            self.forceUpdate = nil;
+
+            self.FeedbackFrame:StartFeedbackAnim(currValue or 0, currValueAP);
+            if ( self.FullPowerFrame.active ) then
+                self.FullPowerFrame:StartAnimIfFull(self.currValue or 0, currValue);
+            end
+            self.currValue = currValue;
+        else
+            self.FeedbackFrame.GainGlowTexture:Hide()
+        end
+    end
 end
 
 function Nameplates:UPDATE_MOUSEOVER_UNIT()
@@ -1073,10 +1070,6 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
 end
 
 function Nameplates:Buffs()
-
-    ---
-    --- NAMEPLATE BUFF FRAME
-    ---
 
     -- icon inset amount
     local top = 1
@@ -1279,8 +1272,7 @@ function Nameplates:Buffs()
             unitFrame.buff:SetHeight(0.1)
         elseif j > 1 then
             unitFrame.buff:SetHeight(15)
-        end
-       
+        end   
     end
 
     local function NamePlate_OnEvent(self, event, arg1, ...)
@@ -1305,7 +1297,7 @@ function Nameplates:Buffs()
         end
     end
 
-    function NamePlates_UpdateAllNamePlates()
+    local function NamePlates_UpdateAllNamePlates()
         for i, namePlate in ipairs(C_NamePlate.GetNamePlates()) do
             local unitFrame = namePlate.suf
             UpdateAuras(unitFrame)
@@ -1442,9 +1434,9 @@ function Nameplates:Buffs()
                     frame.suf.debuff:SetPoint("BOTTOM", NamePlateTargetResourceFrame, "TOP", 0, 5)
                 else   
                     if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-                        frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+                        frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 16)
                     elseif ( frame.UnitFrame.displayedUnit ) then
-                        frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+                        frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 5)
                     end
                 end
             end
@@ -1459,9 +1451,9 @@ function Nameplates:Buffs()
                 frame.suf.debuff:SetPoint("BOTTOM", NamePlateTargetResourceFrame, "TOP", 0, 5)
             else                      
                 if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
-                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.name, "TOP", 0, 3)
+                    frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 16)
                 elseif ( frame.UnitFrame.displayedUnit ) then
-                    frame.suf.debuff:SetPoint("BOTTOM", frame.UnitFrame.healthBar, "TOP", 0, 5)
+                    frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 5)
                 end
             end
         end
