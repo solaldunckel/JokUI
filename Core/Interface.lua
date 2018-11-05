@@ -91,6 +91,7 @@ function Interface:OnEnable()
 	self:ReAnchor()
 	self:Mover()
 	self:AutoQuest()
+	self:Skin()
 end
 
 do
@@ -1108,4 +1109,31 @@ function Interface:Mover()
 		if movableFramesLoD[addonName] then movableFramesLoD[addonName]() end
 		movableFramesLoD:Interface()
 	end)
+end
+
+function Interface:Skin()
+	--CharacterFrame
+	-- for i, v in pairs(
+	-- 	{
+	-- 		PlayerFrameTexture,
+	-- 		TargetFrameTextureFrameTexture,
+	-- 		FocusFrameTextureFrameTexture,
+	-- 		CastingBarFrame.Border,
+	-- 		TargetFrameSpellBar.Border,
+	-- 		TargetFrameToTTextureFrameTexture
+	-- 	}
+	-- ) do
+	-- 	v:SetVertexColor(.2, .2, .2)
+	-- end
+
+	--CharacterFrame
+	for i, v in pairs(
+		{
+			MainMenuBarArtFrameBackground.BackgroundLarge,
+			MainMenuBarArtFrame.LeftEndCap,
+			MainMenuBarArtFrame.RightEndCap,
+		}
+	) do
+		v:SetVertexColor(.2, .2, .2)
+	end
 end

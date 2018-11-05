@@ -57,6 +57,7 @@ function Misc:OnInitialize()
 	self:Specialization()
 	self:Warmode()
 	self:Friends()
+	self:GarrisonDropdown()
 	self:Dampening()
 	self:HoverBind()
 	self:SafeQueue()
@@ -68,6 +69,7 @@ function Misc:OnInitialize()
 	self:SkipCinematic()
 	self:ExtraActionButton()
 	self:PowerBarAlt()
+	self:CheckPVP()
 
 	-- Set Max Equipement Sets to 100.	
 	setglobal("MAX_EQUIPMENT_SETS_PER_PLAYER",100)
@@ -2281,6 +2283,48 @@ function Misc:Surrender()
 	end
 end
 
+function Misc:GarrisonDropdown()
+	local tabs = {}
+	local function SelectGarrison(self)
+	    HideUIPanel(GarrisonLandingPage) -- to make sure it updates
+	    ShowGarrisonLandingPage(self.pageID)
+	end
+
+	hooksecurefunc('ShowGarrisonLandingPage', function(pageID)
+	    for _, Tab in next, tabs do
+	        local available = not not (C_Garrison.GetGarrisonInfo(Tab.pageID))
+	        Tab:SetEnabled(available)
+	        Tab:GetNormalTexture():SetDesaturated(not available)
+	        Tab:SetChecked(Tab.pageID == pageID)
+	    end
+	end)
+
+	local E = CreateFrame('Frame')
+	E:RegisterEvent('ADDON_LOADED')
+	E:SetScript('OnEvent', function(self, event, addon)
+	    if(addon == 'Blizzard_GarrisonUI') then
+	        for _, data in next, {
+	            {LE_GARRISON_TYPE_8_0, GARRISON_TYPE_8_0_LANDING_PAGE_TITLE, [[Interface\Icons\INV_Level120]]},
+	            {LE_GARRISON_TYPE_7_0, ORDER_HALL_LANDING_PAGE_TITLE, [[Interface\Icons\Achievement_Level_110]]},
+	            {LE_GARRISON_TYPE_6_0, GARRISON_LANDING_PAGE_TITLE, [[Interface\Icons\Achievement_Level_100]]},
+	        } do
+	            local Tab = CreateFrame('CheckButton', nil, GarrisonLandingPage, 'SpellBookSkillLineTabTemplate')
+	            Tab:SetPoint('TOPRIGHT', 20, -(50 * (#tabs + 1)))
+	            Tab:SetNormalTexture(data[3])
+	            Tab:SetFrameStrata('LOW') -- appear behind to avoid gaps
+	            Tab:SetScript('OnClick', SelectGarrison)
+	            Tab:Show()
+	            Tab.pageID = data[1]
+	            Tab.tooltip = data[2]
+
+	            table.insert(tabs, Tab)
+	        end
+
+	        self:UnregisterEvent(event)
+	    end
+	end)
+end
+
 function Misc:TeleportCloak()
 
 	-- TeleportCloak by Jordon
@@ -2430,6 +2474,41 @@ function Misc:TeleportCloak()
 end
 
 function Misc:Quests()
+
+	-- local mapIDs = {
+	-- 	862, -- Zuldazar
+	-- 	863, -- Nazmir
+	-- 	864, -- Voldun
+	-- 	1165, -- Zuldazar (Dazar'alor)
+	-- }
+	--  -- Hook objective tracker
+	
+	-- function SetBlockHeader_hook()
+	--   	for i = 1, GetNumQuestWatches() do
+	--    		local questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isStory, isOnMap, hasLocalPOI = GetQuestWatchInfo(i)
+	--    		if ( not questID ) then
+	--     		break
+	--    		end
+	--    		local oldBlock = QUEST_TRACKER_MODULE:GetExistingBlock(questID)
+	--    		if oldBlock then
+	--     		local oldBlockHeight = oldBlock.height
+	--     		local oldHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, title, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+	--     		local newTitle = title
+	    
+	--     		local playerMap = C_Map.GetBestMapForUnit("player")
+	--     		local questLine = C_QuestLine.GetQuestLineInfo(questID, playerMap)
+	--     		if questLine then
+	--     			newTitle = "["..questLine["questLineName"].."] "..title
+	--    			end
+	      
+	--     		local newHeight = QUEST_TRACKER_MODULE:SetStringText(oldBlock.HeaderText, newTitle, nil, OBJECTIVE_TRACKER_COLOR["Header"])
+	--     		oldBlock:SetHeight(oldBlockHeight + newHeight - oldHeight);
+	--    		end
+	--   	end
+	-- end
+
+	-- hooksecurefunc(QUEST_TRACKER_MODULE, "Update", SetBlockHeader_hook)
+
 	local QuestNum = CreateFrame("Frame")
 	QuestNum:RegisterEvent("PLAYER_ENTERING_WORLD")
 	QuestNum:RegisterEvent("QUEST_LOG_UPDATE")
@@ -3142,5 +3221,319 @@ function Misc:PowerBarAlt()
 			UnitPowerBarAlt_TearDown(PlayerPowerBarAlt)
 			PlayerPowerBarAlt:Hide()
 		end
+	end
+end
+
+function Misc:CheckPVP()
+
+	local date = C_Calendar.GetDate()
+	local today = date.monthDay
+	local numDayEvents = C_Calendar.GetNumDayEvents(0, today)
+
+	for i = 1,numDayEvents do
+	    local events = C_Calendar.GetDayEvent(0, today, i)
+	    print(events.title)
+	end
+
+	UnitPopupButtons["ARMORY_LINK"] = { text = "Check PvP", dist = 0 }
+
+	local frame = CreateFrame("Frame", "CheckPvPFrame", UIParent, "UIPanelDialogTemplate")
+	local edit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+	frame.edit = edit
+
+	--Frame Setup
+	frame:Hide()
+	frame:SetHeight(80)
+	frame:SetWidth(300)
+	frame:SetPoint("CENTER", UIParent, "TOP", 0, -1 * GetScreenHeight() / 4)
+	frame:EnableKeyboard(false)
+	frame.Title:SetText("Check PvP")
+	frame:SetMovable(true)
+	frame:SetScript("OnShow", function(self) self.edit:SetFocus() end)
+	frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
+	frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+	frame:RegisterForDrag("LeftButton")
+	frame:EnableMouse(true)
+	frame:SetToplevel(true)
+
+	--Editbox Setup
+	edit:SetPoint("TOPLEFT", frame, "LEFT", 30, 0)
+	edit:SetPoint("BOTTOMRIGHT", frame, "RIGHT", -30, -16)
+	edit:SetScript("OnEnterPressed", function(self) self:GetParent():Hide() end)
+	edit:SetScript("OnEscapePressed", function(self) self:GetParent():Hide() end)
+	edit:SetScript("OnSpacePressed", function(self) self:GetParent():Hide() end)
+	edit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	edit:SetScript("OnUpdate", function(self) self:HighlightText() end)
+	edit:SetJustifyH("CENTER")
+	edit:SetAutoFocus(false)
+
+
+	-- Add it to the FRIEND, PLAYER, PARTY, RAID, RAID_PLAYER, and SELF menus as the 2nd to last option (before Cancel)
+	-- place it as 3rd to last on self so that its before 'leave party'
+	table.insert(UnitPopupMenus["FRIEND"], #UnitPopupMenus["FRIEND"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["PLAYER"], #UnitPopupMenus["PLAYER"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["PARTY"], #UnitPopupMenus["PARTY"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["RAID"], #UnitPopupMenus["RAID"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["RAID_PLAYER"], #UnitPopupMenus["RAID_PLAYER"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["SELF"], #UnitPopupMenus["SELF"] - 2, "ARMORY_LINK")
+	--Bnet friend menu handle is "BN_FRIEND"
+	table.insert(UnitPopupMenus["BN_FRIEND"], #UnitPopupMenus["BN_FRIEND"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["GUILD"], #UnitPopupMenus["GUILD"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["GUILD_OFFLINE"], #UnitPopupMenus["GUILD_OFFLINE"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["CHAT_ROSTER"], #UnitPopupMenus["CHAT_ROSTER"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["TARGET"], #UnitPopupMenus["TARGET"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["ARENAENEMY"], #UnitPopupMenus["ARENAENEMY"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["FOCUS"], #UnitPopupMenus["FOCUS"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["WORLD_STATE_SCORE"], #UnitPopupMenus["WORLD_STATE_SCORE"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["COMMUNITIES_GUILD_MEMBER"], #UnitPopupMenus["COMMUNITIES_GUILD_MEMBER"], "ARMORY_LINK")
+	table.insert(UnitPopupMenus["COMMUNITIES_WOW_MEMBER"], #UnitPopupMenus["COMMUNITIES_WOW_MEMBER"], "ARMORY_LINK")
+
+	-- Your function to setup your button
+	function Armory_Link_Setup(level, value, dropDownFrame, anchorName, xOffset, yOffset, menuList, button, autoHideDelay)
+
+	    -- Make sure we have what we need to continue
+	    if dropDownFrame and level then
+			local name, server, active, customaction
+			if dropDownFrame.which == "BN_FRIEND" then
+				--bnet friend menu
+				if dropDownFrame.bnetIDAccount then
+					--get the gameaccount id and the game
+					local _,_,_,_,_,gameaccount,game = BNGetFriendInfoByID(dropDownFrame.bnetIDAccount)
+					if game == BNET_CLIENT_WOW then
+						--if they are playing wow then get the character and server
+						name = select(2, BNGetGameAccountInfo(gameaccount))
+						server = select(4, BNGetGameAccountInfo(gameaccount))
+						active = true
+					else
+						--otherwise, disable. they are playing a different game
+						active = false
+					end
+				end
+			else
+				--other menu
+				if dropDownFrame.name then
+					name = dropDownFrame.name
+					if(dropDownFrame.server == nil or dropDownFrame.server == "") then
+						server = GetRealmName()
+					else
+						server = dropDownFrame.server
+					end
+					active = true
+				else
+					active = false
+					if(menuList) then
+						if(menuList[2].arg1) then
+							customaction = true
+						end
+					end
+				end
+			end
+			--format servername
+			if server then 
+				server = server
+				local ii = 0
+				while server:find("(%u%l+)(%u%l+)") do
+					server = server:gsub("(%u%l+)(%u%l+)", "%1 %2")
+					ii = ii + 1
+					if ii > 5 then
+						break
+					end
+				end
+				server = server:gsub("(%u%l+)(%d+)", "%1 %2")
+			end
+			-- Just so we don't have to concat strings for each interval
+			local buttonPrefix = "DropDownList" .. level .. "Button"
+			-- Start at 2 because 1 is always going to be the title (i.e. player name) in our case
+			local i = 2
+			while (1) do
+				-- Get the button at index i in the dropdown
+				local button = _G[buttonPrefix..i]
+				if not button then break end
+				-- If the button is our button...
+				if button:GetText() == UnitPopupButtons["ARMORY_LINK"].text then
+					if active == true then
+						-- Make it execute function for player that this menu popped up for (button at index 1)
+						button.func = function()
+							-- Function for the button
+							--Set edit box
+							edit:SetText("https://check-pvp.fr/database/character/?r=eu&q="..name.."-"..server)
+							frame:Show()
+						end
+					else
+						button.func = function()
+							-- Function for the button
+							if(customaction == true) then
+								edit:SetText(menuList[2].arg1)
+								frame:Show()
+							else
+							--player not playing wow
+								print("Check-PvP: This player is not logged in to a character on WoW.")
+							end
+						end
+					end
+					-- Break the loop; we got what we were looking for.
+					break
+				end
+				i = i + 1
+			end
+		end
+	end
+
+	-- Hook ToggleDropDownMenu with your function
+	hooksecurefunc("ToggleDropDownMenu", Armory_Link_Setup);
+
+	--Remove interact distance requirement
+	UnitPopupButtons["ARMORY_LINK"].dist = nil;
+
+	local LFG_LIST_SEARCH_ENTRY_MENU = {
+	    {
+	        text = nil, --Group name goes here
+	        isTitle = true,
+	        notCheckable = true,
+	    },
+	    {
+	        text = WHISPER_LEADER,
+	        func = function(_, name) ChatFrame_SendTell(name); end,
+	        notCheckable = true,
+	        arg1 = nil, --Leader name goes here
+	        disabled = nil, --Disabled if we don't have a leader name yet or you haven't applied
+	        tooltipWhileDisabled = 1,
+	        tooltipOnButton = 1,
+	        tooltipTitle = nil, --The title to display on mouseover
+	        tooltipText = nil, --The text to display on mouseover
+	    },
+		{
+	        text = "Check PvP",
+			notCheckable = true,
+			arg1 = nil, --Player name goes here
+			disabled = nil, --Disabled if we don't have a name yet
+	    },
+	    {
+	        text = LFG_LIST_REPORT_GROUP_FOR,
+	        hasArrow = true,
+	        notCheckable = true,
+	        menuList = {
+	            {
+	                text = LFG_LIST_BAD_NAME,
+	                func = function(_, id) C_LFGList.ReportSearchResult(id, "lfglistname"); end,
+	                arg1 = nil, --Search result ID goes here
+	                notCheckable = true,
+	            },
+	            {
+	                text = LFG_LIST_BAD_DESCRIPTION,
+	                func = function(_, id) C_LFGList.ReportSearchResult(id, "lfglistcomment"); end,
+	                arg1 = nil, --Search reuslt ID goes here
+	                notCheckable = true,
+	                disabled = nil, --Disabled if the description is just an empty string
+	            },
+	            {
+	                text = LFG_LIST_BAD_VOICE_CHAT_COMMENT,
+	                func = function(_, id) C_LFGList.ReportSearchResult(id, "lfglistvoicechat"); end,
+	                arg1 = nil, --Search reuslt ID goes here
+	                notCheckable = true,
+	                disabled = nil, --Disabled if the description is just an empty string
+	            },
+	            {
+	                text = LFG_LIST_BAD_LEADER_NAME,
+	                func = function(_, id) C_LFGList.ReportSearchResult(id, "badplayername"); end,
+	                arg1 = nil, --Search reuslt ID goes here
+	                notCheckable = true,
+	                disabled = nil, --Disabled if we don't have a name for the leader
+	            },
+	        },
+	    },
+	    {
+	        text = CANCEL,
+	        notCheckable = true,
+	    },
+	};
+	 
+	function LFGListUtil_GetSearchEntryMenu(resultID)
+	    local id, activityID, name, comment, voiceChat, iLvl, honorLevel, age, numBNetFriends, numCharFriends, numGuildMates, isDelisted, leaderName, numMembers = C_LFGList.GetSearchResultInfo(resultID);
+	    local _, appStatus, pendingStatus, appDuration = C_LFGList.GetApplicationInfo(resultID);
+	    LFG_LIST_SEARCH_ENTRY_MENU[1].text = name;
+	    LFG_LIST_SEARCH_ENTRY_MENU[2].arg1 = leaderName;
+	    LFG_LIST_SEARCH_ENTRY_MENU[2].disabled = not leaderName;
+	    LFG_LIST_SEARCH_ENTRY_MENU[3].arg1 = leaderName;
+	    LFG_LIST_SEARCH_ENTRY_MENU[3].disabled = not leaderName;
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[1].arg1 = resultID;
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[2].arg1 = resultID;
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[2].disabled = (comment == "");
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[3].arg1 = resultID;
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[3].disabled = (voiceChat == "");
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[4].arg1 = resultID;
+	    LFG_LIST_SEARCH_ENTRY_MENU[4].menuList[4].disabled = not leaderName;
+	    return LFG_LIST_SEARCH_ENTRY_MENU;
+	end
+
+	local LFG_LIST_APPLICANT_MEMBER_MENU = {
+	    {
+	        text = nil, --Player name goes here
+	        isTitle = true,
+	        notCheckable = true,
+	    },
+	    {
+	        text = WHISPER,
+	        func = function(_, name) ChatFrame_SendTell(name); end,
+	        notCheckable = true,
+	        arg1 = nil, --Player name goes here
+	        disabled = nil, --Disabled if we don't have a name yet
+	    },
+	    {
+	        text = "Check PvP",
+			notCheckable = true,
+			arg1 = nil, --Player name goes here
+			disabled = nil, --Disabled if we don't have a name yet
+	    },
+	    {
+	        text = LFG_LIST_REPORT_FOR,
+	        hasArrow = true,
+	        notCheckable = true,
+	        menuList = {
+	            {
+	                text = LFG_LIST_BAD_PLAYER_NAME,
+	                notCheckable = true,
+	                func = function(_, id, memberIdx) C_LFGList.ReportApplicant(id, "badplayername", memberIdx); end,
+	                arg1 = nil, --Applicant ID goes here
+	                arg2 = nil, --Applicant Member index goes here
+	            },
+	            {
+	                text = LFG_LIST_BAD_DESCRIPTION,
+	                notCheckable = true,
+	                func = function(_, id) C_LFGList.ReportApplicant(id, "lfglistappcomment"); end,
+	                arg1 = nil, --Applicant ID goes here
+	            },
+	        },
+	    },
+	    {
+	        text = IGNORE_PLAYER,
+	        notCheckable = true,
+	        func = function(_, name, applicantID) AddIgnore(name); C_LFGList.DeclineApplicant(applicantID); end,
+	        arg1 = nil, --Player name goes here
+	        arg2 = nil, --Applicant ID goes here
+	        disabled = nil, --Disabled if we don't have a name yet
+	    },
+	    {
+	        text = CANCEL,
+	        notCheckable = true,
+	    },
+	};
+	 
+	function LFGListUtil_GetApplicantMemberMenu(applicantID, memberIdx)
+	    local name, class, localizedClass, level, itemLevel, tank, healer, damage, assignedRole = C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx);
+	    local id, status, pendingStatus, numMembers, isNew, comment = C_LFGList.GetApplicantInfo(applicantID);
+	    LFG_LIST_APPLICANT_MEMBER_MENU[1].text = name or " ";
+	    LFG_LIST_APPLICANT_MEMBER_MENU[2].arg1 = name;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[2].disabled = not name or (status ~= "applied" and status ~= "invited");
+	    LFG_LIST_APPLICANT_MEMBER_MENU[3].arg1 = name;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[3].disabled = not name or (status ~= "applied" and status ~= "invited");
+	    LFG_LIST_APPLICANT_MEMBER_MENU[4].menuList[1].arg1 = applicantID;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[4].menuList[1].arg2 = memberIdx;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[4].menuList[2].arg1 = applicantID;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[4].menuList[2].disabled = (comment == "");
+	    LFG_LIST_APPLICANT_MEMBER_MENU[5].arg1 = name;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[5].arg2 = applicantID;
+	    LFG_LIST_APPLICANT_MEMBER_MENU[5].disabled = not name;
+	    return LFG_LIST_APPLICANT_MEMBER_MENU;
 	end
 end

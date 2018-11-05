@@ -120,6 +120,13 @@ local nameplates_aura_spells = {
             [197690] = true, -- Def Stance
 };
 
+local personal_aura_spells = {
+
+    -- PERSONAL NAMEPLATE
+
+        --[269279] = true, -- Schism
+};
+
 local moblist = {
     -- Mythic +
         -- Atal'dazar   
@@ -533,22 +540,25 @@ end
 function Nameplates:OnEnable()
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("NAME_PLATE_CREATED")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:RegisterEvent('UPDATE_MOUSEOVER_UNIT')
 
     self:SecureHook('CompactUnitFrame_UpdateName')
     self:SecureHook('CompactUnitFrame_UpdateHealthColor')
     self:SecureHook('ClassNameplateManaBar_OnUpdate')  
+    self:SecureHook('CompactUnitFrame_OnUpdate')
+    self:SecureHook('CompactUnitFrame_UpdateStatusText')
 
     self:Buffs()
+    self:CC()
 
     -- Set CVAR
     SetCVar("nameplateGlobalScale", Nameplates.settings.globalScale)
     SetCVar("nameplateSelectedScale", Nameplates.settings.targetScale)
     SetCVar("nameplateLargerScale", Nameplates.settings.importantScale)
     SetCVar("nameplateOverlapV", Nameplates.settings.verticalOverlap)
-    SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)
-    --SetCVar("nameplateHorizontalScale", 1)        
+    SetCVar("nameplateOverlapH", Nameplates.settings.horizontalOverlap)      
     SetCVar("nameplateMotion", Nameplates.settings.overlap)
     SetCVar("nameplateShowEnemyGuardians", Nameplates.settings.enemyguardian)
     SetCVar("nameplateShowEnemyTotems", Nameplates.settings.enemytotem)
@@ -559,6 +569,10 @@ function Nameplates:OnEnable()
     SetCVar("nameplateShowDebuffsOnFriendly", 0)
 
     SetCVar("nameplateShowAll", 1)
+
+    SetCVar("nameplateSelfBottomInset", .37)
+    SetCVar("nameplateSelfTopInset", .55)
+
     --SetCVar("NameplatePersonalShowAlways", 0)
 end
 
@@ -584,6 +598,20 @@ function Nameplates:FormatTime(s)
     end
 
     return floor(s), s - floor(s)
+end
+
+function Nameplates:FormatValue(number)
+    if ( number < 1e3 ) then
+        return floor(number)
+    elseif ( number >= 1e12 ) then
+        return format("%.3ft", number/1e12)
+    elseif ( number >= 1e9 ) then
+        return format("%.3fb", number/1e9)
+    elseif ( number >= 1e6 ) then
+        return format("%.2fm", number/1e6)
+    elseif ( number >= 1e3 ) then
+        return format("%.1fk", number/1e3)
+    end
 end
 
 -- Abbreviate Function
@@ -755,6 +783,18 @@ function Nameplates:DangerousColor(unit)
 		end
     end
     return r, g, b
+end
+
+function Nameplates:AddHealthbarText(frame)
+    if ( frame ) then
+        local HealthBar = frame.UnitFrame.healthBar
+        if ( not HealthBar.text ) then
+            HealthBar.text = HealthBar:CreateFontString("$parentHeathValue", "OVERLAY")
+            HealthBar.text:Hide()
+            HealthBar.text:SetPoint("CENTER", HealthBar)
+            HealthBar.text:SetFont("FONTS\\FRIZQT__.TTF", 8, "OUTLINE")
+        end
+    end
 end
 
 -----------------------------------------
@@ -944,8 +984,12 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     InterfaceOptionsNamesPanelUnitNameplatesMakeLarger.setFunc = function() end
 
     C_NamePlate.SetNamePlateEnemySize(Nameplates.settings.healthWidth, 45)
-    C_NamePlate.SetNamePlateSelfSize(150, 60)
+    C_NamePlate.SetNamePlateSelfSize(150, 40)
     C_NamePlate.SetNamePlateSelfClickThrough(true)
+
+    SetCVar("NamePlateHorizontalScale", 1.2)
+    SetCVar("NamePlateVerticalScale", 1)
+
 
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
@@ -967,12 +1011,27 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     -- Nameplate Class Bar
     if not InCombatLockdown() then
         if class == "WARLOCK" or class == "DEATHKNIGHT" or class == "ROGUE" then
-            SetCVar("nameplateResourceOnTarget", 1)
+            ClassNameplateBarRogueDruidFrame:SetScale(1.1)
+            SetCVar("nameplateResourceOnTarget", 0)
             SetCVar("nameplateShowSelf", 1)
+            SetCVar("nameplatePersonalShowAlways", 1)
         else
             SetCVar("nameplateResourceOnTarget", 0)
             SetCVar("nameplateShowSelf", 1)
+            SetCVar("nameplatePersonalShowAlways", 1)
         end
+    end
+end
+
+function Nameplates:NAME_PLATE_CREATED(...)
+    local _, nameplate = ...
+    if ( nameplate ) then
+        if ( not ClassNameplateManaBarFrame.text ) then
+            ClassNameplateManaBarFrame.text = ClassNameplateManaBarFrame:CreateFontString("$parent.text", "OVERLAY")   
+            ClassNameplateManaBarFrame.text:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE")
+            ClassNameplateManaBarFrame.text:SetPoint("CENTER", ClassNameplateManaBarFrame)
+        end
+        --self:AddHealthbarText(nameplate)
     end
 end
 
@@ -992,6 +1051,10 @@ function Nameplates:CompactUnitFrame_UpdateHealthColor(frame)
 end
 
 function Nameplates:ClassNameplateManaBar_OnUpdate(self)
+    ClassNameplateManaBarFrame:SetHeight(14)
+    local currValue = UnitPower("player", self.powerType);
+    self.text:SetText(currValue)
+  
     if class == "DRUID" then 
         local lunarStrike = GetSpellInfo(194153)
         local solarWrath = GetSpellInfo(190984)
@@ -1005,9 +1068,10 @@ function Nameplates:ClassNameplateManaBar_OnUpdate(self)
         elseif spellCast == solarWrath then
             currValueAP = currValue + 8
         end
+
         if ( currValue ~= currValueAP and spellCast ) then
             self.forceUpdate = nil;
-
+            self.text:SetText(currValueAP)
             self.FeedbackFrame:StartFeedbackAnim(currValue or 0, currValueAP);
             if ( self.FullPowerFrame.active ) then
                 self.FullPowerFrame:StartAnimIfFull(self.currValue or 0, currValue);
@@ -1016,6 +1080,39 @@ function Nameplates:ClassNameplateManaBar_OnUpdate(self)
         else
             self.FeedbackFrame.GainGlowTexture:Hide()
         end
+    end
+end
+
+function Nameplates:CompactUnitFrame_OnUpdate(frame)
+    if ( frame:IsForbidden() ) then return end
+    if UnitIsUnit(frame.displayedUnit, "player") then
+        local spellCast = UnitCastingInfo("player")
+        if not ( spellCast ) then
+            ClassNameplateManaBarFrame.text:SetText(UnitPower("player"))
+        end
+    end
+end
+
+function Nameplates:CompactUnitFrame_UpdateStatusText(frame)
+    if ( frame:IsForbidden() ) then return end
+    if ( not frame.healthBar.text ) then
+        return
+    end
+
+    local health = UnitHealth(frame.displayedUnit)
+    local maxHealth = UnitHealthMax(frame.displayedUnit)
+    local perc = math.floor(100 * (health/maxHealth))
+
+    if ( health >= 1 ) then
+        frame.healthBar.text:SetFormattedText("%s - %s%s", Nameplates:FormatValue(health), perc, "%")
+    else
+        frame.healthBar.text:SetText("")
+    end
+
+    if not UnitIsUnit("player", frame.displayedUnit) then 
+        frame.healthBar.text:Show()
+    else
+        frame.healthBar.text:Hide()
     end
 end
 
@@ -1210,6 +1307,9 @@ function Nameplates:Buffs()
         if canStealOrPurge then
             button.overlay:SetVertexColor(1, 1, 1)
             button.overlay:Show()
+        elseif nameplateShowAll then
+            button.overlay:SetVertexColor(0, 0.5, 1)
+            button.overlay:Show()
         else
             button.overlay:Hide()
         end
@@ -1234,7 +1334,7 @@ function Nameplates:Buffs()
 
         for index = 1, BUFF_MAX_DISPLAY do
             local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, isBossDebuff, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')
-            if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or isBossDebuff or nameplateShowAll then
+            if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or isBossDebuff then
                 if not unitFrame.debuff.Aura_Icons[i] then
                     unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
                 end
@@ -1249,7 +1349,7 @@ function Nameplates:Buffs()
         
         for index = 1, BUFF_MAX_DISPLAY do         
             local name, _, _, _, duration, expire, caster, canStealOrPurge, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
-            if canStealOrPurge or nameplates_aura_spells[spellID] or (nameplateShowPersonal and caster == "player") then
+            if canStealOrPurge or nameplates_aura_spells[spellID] or (nameplateShowPersonal or personal_aura_spells[spellID] and caster == "player") then
                 if not unitFrame.buff.Aura_Icons[j] then
                     unitFrame.buff.Aura_Icons[j] = CreateIcon(unitFrame.buff, "aura"..j)
                 end
@@ -1429,6 +1529,7 @@ function Nameplates:Buffs()
 
     local function OnTargetChanged()
         for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
+            if UnitIsUnit(frame.UnitFrame.displayedUnit, "player") then return end
             if ( not frame.UnitFrame:IsForbidden() ) then
                 if Nameplates:IsShowingResourcesOnTarget() and UnitIsUnit(frame.UnitFrame.displayedUnit, "target") then
                     frame.suf.debuff:SetPoint("BOTTOM", NamePlateTargetResourceFrame, "TOP", 0, 5)
@@ -1452,6 +1553,8 @@ function Nameplates:Buffs()
             else                      
                 if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
                     frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 16)
+                elseif ( frame.UnitFrame.displayedUnit and UnitIsUnit(frame.UnitFrame.displayedUnit, "player") ) then
+                    frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 0)
                 elseif ( frame.UnitFrame.displayedUnit ) then
                     frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 5)
                 end
@@ -1488,4 +1591,147 @@ function Nameplates:Buffs()
     NamePlatesFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     NamePlatesFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     NamePlatesFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+end
+
+function Nameplates:CC()
+
+    local Spells = {
+        [1766] = { type = "interrupts", duration = 5 }, -- Kick (Rogue)
+        [2139] = { type = "interrupts", duration = 6 }, -- Counterspell (Mage)
+        [6552] = { type = "interrupts", duration = 4 }, -- Pummel (Warrior)
+        [19647] = { type = "interrupts", duration = 6 }, -- Spell Lock (Warlock)
+        [47528] = { type = "interrupts", duration = 3 }, -- Mind Freeze (Death Knight)
+        [57994] = { type = "interrupts", duration = 3 }, -- Wind Shear (Shaman)
+        [91802] = { type = "interrupts", duration = 2 }, -- Shambling Rush (Death Knight)
+        [96231] = { type = "interrupts", duration = 4 }, -- Rebuke (Paladin)
+        [106839] = { type = "interrupts", duration = 4 }, -- Skull Bash (Feral)
+        [115781] = { type = "interrupts", duration = 6 }, -- Optical Blast (Warlock)
+        [116705] = { type = "interrupts", duration = 4 }, -- Spear Hand Strike (Monk)
+        [132409] = { type = "interrupts", duration = 6 }, -- Spell Lock (Warlock)
+        [147362] = { type = "interrupts", duration = 3 }, -- Countershot (Hunter)
+        [171138] = { type = "interrupts", duration = 6 }, -- Shadow Lock (Warlock)
+        [183752] = { type = "interrupts", duration = 3 }, -- Consume Magic (Demon Hunter)
+        [187707] = { type = "interrupts", duration = 3 }, -- Muzzle (Hunter)
+        [212619] = { type = "interrupts", duration = 6 }, -- Call Felhunter (Warlock)
+        [231665] = { type = "interrupts", duration = 3 }, -- Avengers Shield (Paladin)
+    }
+
+    local interruptActive = false
+    local ccActive = false
+
+    local function UpdateAuraIcon(frame, duration, expirationTime, spellID)
+        local _, _, icon = GetSpellInfo(spellID)
+
+        CooldownFrame_Set(frame.cd, expirationTime - duration, duration, true, true)
+
+        frame.icon:SetTexture(icon)
+        frame.duration = duration
+        frame.expirationTime = expirationTime
+        frame.spellID = spellID
+
+        frame:Show()       
+    end
+
+    local function UpdateAuras(unit)
+        --if not unit then return end
+        local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
+        if not namePlate then return end
+
+        local frame = namePlate.UnitFrame
+        ccActive = false
+  
+        for i = 1, BUFF_MAX_DISPLAY do
+            local _, _, _, _, duration, expirationTime, _, _, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, i, 'HARMFUL')
+            if nameplateShowAll or spellID == 2094 then
+                UpdateAuraIcon(frame.cc, duration, expirationTime, spellID)
+                ccActive = true
+            end
+        end
+
+        if not ccActive and not interruptActive then frame.cc:Hide() end
+    end
+
+    local function UpdateInterrupts()
+        local _, event, _,_,_,_,_, destGUID, _,_,_, spellId = CombatLogGetCurrentEventInfo()
+
+        if event ~= "SPELL_INTERRUPT" then return end
+
+
+
+        local spell = Spells[spellId]
+        if not spell or spell.type ~= "interrupts" then return end
+
+        for _, namePlate in pairs(C_NamePlate.GetNamePlates(issecure())) do
+            local frame = namePlate.UnitFrame
+            local unit = frame.displayedUnit
+            
+            if not UnitIsPlayer(frame.displayedUnit) then return end
+
+            if destGUID == UnitGUID(unit) then
+                local duration = spell.duration
+                local spellID = spellId
+                local expirationTime = GetTime() + duration
+                interruptActive = true
+
+                UpdateAuraIcon(frame.cc, duration, expirationTime, spellID)
+                C_Timer.After(duration, function()
+                    interruptActive = false
+                    if not ccActive then frame.cc:Hide() end
+                end)
+            end
+        end
+    end
+
+    local function OnNamePlateCreated(frame)
+        if frame:IsForbidden() then return end      
+
+        frame.cc = CreateFrame("Frame", nil, frame)
+
+        frame.cc:SetPoint("LEFT", frame.healthBar, "RIGHT", 2, 0)
+        
+        frame.cc:SetWidth(25)
+        frame.cc:SetHeight(25)
+        frame.cc:SetFrameLevel(frame:GetFrameLevel())
+        
+        frame.cc.icon = frame.cc:CreateTexture(nil, "OVERLAY", nil, 3)
+        frame.cc.icon:SetAllPoints(frame.cc)
+
+        frame.cc.cd = CreateFrame("Cooldown", nil, frame.cc, "CooldownFrameTemplate")
+        frame.cc.cd:SetAllPoints(frame.cc)
+        frame.cc.cd:SetDrawEdge(false)
+        frame.cc.cd:SetAlpha(1)
+        frame.cc.cd:SetDrawSwipe(true)
+        frame.cc.cd:SetReverse(true)
+    end
+
+    local function OnNamePlateAdded(unit)
+        local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
+        local frame = namePlate.UnitFrame
+
+        if frame:IsForbidden() then return end
+
+        UpdateAuras(frame.displayedUnit)
+    end
+
+    local function NamePlates_OnEvent(self, event, ...) 
+        if ( event == "NAME_PLATE_CREATED" ) then
+            local namePlate = ...
+            OnNamePlateCreated(namePlate.UnitFrame)
+        elseif ( event == "NAME_PLATE_UNIT_ADDED" ) then 
+            local unit = ...
+            OnNamePlateAdded(unit)
+        elseif ( event == "COMBAT_LOG_EVENT_UNFILTERED" ) then
+            UpdateInterrupts()
+        elseif ( event == "UNIT_AURA" ) then
+            local unit = ...
+            UpdateAuras(unit)
+        end
+    end
+
+    local NamePlatesFrame = CreateFrame("Frame", "NamePlatesFrame", UIParent) 
+    NamePlatesFrame:SetScript("OnEvent", NamePlates_OnEvent)
+    NamePlatesFrame:RegisterEvent("UNIT_AURA")
+    NamePlatesFrame:RegisterEvent("NAME_PLATE_CREATED")
+    NamePlatesFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    NamePlatesFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 end
