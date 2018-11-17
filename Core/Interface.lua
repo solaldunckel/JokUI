@@ -91,7 +91,8 @@ function Interface:OnEnable()
 	self:ReAnchor()
 	self:Mover()
 	self:AutoQuest()
-	self:Skin()
+	--self:Skin()
+	self:RaidFrame()
 end
 
 do
@@ -134,6 +135,7 @@ function Interface:UnitFrames()
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 
 	PlayerPVPIcon:SetAlpha(0)
+	TargetFrameTextureFramePVPIcon:SetAlpha(0)
 	FocusFrameTextureFramePVPIcon:SetAlpha(0)
 
 	--HIDE COLORS BEHIND NAME
@@ -352,7 +354,6 @@ function Interface:CastBars()
 
 		-- Target Castbar
 		TargetFrameSpellBar:SetScale(1.1)
-		TargetFrameSpellBar.Icon:SetTexCoord(.08, .92, .08, .92)
   		TargetFrameSpellBar.Icon:SetPoint("RIGHT", TargetFrameSpellBar, "LEFT", -3, 0)
 
 		-- Target Timer
@@ -745,7 +746,7 @@ end
 function Interface:ReAnchor()
 
   	-- ETC
-  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -58)
+  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -15)
   	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
 
   	for i,v in pairs({
@@ -758,6 +759,8 @@ function Interface:ReAnchor()
 	}) do
         v:Hide()
 	end	
+
+	if InCombatLockdown() then return end
 
 	C_Timer.After(0.3, function()
 		LoadAddOn("Blizzard_OrderHallUI")
@@ -1113,20 +1116,6 @@ end
 
 function Interface:Skin()
 	--CharacterFrame
-	-- for i, v in pairs(
-	-- 	{
-	-- 		PlayerFrameTexture,
-	-- 		TargetFrameTextureFrameTexture,
-	-- 		FocusFrameTextureFrameTexture,
-	-- 		CastingBarFrame.Border,
-	-- 		TargetFrameSpellBar.Border,
-	-- 		TargetFrameToTTextureFrameTexture
-	-- 	}
-	-- ) do
-	-- 	v:SetVertexColor(.2, .2, .2)
-	-- end
-
-	--CharacterFrame
 	for i, v in pairs(
 		{
 			MainMenuBarArtFrameBackground.BackgroundLarge,
@@ -1136,4 +1125,29 @@ function Interface:Skin()
 	) do
 		v:SetVertexColor(.2, .2, .2)
 	end
+end
+
+function Interface:RaidFrame()
+
+	-- hooksecurefunc("CompactUnitFrame_UpdateDebuffs", function(frame)
+ --    	if ( frame:IsForbidden() ) then return end
+ --    	if frame:GetName():match("^Compact") then
+ --    		CompactUnitFrame_SetMaxDebuffs(frame,12); 
+ --    		if not frame.debuffFrames[4] then 
+ --    			for i=4,12 do 
+ --    				debuff=CreateFrame("Button", frame:GetName().."Debuff"..i, frame, "CompactDebuffTemplate");
+ --    				debuff.baseSize=22;
+ --    				debuff:SetSize(frame.buffFrames[1]:GetSize()) 
+ --    				debuff:Hide()
+ --    			end 
+ --    		end 
+ --    		for i=4,12 do       
+ --    			if not frame.debuffFrames[i] then return end 
+	-- 			local width = frame.debuffFrames[1]:GetWidth();
+	-- 			frame.debuffFrames[i]:SetSize(width, width);
+	-- 			frame.debuffFrames[i]:ClearAllPoints();
+	-- 			frame.debuffFrames[i]:SetPoint("BOTTOMRIGHT", frame.debuffFrames[1], "BOTTOMLEFT", -(width*(i-7)), 0)
+ --    		end
+ --    	end
+ --    end)
 end

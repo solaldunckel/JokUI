@@ -49,6 +49,7 @@ local nameplates_aura_spells = {
 
         -- Demon Hunter
             [212800] = true, -- Blur
+            [196555] = true, -- Netherwalk
 
         -- Druid
             [194223] = true, -- Celestial Alignment
@@ -78,9 +79,11 @@ local nameplates_aura_spells = {
 
         -- Paladin
             [31884] = true, -- Avenging Wrath
+            [216331] = true, -- Avenging Wrath
             [210294] = true, -- Divine Favor
             [1022] = true, -- Blessing of Protection
             [6940] = true, -- Sacrifice
+            [199448] = true, -- Sacrifice
             [498] = true, -- Divine Protection
             [642] = true, -- Divine Shield
             [184662] = true, -- Shield of Vengeance
@@ -96,6 +99,7 @@ local nameplates_aura_spells = {
         -- Rogue
             [199754] = true, -- Riposte
             [5277] = true, -- Evasion
+            [1966] = true, -- Feint
             [31224] = true, -- Cloak of Shadows
             [13750] = true, -- Adrenaline Rush
             [121471] = true, -- Shadow Blades
@@ -162,6 +166,19 @@ local moblist = {
                 
     [113966] = {tag = "DANGEROUS"}, -- Training Dummy
     [92166] = {tag = "OTHER"}, -- Training Dummy
+}
+
+local totemlist = {
+        [5925] = {icon = 136039}, -- Grounding Totem
+        [105427] = {icon = 135829}, -- Skyfury Totem
+        [2630] = {icon = 136102}, -- Earthbind Totem
+        [53006] = {icon = 237586}, -- Spirit Link Totem   
+        [60561] = {icon = 136100}, -- Earthgrab Totem   
+        [61245] = {icon = 136013}, -- Capacitor Totem
+        
+        [101398] = {icon = 537021}, -- Psyfiend
+
+        [119052] = {icon = 603532}, -- War Banner    
 }
 
 local nameplateScale = GetCVar("nameplateGlobalScale")
@@ -302,6 +319,7 @@ local nameplates_config = {
                 set = function(info,val) 
                     Nameplates.settings.globalScale = val
                     SetCVar("nameplateGlobalScale", val)
+                    Nameplates:ForceUpdate()
                 end,
                 get = function(info) return Nameplates.settings.globalScale end
             },
@@ -547,7 +565,6 @@ function Nameplates:OnEnable()
     self:SecureHook('CompactUnitFrame_UpdateName')
     self:SecureHook('CompactUnitFrame_UpdateHealthColor')
     self:SecureHook('ClassNameplateManaBar_OnUpdate')  
-    self:SecureHook('CompactUnitFrame_OnUpdate')
     self:SecureHook('CompactUnitFrame_UpdateStatusText')
 
     self:Buffs()
@@ -754,10 +771,10 @@ function Nameplates:GetNpcID(unit)
     return tonumber(npcID)
 end
 
-function Nameplates:IsDangerous(unit)
+function Nameplates:IsUnit(table, unit)
 	local npcID = self:GetNpcID(unit)
 
-	for k, npcs in pairs(moblist) do
+	for k, npcs in pairs(table) do
 		if k == npcID then
 			return true
 		end
@@ -801,19 +818,57 @@ end
 
 function Nameplates:SkinPlates(frame)
 
-	if self:IsDangerous(frame.displayedUnit) then
+	if self:IsUnit(moblist, frame.displayedUnit) then
 		frame.name:SetTextColor(self:DangerousColor(frame.displayedUnit))
 		frame.healthBar:SetStatusBarColor(self:DangerousColor(frame.displayedUnit))
 	end
+
+    if self:IsUnit(totemlist, frame.displayedUnit) then
+        if not frame.totemIcon then
+            frame.totemIcon = frame:CreateTexture(nil, "OVERLAY")
+            frame.totemIcon:SetSize(30, 30)
+            frame.totemIcon:SetPoint("BOTTOM", frame.name, "TOP", 0, 2)
+        end
+
+        local npcID = self:GetNpcID(frame.displayedUnit)
+
+        for k, npcs in pairs(totemlist) do
+            local icon = npcs["icon"]
+
+            if k == npcID then
+                frame.totemIcon:SetTexture(npcs["icon"])
+            end
+        end
+    else
+        if frame.totemIcon then
+            frame.totemIcon:SetTexture(nil)
+        end
+    end
+
+    if not UnitIsUnit("player", frame.displayedUnit) then
+        frame.healthBar:ClearAllPoints()
+        frame.healthBar:SetPoint("BOTTOMLEFT", frame.castBar, "TOPLEFT", 0, 7)
+        frame.healthBar:SetPoint("BOTTOMRIGHT", frame.castBar, "TOPRIGHT", 0, 7)
+    end
 
     -- Only Name Fix
 
     frame.healthBar:Show()
 
+    -- Raid Target Frame
+
+    frame.RaidTargetFrame:SetScale(1.3)
+
+    if IsActiveBattlefieldArena() then
+        frame.RaidTargetFrame:ClearAllPoints()
+        frame.RaidTargetFrame:SetSize(32,32)
+        frame.RaidTargetFrame:SetPoint("TOP", frame.name, "BOTTOM", 0, -15)
+    end
+
     -- Name
 
     frame.name:SetPoint("BOTTOM", frame.healthBar, "TOP", 0, 4)         
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize)
+    frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize*Nameplates.settings.globalScale)
 
      -- Health Bar Height
 
@@ -829,7 +884,7 @@ function Nameplates:SkinPlates(frame)
     
     if ( UnitIsPlayer(frame.displayedUnit) and not UnitCanAttack(frame.displayedUnit,"player") and not UnitIsUnit(frame.displayedUnit, "player") ) then
         local name = GetUnitName(frame.displayedUnit,true)
-        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize*Nameplates.settings.globalScale, "OUTLINE")
         frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
         frame:SetAlpha(1)
         -- 
@@ -841,7 +896,7 @@ function Nameplates:SkinPlates(frame)
     
     if ( UnitCanAttack(frame.displayedUnit,"player") and UnitIsPlayer(frame.displayedUnit) ) then
         local name = GetUnitName(frame.displayedUnit,true)
-        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize, "OUTLINE")
+        frame.name:SetFont("Fonts\\FRIZQT__.TTF", Nameplates.settings.nameSize*Nameplates.settings.globalScale, "OUTLINE")
         frame.name:SetText(Nameplates:SetPlayerNameByClass(frame.displayedUnit, name))
     end
     
@@ -851,7 +906,7 @@ function Nameplates:SkinPlates(frame)
         for i=1,3 do 
             if UnitIsUnit(frame.displayedUnit,"arena"..i) then 
                 frame.name:SetText(i)
-                frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11)
+                frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11*Nameplates.settings.globalScale)
                 frame.name:SetTextColor(1,1,0)
                 break 
             end 
@@ -861,31 +916,75 @@ end
 
 function Nameplates:SkinCastBar(frame)
 
+    if ( frame:IsForbidden() ) then return end
     -- Castbar.
 
     frame.castBar:SetStatusBarTexture(statusBar)
+    frame.castBar:SetHeight(7)
+    --Text
     frame.castBar.Text:SetShadowOffset(.5, -.5)
-    frame.castBar.Text:SetFont("Fonts\\FRIZQT__.TTF", 8, "THINOUTLINE")
-    frame.castBar:SetHeight(10)
-    frame.castBar.Icon:SetSize(12, 12)
-    frame.castBar.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    frame.castBar.Icon:SetPoint("RIGHT", frame.castBar, "LEFT", 2, 0)
+    frame.castBar.Text:SetFont("Fonts\\FRIZQT__.TTF", 8, "THINOUTLINE")    
+    --Icon
+    frame.castBar.Icon:SetSize(11, 11)
+    frame.castBar.Icon:SetPoint("RIGHT", frame.castBar, "LEFT", -4, 0)
+
+    if ( not frame.castBar.bord ) then
+        frame.castBar.bord = frame.castBar:CreateTexture(nil, "OVERLAY")
+        frame.castBar.bord:SetSize(Nameplates.settings.healthWidth*1.075, 38)
+        frame.castBar.bord:SetAlpha(1)
+        frame.castBar.bord:SetVertexColor(.8,.8,.8)
+        frame.castBar.bord:SetPoint("CENTER", frame.castBar, "CENTER", 0, 0)
+        frame.castBar.bord:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border-Small")
+    end
 
     -- Castbar Timer.
 
     if ( not frame.castBar.CastTime ) then
         frame.castBar.CastTime = frame.castBar:CreateFontString(nil, "OVERLAY")
         frame.castBar.CastTime:Hide()
-        frame.castBar.CastTime:SetPoint("RIGHT", frame.castBar, "RIGHT", 17, 0)
+        frame.castBar.CastTime:SetPoint("LEFT", frame.castBar, "RIGHT", 6, 0)
         frame.castBar.CastTime:SetFont(castbarFont, 8, "OUTLINE")
         frame.castBar.CastTime:Show()
     end
+
+    frame.castBar.BorderShield:SetTexture(nil)
 
     -- Update Castbar.
 
     frame.castBar:SetScript("OnValueChanged", function(self, value)
         Nameplates:UpdateCastbarTimer(frame)
-    end) 
+    end)
+
+    frame.castBar:SetScript("OnShow", function(self)
+        local notInterruptible
+
+        frame.castBar.BorderShield:Hide()
+
+        if ( frame.unit ) then
+            if ( frame.castBar.casting ) then
+                notInterruptible = select(8, UnitCastingInfo(frame.displayedUnit))
+            else
+                notInterruptible = select(7, UnitChannelInfo(frame.displayedUnit))
+            end
+
+            if notInterruptible then
+                frame.castBar.bord:SetTexture("Interface\\CastingBar\\UI-CastingBar-Small-FocusShield")
+                frame.castBar.bord:SetSize(Nameplates.settings.healthWidth*1.15, 38)
+                frame.castBar.Icon:SetSize(11, 11)
+                if ( frame.castBar.casting ) then
+                    frame.castBar.Icon:SetTexture(select(3, UnitCastingInfo(frame.displayedUnit)))
+                else
+                    frame.castBar.Icon:SetTexture(select(3, UnitChannelInfo(frame.displayedUnit)))
+                end
+                frame.castBar.Icon:Show()
+            else
+                frame.castBar.bord:SetSize(Nameplates.settings.healthWidth*1.076, 38)
+                frame.castBar.bord:SetAlpha(1)
+                frame.castBar.bord:SetPoint("CENTER", frame.castBar, "CENTER", 0, 0)
+                frame.castBar.bord:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border-Small")
+            end
+        end
+    end)
 end
 
 function Nameplates:ThreatColor(frame)
@@ -907,7 +1006,7 @@ function Nameplates:ThreatColor(frame)
                 r, g, b = classColor.r, classColor.g, classColor.b
             elseif ( CompactUnitFrame_IsTapDenied(frame) ) then
                 r, g, b = 0.5, 0.5, 0.5
-            elseif ( Nameplates:IsDangerous(frame.displayedUnit) ) then
+            elseif ( Nameplates:IsUnit(moblist, frame.displayedUnit) ) then
 				r, g, b = Nameplates:DangerousColor(frame.displayedUnit)
             elseif ( frame.optionTable.colorHealthBySelection ) then
                 if ( frame.optionTable.considerSelectionInCombatAsHostile and Nameplates:IsOnThreatListWithPlayer(frame.displayedUnit) ) then    
@@ -954,9 +1053,9 @@ function Nameplates:Highlight(frame)
 
     local function SetBorderColor(frame, r, g, b, a)
         frame.healthBar.border:SetVertexColor(r, g, b, a);
-        if frame.castBar and frame.castBar.border then
-            frame.castBar.border:SetVertexColor(r, g, b, a);
-        end
+        --if frame.castBar and frame.castBar.border then
+        --    frame.castBar.border:SetVertexColor(r, g, b, a);
+        --end
     end
 
     frame.selectionHighlight:Show()
@@ -989,11 +1088,17 @@ function Nameplates:PLAYER_ENTERING_WORLD()
 
     SetCVar("NamePlateHorizontalScale", 1.2)
     SetCVar("NamePlateVerticalScale", 1)
+    SetCVar("nameplateResourceOnTarget", 0)
+    SetCVar("nameplateShowSelf", 1)
+    SetCVar("nameplatePersonalShowAlways", 1)
 
+    local _, instanceType = IsInInstance()
+    if instanceType == "arena" then
+        --SetCVar("nameplateGlobalScale", 1.2)
+    end
 
     -- Friendly Force Stacking
     if Nameplates.settings.friendlymotion and Nameplates.settings.overlap then
-        local _, instanceType = IsInInstance()
         if instanceType == "party" or instanceType == "raid" then
             SetCVar("nameplateShowOnlyNames", 1)
             C_NamePlate.SetNamePlateFriendlySize(80, 0.1)
@@ -1012,13 +1117,6 @@ function Nameplates:PLAYER_ENTERING_WORLD()
     if not InCombatLockdown() then
         if class == "WARLOCK" or class == "DEATHKNIGHT" or class == "ROGUE" then
             ClassNameplateBarRogueDruidFrame:SetScale(1.1)
-            SetCVar("nameplateResourceOnTarget", 0)
-            SetCVar("nameplateShowSelf", 1)
-            SetCVar("nameplatePersonalShowAlways", 1)
-        else
-            SetCVar("nameplateResourceOnTarget", 0)
-            SetCVar("nameplateShowSelf", 1)
-            SetCVar("nameplatePersonalShowAlways", 1)
         end
     end
 end
@@ -1083,16 +1181,6 @@ function Nameplates:ClassNameplateManaBar_OnUpdate(self)
     end
 end
 
-function Nameplates:CompactUnitFrame_OnUpdate(frame)
-    if ( frame:IsForbidden() ) then return end
-    if UnitIsUnit(frame.displayedUnit, "player") then
-        local spellCast = UnitCastingInfo("player")
-        if not ( spellCast ) then
-            ClassNameplateManaBarFrame.text:SetText(UnitPower("player"))
-        end
-    end
-end
-
 function Nameplates:CompactUnitFrame_UpdateStatusText(frame)
     if ( frame:IsForbidden() ) then return end
     if ( not frame.healthBar.text ) then
@@ -1131,15 +1219,11 @@ function Nameplates:COMBAT_LOG_EVENT_UNFILTERED()
             for _, plateFrame in ipairs (C_NamePlate.GetNamePlates()) do
                 local token = plateFrame.namePlateUnitToken
                 if (plateFrame.UnitFrame.castBar:IsShown()) then
-                    --for u in Nameplates:GroupMembers() do
-                        --if UnitIsUnit(sourceName, u) then
-                            if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
-                                if (UnitGUID(token) == targetGUID) then
-                                    plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
-                                end
-                            end
-                       -- end
-                   -- end
+                    if (plateFrame.UnitFrame.castBar.Text:GetText() == INTERRUPTED) then
+                        if (UnitGUID(token) == targetGUID) then
+                            plateFrame.UnitFrame.castBar.Text:SetText (INTERRUPTED .. Nameplates:SetTextColorByClass(sourceName, sourceName))
+                        end
+                    end
                 end
             end
         elseif event == "SPELL_CAST_START" or event == "SPELL_CAST_SUCCESS" or event == "SPELL_CAST_FAILED" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
@@ -1307,9 +1391,6 @@ function Nameplates:Buffs()
         if canStealOrPurge then
             button.overlay:SetVertexColor(1, 1, 1)
             button.overlay:Show()
-        elseif nameplateShowAll then
-            button.overlay:SetVertexColor(0, 0.5, 1)
-            button.overlay:Show()
         else
             button.overlay:Hide()
         end
@@ -1334,7 +1415,7 @@ function Nameplates:Buffs()
 
         for index = 1, BUFF_MAX_DISPLAY do
             local name, _, _, _, duration, expire, caster, _, nameplateShowPersonal, spellID, _, isBossDebuff, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HARMFUL')
-            if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or isBossDebuff then
+            if (nameplates_aura_spells[spellID] and caster == "player") or (nameplateShowPersonal and caster == "player") or isBossDebuff or nameplateShowAll then
                 if not unitFrame.debuff.Aura_Icons[i] then
                     unitFrame.debuff.Aura_Icons[i] = CreateIcon(unitFrame.debuff, "aura"..i)
                 end
@@ -1349,7 +1430,7 @@ function Nameplates:Buffs()
         
         for index = 1, BUFF_MAX_DISPLAY do         
             local name, _, _, _, duration, expire, caster, canStealOrPurge, nameplateShowPersonal, spellID, _, _, castByPlayer, nameplateShowAll = UnitAura(unit, index, 'HELPFUL')
-            if canStealOrPurge or nameplates_aura_spells[spellID] or (nameplateShowPersonal or personal_aura_spells[spellID] and caster == "player") then
+            if canStealOrPurge or nameplates_aura_spells[spellID] or (nameplateShowPersonal and caster == "player") then
                 if not unitFrame.buff.Aura_Icons[j] then
                     unitFrame.buff.Aura_Icons[j] = CreateIcon(unitFrame.buff, "aura"..j)
                 end
@@ -1414,7 +1495,7 @@ function Nameplates:Buffs()
         -- Debuff Frame
         namePlate.suf.debuff = CreateFrame("Frame", nil, namePlate.suf)
 
-        namePlate.suf.debuff:SetPoint("BOTTOM", namePlate.UnitFrame.name, "TOP", 0, 3)
+        namePlate.suf.debuff:SetPoint("BOTTOM", namePlate.UnitFrame.name, "TOP", 0, 4)
         
         namePlate.suf.debuff:SetWidth(100)
         namePlate.suf.debuff:SetHeight(15)
@@ -1459,7 +1540,7 @@ function Nameplates:Buffs()
         -- Buff Frame
         namePlate.suf.buff = CreateFrame("Frame", nil, namePlate.suf)
 
-        namePlate.suf.buff:SetPoint("BOTTOMLEFT", namePlate.suf.debuff, "TOPLEFT", 0, 3)
+        namePlate.suf.buff:SetPoint("BOTTOMLEFT", namePlate.suf.debuff, "TOPLEFT", 0, 2)
         
         namePlate.suf.buff:SetWidth(100)
         namePlate.suf.buff:SetHeight(15)
@@ -1554,7 +1635,7 @@ function Nameplates:Buffs()
                 if ( frame.UnitFrame.displayedUnit and UnitShouldDisplayName(frame.UnitFrame.displayedUnit) ) then
                     frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 16)
                 elseif ( frame.UnitFrame.displayedUnit and UnitIsUnit(frame.UnitFrame.displayedUnit, "player") ) then
-                    frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 0)
+                    frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 2)
                 elseif ( frame.UnitFrame.displayedUnit ) then
                     frame.suf.debuff:SetPoint("BOTTOMLEFT", frame.UnitFrame.healthBar, "TOPLEFT", 0, 5)
                 end
@@ -1595,102 +1676,216 @@ end
 
 function Nameplates:CC()
 
-    local Spells = {
-        [1766] = { type = "interrupts", duration = 5 }, -- Kick (Rogue)
-        [2139] = { type = "interrupts", duration = 6 }, -- Counterspell (Mage)
-        [6552] = { type = "interrupts", duration = 4 }, -- Pummel (Warrior)
-        [19647] = { type = "interrupts", duration = 6 }, -- Spell Lock (Warlock)
-        [47528] = { type = "interrupts", duration = 3 }, -- Mind Freeze (Death Knight)
-        [57994] = { type = "interrupts", duration = 3 }, -- Wind Shear (Shaman)
-        [91802] = { type = "interrupts", duration = 2 }, -- Shambling Rush (Death Knight)
-        [96231] = { type = "interrupts", duration = 4 }, -- Rebuke (Paladin)
-        [106839] = { type = "interrupts", duration = 4 }, -- Skull Bash (Feral)
-        [115781] = { type = "interrupts", duration = 6 }, -- Optical Blast (Warlock)
-        [116705] = { type = "interrupts", duration = 4 }, -- Spear Hand Strike (Monk)
-        [132409] = { type = "interrupts", duration = 6 }, -- Spell Lock (Warlock)
-        [147362] = { type = "interrupts", duration = 3 }, -- Countershot (Hunter)
-        [171138] = { type = "interrupts", duration = 6 }, -- Shadow Lock (Warlock)
-        [183752] = { type = "interrupts", duration = 3 }, -- Consume Magic (Demon Hunter)
-        [187707] = { type = "interrupts", duration = 3 }, -- Muzzle (Hunter)
-        [212619] = { type = "interrupts", duration = 6 }, -- Call Felhunter (Warlock)
-        [231665] = { type = "interrupts", duration = 3 }, -- Avengers Shield (Paladin)
+    local spellList = {
+        -- Higher up = higher display priority
+
+        -- CCs
+        5211,   -- Mighty Bash (Stun)
+        108194, -- Asphyxiate (Stun)
+        221562, -- Asphyxiate Blood (Stun)
+        199804, -- Between the Eyes (Stun)
+        118905, -- Static Charge (Stun)
+        1833,   -- Cheap Shot (Stun)
+        853,    -- Hammer of Justice (Stun)
+        179057, -- Chaos Nova (Stun)
+        132169, -- Storm Bolt (Stun)
+        408,    -- Kidney Shot (Stun)
+        163505, -- Rake (Stun)
+        119381, -- Leg Sweep (Stun)
+        232055, -- Fists of Fury (Stun)
+        89766,  -- Axe Toss (Stun)
+        30283,  -- Shadowfury (Stun)
+        200166, -- Metamorphosis (Stun)
+        24394,  -- Intimidation (Stun)
+        211881, -- Fel Eruption (Stun)
+        221562, -- Asphyxiate, Blood Spec (Stun)
+        91800,  -- Gnaw (Stun)
+        91797,  -- Monstrous Blow (Stun)
+        205630, -- Illidan's Grasp (Stun)
+        208618, -- Illidan's Grasp (Stun)
+        203123, -- Maim (Stun)
+        200200, -- Holy Word: Chastise, Censure Talent (Stun)
+        118345, -- Pulverize (Stun)
+        22703,  -- Infernal Awakening (Stun)
+        132168, -- Shockwave (Stun)
+        46968,  -- Shockwave 2 (Stun)
+        20549,  -- War Stomp (Stun)
+        199085, -- Warpath (Stun)
+        204437, -- Lightning Lasso (Stun)
+        210141, -- Zombie Explosion (Stun)
+        212332, -- Gnaw (Stun)
+        171017, -- Meteor Strike Infernal (Stun)
+        171018, -- Meteor Strike Abyssal (Stun)
+        64044,  -- Psychic Horror (Stun)
+        255723, -- Bull Rush (Stun)
+        202244, -- Overrun (Stun)
+        202346, -- Double Barrel (Stun)
+
+        33786,  -- Cyclone (Disorient)
+        209753, -- Cyclone, Honor Talent (Disorient)
+        5246,   -- Intimidating Shout (Disorient)
+        238559, -- Bursting Shot (Disorient)
+        224729, -- Bursting Shot on NPC's (Disorient)
+        8122,   -- Psychic Scream (Disorient)
+        2094,   -- Blind (Disorient)
+        5484,   -- Howl of Terror (Disorient)
+        605,    -- Mind Control (Disorient)
+        105421, -- Blinding Light (Disorient)
+        207167, -- Blinding Sleet (Disorient)
+        31661,  -- Dragon's Breath (Disorient)
+        207685, -- Sigil of Misery (Disorient)
+        198909, -- Song of Chi-ji (Disorient)
+        202274, -- Incendiary Brew (Disorient)
+        5782,   -- Fear (Disorient)
+        118699, -- Fear (Disorient)
+        130616, -- Fear (Disorient)
+        115268, -- Mesmerize (Disorient)
+        6358,   -- Seduction (Disorient)
+        87204,  -- Sin and Punishment (Disorient)
+        2637,   -- Hibernate (Disorient)
+        226943, -- Mind Bomb (Disorient)
+        236748, -- Intimidating Roar (Disorient)
+
+        51514,  -- Hex (Incapacitate)
+        211004, -- Hex: Spider (Incapacitate)
+        210873, -- Hex: Raptor (Incapacitate)
+        211015, -- Hex: Cockroach (Incapacitate)
+        211010, -- Hex: Snake (Incapacitate)
+        196942, -- Hex (Voodoo Totem)
+        277784, -- Hex (Wicker Mongrel)
+        277778, -- Hex (Zandalari Tendonripper)
+        118,    -- Polymorph (Incapacitate)
+        61305,  -- Polymorph: Black Cat (Incapacitate)
+        28272,  -- Polymorph: Pig (Incapacitate)
+        61721,  -- Polymorph: Rabbit (Incapacitate)
+        61780,  -- Polymorph: Turkey (Incapacitate)
+        28271,  -- Polymorph: Turtle (Incapacitate)
+        161353, -- Polymorph: Polar Bear Cub (Incapacitate)
+        126819, -- Polymorph: Porcupine (Incapacitate)
+        161354, -- Polymorph: Monkey (Incapacitate)
+        161355, -- Polymorph: Penguin (Incapacitate)
+        161372, -- Polymorph: Peacock (Incapacitate)
+        277792, -- Polymorph (Bumblebee)
+        277787, -- Polymorph (Baby Direhorn)
+        3355,   -- Freezing Trap (Incapacitate)
+        203337, -- Freezing Trap, Diamond Ice Honor Talent (Incapacitate)
+        212365, -- Freezing Trap 2 (Incapacitate)
+        115078, -- Paralysis (Incapacitate)
+        213691, -- Scatter Shot (Incapacitate)
+        6770,   -- Sap (Incapacitate)
+        199743, -- Parley (Incapacitate)
+        20066,  -- Repentance (Incapacitate)
+        19386,  -- Wyvern Sting (Incapacitate)
+        6789,   -- Mortal Coil (Incapacitate)
+        200196, -- Holy Word: Chastise (Incapacitate)
+        221527, -- Imprison, Detainment Honor Talent (Incapacitate)
+        217832, -- Imprison (Incapacitate)
+        99,     -- Incapacitating Roar (Incapacitate)
+        82691,  -- Ring of Frost (Incapacitate)
+        9484,   -- Shackle Undead (Incapacitate)
+        1776,   -- Gouge (Incapacitate)
+        710,    -- Banish (Incapacitate)
+        107079, -- Quaking Palm (Incapacitate)
+        236025, -- Enraged Maim (Incapacitate)
+        197214, -- Sundering (Incapacitate)
+
+        -- Interrupts
+        1766,   -- Kick (Rogue)
+        2139,   -- Counterspell (Mage)
+        6552,   -- Pummel (Warrior)
+        19647,  -- Spell Lock (Warlock)
+        47528,  -- Mind Freeze (Death Knight)
+        57994,  -- Wind Shear (Shaman)
+        91802,  -- Shambling Rush (Death Knight)
+        96231,  -- Rebuke (Paladin)
+        93985, -- Skull Bash (Feral)
+        115781, -- Optical Blast (Warlock)
+        116705, -- Spear Hand Strike (Monk)
+        132409, -- Spell Lock (Warlock)
+        147362, -- Countershot (Hunter)
+        171138, -- Shadow Lock (Warlock)
+        183752, -- Consume Magic (Demon Hunter)
+        187707, -- Muzzle (Hunter)
+        212619, -- Call Felhunter (Warlock)
+        231665, -- Avengers Shield (Paladin)
+
+        -- Silences
+        81261,  -- Solar Beam
+        202933, -- Spider Sting
+        233022, -- Spider Sting 2
+        1330,   -- Garrote
+        15487,  -- Silence
+        199683, -- Last Word
+        47476,  -- Strangulate
+        31935,  -- Avenger's Shield
+        204490, -- Sigil of Silence
+        217824, -- Shield of Virtue
+        43523,  -- Unstable Affliction Silence 1
+        196364, -- Unstable Affliction Silence 2
+
+        -- Roots
+        339,    -- Entangling Roots
+        170855, -- Entangling Roots (Nature's Grasp)
+        201589, -- Entangling Roots (Tree of Life)
+        235963, -- Entangling Roots (Feral honor talent)
+        122,    -- Frost Nova
+        102359, -- Mass Entanglement
+        64695,  -- Earthgrab
+        200108, -- Ranger's Net
+        212638, -- Tracker's Net
+        162480, -- Steel Trap
+        204085, -- Deathchill
+        233395, -- Frozen Center
+        233582, -- Entrenched in Flame
+        201158, -- Super Sticky Tar
+        33395,  -- Freeze
+        228600, -- Glacial Spike
+        116706, -- Disable
+        45334,  -- Immobilized
+        53148,  -- Charge (Hunter Pet)
+        190927, -- Harpoon
+        136634, -- Narrow Escape (unused?)
+        198121, -- Frostbite
+        117526, -- Binding Shot
+        207171, -- Winter is Coming
     }
 
-    local interruptActive = false
-    local ccActive = false
+    local priorityList = {}
 
-    local function UpdateAuraIcon(frame, duration, expirationTime, spellID)
-        local _, _, icon = GetSpellInfo(spellID)
+    local interrupts = {
+        [1766] = 5, -- Kick (Rogue)
+        [2139] = 6, -- Counterspell (Mage)
+        [6552] = 4, -- Pummel (Warrior)
+        [19647] = 6, -- Spell Lock (Warlock)
+        [47528] = 3, -- Mind Freeze (Death Knight)
+        [57994] = 3, -- Wind Shear (Shaman)
+        [91802] = 2, -- Shambling Rush (Death Knight)
+        [96231] = 4, -- Rebuke (Paladin)
+        [93985] = 4, -- Skull Bash (Feral)
+        [115781] = 6, -- Optical Blast (Warlock)
+        [116705] = 4, -- Spear Hand Strike (Monk)
+        [132409] = 6, -- Spell Lock (Warlock)
+        [147362] = 3, -- Countershot (Hunter)
+        [171138] = 6, -- Shadow Lock (Warlock)
+        [183752] = 3, -- Consume Magic (Demon Hunter)
+        [187707] = 3, -- Muzzle (Hunter)
+        [212619] = 6, -- Call Felhunter (Warlock)
+        [231665] = 3, -- Avengers Shield (Paladin)
+    }
 
-        CooldownFrame_Set(frame.cd, expirationTime - duration, duration, true, true)
-
-        frame.icon:SetTexture(icon)
-        frame.duration = duration
-        frame.expirationTime = expirationTime
-        frame.spellID = spellID
-
-        frame:Show()       
-    end
-
-    local function UpdateAuras(unit)
-        --if not unit then return end
-        local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
-        if not namePlate then return end
-
-        local frame = namePlate.UnitFrame
-        ccActive = false
-  
-        for i = 1, BUFF_MAX_DISPLAY do
-            local _, _, _, _, duration, expirationTime, _, _, _, spellID, _, _, _, nameplateShowAll = UnitAura(unit, i, 'HARMFUL')
-            if nameplateShowAll or spellID == 2094 then
-                UpdateAuraIcon(frame.cc, duration, expirationTime, spellID)
-                ccActive = true
-            end
-        end
-
-        if not ccActive and not interruptActive then frame.cc:Hide() end
-    end
-
-    local function UpdateInterrupts()
-        local _, event, _,_,_,_,_, destGUID, _,_,_, spellId = CombatLogGetCurrentEventInfo()
-
-        if event ~= "SPELL_INTERRUPT" then return end
-
-
-
-        local spell = Spells[spellId]
-        if not spell or spell.type ~= "interrupts" then return end
-
-        for _, namePlate in pairs(C_NamePlate.GetNamePlates(issecure())) do
-            local frame = namePlate.UnitFrame
-            local unit = frame.displayedUnit
-            
-            if not UnitIsPlayer(frame.displayedUnit) then return end
-
-            if destGUID == UnitGUID(unit) then
-                local duration = spell.duration
-                local spellID = spellId
-                local expirationTime = GetTime() + duration
-                interruptActive = true
-
-                UpdateAuraIcon(frame.cc, duration, expirationTime, spellID)
-                C_Timer.After(duration, function()
-                    interruptActive = false
-                    if not ccActive then frame.cc:Hide() end
-                end)
-            end
-        end
+    for k, v in ipairs(spellList) do
+        priorityList[v] = k
     end
 
     local function OnNamePlateCreated(frame)
-        if frame:IsForbidden() then return end      
+        if frame:IsForbidden() then return end
 
-        frame.cc = CreateFrame("Frame", nil, frame)
+        frame.cc = CreateFrame("Frame", "$parent.CC", frame)
 
-        frame.cc:SetPoint("LEFT", frame.healthBar, "RIGHT", 2, 0)
+        frame.cc:SetPoint("LEFT", frame.healthBar, "RIGHT", 3, 2)
         
-        frame.cc:SetWidth(25)
-        frame.cc:SetHeight(25)
+        frame.cc:SetWidth(24)
+        frame.cc:SetHeight(24)
         frame.cc:SetFrameLevel(frame:GetFrameLevel())
         
         frame.cc.icon = frame.cc:CreateTexture(nil, "OVERLAY", nil, 3)
@@ -1702,6 +1897,122 @@ function Nameplates:CC()
         frame.cc.cd:SetAlpha(1)
         frame.cc.cd:SetDrawSwipe(true)
         frame.cc.cd:SetReverse(true)
+
+        frame.cc.activeId = nil
+        frame.cc.aura = { spellId = nil, icon = nil, start = nil, expire = nil }
+        frame.cc.interrupt = { spellId = nil, icon = nil, start = nil, expire = nil }
+    end
+
+    local function ApplyAura(frame)
+        local spellId, icon, start, expire
+
+        -- Check if an aura was found
+        if frame.aura.spellId then
+            spellId, icon, start, expire = frame.aura.spellId, frame.aura.icon, frame.aura.start, frame.aura.expire
+        end
+
+        -- Check if there's an interrupt lockout
+        if frame.interrupt.spellId then
+            -- Make sure the lockout is still active
+            if frame.interrupt.expire < GetTime() then
+                frame.interrupt.spellId = nil
+            -- Select the greatest priority (aura or interrupt)
+            elseif spellId and priorityList[frame.interrupt.spellId] < priorityList[spellId] or not spellId then
+                spellId, icon, start, expire = frame.interrupt.spellId, frame.interrupt.icon, frame.interrupt.start, frame.interrupt.expire
+            end
+        end
+
+        -- Set up the icon & cooldown
+        if spellId then
+            CooldownFrame_Set(frame.cd, start, expire - start, 1, true)
+            if spellId ~= frame.activeId then
+                frame.activeId = spellId
+                frame.icon:SetTexture(icon)
+            end
+        -- Remove cooldown & reset icon back to class icon
+        elseif frame.activeId then
+            frame.activeId = nil
+            frame.icon:SetTexture(nil)
+            CooldownFrame_Set(frame.cd, 0, 0, 0, true)
+        end
+    end
+
+    local function UpdateAuras(unit)
+        local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
+        if not namePlate then return end
+
+        local frame = namePlate.UnitFrame
+
+        local priorityAura = {
+            icon = nil,
+            spellId = nil,
+            duration = nil,
+            expires = nil,
+        }
+
+        local duration, icon, expires, spellId, _
+
+        for i = 1, BUFF_MAX_DISPLAY do
+            _, icon, _, _, duration, expires, _, _, _, spellId = UnitAura(unit, i, "HARMFUL")
+            if not spellId then break end
+
+            if priorityList[spellId] then
+                -- Select the greatest priority aura
+                if not priorityAura.spellId or priorityList[spellId] < priorityList[priorityAura.spellId] then
+                    priorityAura.icon = icon
+                    priorityAura.spellId = spellId
+                    priorityAura.duration = duration
+                    priorityAura.expires = expires
+                end
+            end
+        end
+
+        if priorityAura.spellId then
+            frame.cc.aura.spellId = priorityAura.spellId
+            frame.cc.aura.icon = priorityAura.icon
+            frame.cc.aura.start = priorityAura.expires - priorityAura.duration
+            frame.cc.aura.expire = priorityAura.expires
+        else
+            frame.cc.aura.spellId = nil
+        end
+
+        ApplyAura(frame.cc)
+    end
+
+    local function UpdateInterrupts()
+        local _, event,_,_,_,_,_, destGUID, _,_,_, spellId = CombatLogGetCurrentEventInfo()
+
+        if not interrupts[spellId] then return end
+
+        if event ~= "SPELL_INTERRUPT" and event ~= "SPELL_CAST_SUCCESS" then return end
+
+        if event == "SPELL_INTERRUPT" then
+            local _, _, icon = GetSpellInfo(spellId)
+            local start = GetTime()
+            local duration = interrupts[spellId]
+
+            for _, namePlate in pairs(C_NamePlate.GetNamePlates(issecure())) do
+                local frame = namePlate.UnitFrame
+                local unit = frame.displayedUnit
+                
+                if not UnitIsPlayer(frame.displayedUnit) then return end
+
+                if UnitGUID(unit) == destGUID then
+
+                    frame.cc.interrupt.spellId = spellId
+                    frame.cc.interrupt.icon = icon
+                    frame.cc.interrupt.start = start
+                    frame.cc.interrupt.expire = start + duration
+
+                    ApplyAura(frame.cc)
+
+                    -- Check for auras when an interrupt lockout expires
+                    C_Timer.After(duration, function()
+                        UpdateAuras(unit)
+                    end)
+                end
+            end
+        end
     end
 
     local function OnNamePlateAdded(unit)
@@ -1724,6 +2035,7 @@ function Nameplates:CC()
             UpdateInterrupts()
         elseif ( event == "UNIT_AURA" ) then
             local unit = ...
+            if not unit:find("nameplate") then return end
             UpdateAuras(unit)
         end
     end
