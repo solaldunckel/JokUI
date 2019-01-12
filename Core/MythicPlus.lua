@@ -27,7 +27,7 @@ local features = {}
 --]]
 
 local affixSchedule = {
-	{ 9, 8, 4 }, -- Fortified / Sanguine / Necrotic / Infested
+	{ 10, 8, 4 }, -- Fortified / Sanguine / Necrotic / Infested
 	{ 9, 11, 2 }, -- Tyrannical / Bursting / Skittish / Infested
 	{ 10, 5, 14 }, -- Fortified / Teeming / Quaking / Infested
 	{ 9, 6, 4 }, -- Tyrannical / Raging / Necrotic / Infested
@@ -136,12 +136,12 @@ function MythicPlus:OnEnable()
 	end
 
 	if MythicPlus.settings.enableProgress then
-		self:Progress()
+		--self:Progress()
 	end
 
 	self:Timer()
 	self:Schedule()
-	self:GuildBest()
+	--self:GuildBest()
 	C_MythicPlus.RequestCurrentAffixes()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -482,43 +482,7 @@ function MythicPlus:Schedule()
 	function MythicPlus:Blizzard_ChallengesUI()
 		local keyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
 		local keyMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID()
-
-		if C_MythicPlus.IsWeeklyRewardAvailable() then return end
-
-		-- Add EJ Button
-		local button = CreateFrame("Button", "EJ_Button", ChallengesFrame.WeeklyInfo.Child)
-        button:SetPoint("TOPRIGHT", ChallengesFrame.WeeklyInfo.Child, "TOPRIGHT", 2, -10)
-        button:SetWidth(80)
-        button:SetHeight(20)
-        
-        button:SetText("Journal")
-        button:SetNormalFontObject("GameFontNormalSmall")
-        
-        local ntex = button:CreateTexture()
-		ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
-		ntex:SetTexCoord(0, 0.625, 0, 0.6875)
-		ntex:SetAllPoints()	
-		button:SetNormalTexture(ntex)
-		
-		local htex = button:CreateTexture()
-		htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
-		htex:SetTexCoord(0, 0.625, 0, 0.6875)
-		htex:SetAllPoints()
-		button:SetHighlightTexture(htex)
-		
-		local ptex = button:CreateTexture()
-		ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
-		ptex:SetTexCoord(0, 0.625, 0, 0.6875)
-		ptex:SetAllPoints()
-		button:SetPushedTexture(ptex)
-
-		button:SetScript("OnMouseDown", function()
-			
-		end)
-
-		button:Hide()
-
-		ChallengesFrame.WeeklyInfo.Child.Label:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child, "TOP", -100, -25)
+		local weeklyBest = C_MythicPlus.GetWeeklyChestRewardLevel()		
 
 		if keyLevel then
 			ownedKeystone = true
@@ -531,7 +495,19 @@ function MythicPlus:Schedule()
 
 			local dungeonName = C_ChallengeMode.GetMapUIInfo(keyMapID)
 
-			--print(dungeonName .. " (" .. keyLevel .. ")")
+			ChallengesFrame.WeeklyInfo.Child.RunStatus:ClearAllPoints()
+			ChallengesFrame.WeeklyInfo.Child.RunStatus:SetScale(0.8)
+			ChallengesFrame.WeeklyInfo.Child.Label:SetPoint("TOP", ChallengesFrame.WeeklyInfo.Child, "TOP", -100, -25)
+
+			-- Move the big center chest visual to the left
+	    	MythicFrame.WeeklyChest:SetPoint("LEFT", MythicFrame, "LEFT", 70, -100)
+	    	MythicFrame.WeeklyChest:SetScale(0.9)
+	    	MythicFrame.RunStatus:SetPoint("TOP", MythicFrame.WeeklyChest, "TOP", 0, 5)
+	    	-- Center status text to mid if its the long one
+	    	if MythicFrame.WeeklyChest.CollectChest:IsShown() or MythicFrame.WeeklyChest.MissingKeystoneChest:IsShown() then
+	        	MythicFrame.RunStatus:ClearAllPoints()
+	        	MythicFrame.RunStatus:SetPoint("CENTER", MythicFrame, "TOP", 0, -90)
+	    	end
 
 			local key = CreateFrame('Frame', nil, MythicFrame)
 			key:SetPoint("BOTTOM", MythicFrame.RunStatus, "TOP", 0, 10)
@@ -589,22 +565,31 @@ function MythicPlus:Schedule()
 			frame.Entries = entries
 
 			hooksecurefunc("ChallengesFrame_Update", UpdateAffixes)
+		else
+			ChallengesFrame.WeeklyInfo.Child.RunStatus:ClearAllPoints()
+			ChallengesFrame.WeeklyInfo.Child.RunStatus:SetPoint("CENTER", ChallengesFrame, "CENTER", 0, 10)
 		end
 	end
 
 	function MythicPlus:CheckCurrentAffixes()
-
-		currentWeek = nil
-		affix = nil
-		
+		currentWeek = nil		
 		C_MythicPlus.RequestCurrentAffixes()
-		local weeklyAffixes = C_MythicPlus.GetCurrentAffixes()
 
-		for index, affixes in ipairs(affixSchedule) do
-			if weeklyAffixes[1] == affixes[1] and weeklyAffixes[2] == affixes[2] and weeklyAffixes[3] == affixes[3] then
-				currentWeek = index
+		local weeklyAffixes = C_MythicPlus.GetCurrentAffixes()
+		
+		if weeklyAffixes then
+			for index, affixes in ipairs(affixSchedule) do
+				local matches = 0
+				for _, affix in ipairs(weeklyAffixes) do
+					if affix.id == affixes[1] or affix.id == affixes[2] or affix.id == affixes[3] then
+						matches = matches + 1
+					end
+				end
+				if matches >= 3 then
+					currentWeek = index
+				end
 			end
-		end		
+		end	
 	end
 end
 
@@ -622,24 +607,13 @@ function MythicPlus:GuildBest()
 	end
 
 	local function ChallengesFrame_AddGuildBest()
-	    if not ChallengesFrame or not ChallengesFrame:IsShown() then
+		local keyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+		
+	    if not ChallengesFrame or not ChallengesFrame:IsShown() or not keyLevel then
 	        return
 	    end
 
-	    if RaiderIO_GuildBestFrame then
-	    	RaiderIO_GuildBestFrame:Hide()
-	    end
-
 	    local frame = ChallengesFrame.WeeklyInfo.Child
-	    -- Move the big center chest visual to the left
-	    frame.WeeklyChest:SetPoint("LEFT", frame, "LEFT", 70, -100)
-	    frame.WeeklyChest:SetScale(0.9)
-	    frame.RunStatus:SetPoint("TOP", frame.WeeklyChest, "TOP", 0, 5)
-	    -- Center status text to mid if its the long one
-	    if frame.WeeklyChest.CollectChest:IsShown() or frame.WeeklyChest.MissingKeystoneChest:IsShown() then
-	        frame.RunStatus:ClearAllPoints()
-	        frame.RunStatus:SetPoint("CENTER", frame, "TOP", 0, -90)
-	    end
 
 	    local container = _G["ChallengesFrameGuildBestFrame"]
 	    if not container then
@@ -957,54 +931,6 @@ function MythicPlus:Progress()
 	--- NAMEPLATES
 	---
 
-	local function isTargetPulled(target)
-		local threat = UnitThreatSituation("player", target) or -1 -- Is nil if we're not on their aggro table, so make it -1 instead.
-		if isValidTarget(target) and (threat >= 0 or UnitPlayerControlled(target.."target")) then
-			return true
-		end
-		return false
-	end
-		
-	local function getPulledUnits()
-		local tempList = {}
-		for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
-			if nameplate.UnitFrame.unitExists then
-				if isTargetPulled(nameplate.UnitFrame.displayedUnit) then
-					table.insert(tempList, UnitGUID(nameplate.UnitFrame.displayedUnit))
-				end
-			end
-		end
-		return tempList
-	end
-
-	local function getPulledProgress(pulledUnits)
-		local estProg = 0
-		for _, guid in pairs(pulledUnits) do
-			npcID = getNPCID(guid)
-			if npcID then
-				estProg = estProg + (getExactProgress(npcID) or 0)
-			end
-		end
-		return estProg
-	end
-
-	local function updateCurrentPullEstimate()
-		local pulledUnits = getPulledUnits()
-		local estProg = getPulledProgress(pulledUnits)
-		local curProg = getEnemyForcesProgress()
-		local perProg = getEnemyForcesPercentage()
-		local totProg = estProg + curProg
-		local maxProg = getMaxQuantity()
-		if estProg == 0 then
-			tempMessage = string.format("%.2f%s - %s/%s", perProg, "%", curProg, maxProg)
-		else
-			tempMessage = string.format("%s + %s = %s/%s", curProg, estProg, totProg, maxProg)
-		end
-		if not curProg == maxProg then
-			ScenarioObjectiveBlock.currentLine.Bar.Label:SetText(tempMessage)
-		end
-	end
-
 	local function createNameplateText(token)
 		local npcID = getNPCID(UnitGUID(token))
 		if npcID and MythicPlus.settings.enableNameplateText then
@@ -1154,7 +1080,6 @@ function MythicPlus:Progress()
 	MythicProgress:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-	MythicProgress:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 	function MythicProgress:OnEvent(event, ...)
 		args={...}
@@ -1168,26 +1093,9 @@ function MythicPlus:Progress()
 			onAddNameplate(...)
 		elseif event == "NAME_PLATE_UNIT_REMOVED" then
 			onRemoveNameplate(...)
-		elseif event == "PLAYER_REGEN_ENABLED" then
-			local numSteps = select(3, C_Scenario.GetStepInfo())
-			local criteriaString, _, completed, _, totalQuantity, _, _, quantityString, _, _, _, _, isWeightedProgress = C_Scenario.GetCriteriaInfo(numSteps)
-			local currentQuantity = getEnemyForcesProgress()
-			if (isWeightedProgress and not completed) and currentQuantity and totalQuantity then
-				ScenarioObjectiveBlock.currentLine.Bar.Label:SetFormattedText("%.2f%% - %d/%d", currentQuantity/totalQuantity*100, currentQuantity, totalQuantity)
-			end
 		end
 	end
 
-	function MythicProgress:OnUpdate(elapsed)
-		if not isMythicPlus() then return end
-		currentPullUpdateTimer = currentPullUpdateTimer + elapsed * 1000 
-		if currentPullUpdateTimer >= 200 then
-			currentPullUpdateTimer = 0
-			updateCurrentPullEstimate()
-		end
-	end
-
-	MythicProgress:SetScript("OnUpdate", MythicProgress.OnUpdate)
 	MythicProgress:SetScript("OnEvent", MythicProgress.OnEvent)
 	GameTooltip:HookScript("OnTooltipSetUnit", onNPCTooltip)
 end

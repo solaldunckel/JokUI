@@ -17,11 +17,13 @@ local interface_defaults = {
     profile = {
     	UnitFrames = {
     		scale = 1.1,
+    		skin = true,
     	},
     	CastBars = {
     		player = { x = 0, y = 175},
     		target = { x = 0, y = 550},
-    	}, 	
+    	},
+    	BossFrame = {"TOPLEFT", nil, "TOPLEFT", 1250, -285},
     }
 }
 
@@ -60,7 +62,18 @@ local interface_config = {
 					FocusFrame:SetScale(val)
                 end,
                 get = function(info) return Interface.settings.UnitFrames.scale end
-            },			
+            },
+            skin = {
+                type = "toggle",
+                name = "Skin Unit Frames",
+                desc = "|cffaaaaaa Skin Unit Frames. |r",
+                descStyle = "inline",
+                width = "full",
+                order = 1,
+                set = function(info,val) Interface.settings.UnitFrames.skin = val
+                end,
+                get = function(info) return Interface.settings.UnitFrames.skin end
+            },		
         },
     },
 }
@@ -91,7 +104,8 @@ function Interface:OnEnable()
 	self:ReAnchor()
 	self:Mover()
 	self:AutoQuest()
-	--self:Skin()
+	self:BossFrame()
+	self:Skin()
 	self:RaidFrame()
 end
 
@@ -134,9 +148,13 @@ function Interface:UnitFrames()
 	TargetFrame:SetScale(Interface.settings.UnitFrames.scale)
 	FocusFrame:SetScale(Interface.settings.UnitFrames.scale)
 
-	PlayerPVPIcon:SetAlpha(0)
 	TargetFrameTextureFramePVPIcon:SetAlpha(0)
 	FocusFrameTextureFramePVPIcon:SetAlpha(0)
+
+	--PET
+	PetFrame:ClearAllPoints()
+	PetFrame:SetScale(1.1)
+	PetFrame:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 80, -57)
 
 	--HIDE COLORS BEHIND NAME
 	hooksecurefunc("TargetFrame_CheckFaction", function(self)
@@ -159,12 +177,217 @@ function Interface:UnitFrames()
 	    colour(self, self.unit)
 	end)
 
+	if Interface.settings.UnitFrames.skin then
+
+		--PLAYER
+		function StylePlayerFrame(self)
+			PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
+
+			PlayerName:SetPoint("CENTER", PlayerFrame, "CENTER", 50, 36)
+
+			PlayerFrameGroupIndicatorText:ClearAllPoints()
+			PlayerFrameGroupIndicatorText:SetPoint("BOTTOMLEFT", PlayerFrame, "TOP", 0, -20)
+			PlayerFrameGroupIndicatorLeft:Hide()
+			PlayerFrameGroupIndicatorMiddle:Hide()
+			PlayerFrameGroupIndicatorRight:Hide()
+
+			PlayerFrameHealthBar:SetPoint("TOPLEFT", 106, -24)
+			PlayerFrameHealthBar:SetHeight(26)
+
+			PlayerFrameHealthBar.LeftText:ClearAllPoints()
+			PlayerFrameHealthBar.LeftText:SetPoint("LEFT", PlayerFrameHealthBar, "LEFT", 5, 0)
+
+			PlayerFrameHealthBar.RightText:ClearAllPoints()
+			PlayerFrameHealthBar.RightText:SetPoint("RIGHT", PlayerFrameHealthBar, "RIGHT", -5, 0)
+			PlayerFrameHealthBar.RightText:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE")
+			PlayerFrameHealthBarText:SetPoint("CENTER", PlayerFrameHealthBar, "CENTER", 0, 0)
+
+			PlayerFrameManaBar:SetPoint("TOPLEFT", 106, -52)
+			PlayerFrameManaBar:SetHeight(13)
+
+			PlayerFrameManaBar.LeftText:ClearAllPoints()
+			PlayerFrameManaBar.LeftText:SetPoint("LEFT", PlayerFrameManaBar, "LEFT", 5, 0)
+
+			PlayerFrameManaBar.RightText:ClearAllPoints()
+			PlayerFrameManaBar.RightText:SetPoint("RIGHT", PlayerFrameManaBar, "RIGHT", -3, 1)
+			PlayerFrameManaBarText:SetPoint("CENTER", PlayerFrameManaBar, "CENTER", 0, 0)
+
+			PlayerFrameManaBar.FeedbackFrame:ClearAllPoints()
+			PlayerFrameManaBar.FeedbackFrame:SetPoint("CENTER", PlayerFrameManaBar, "CENTER", 0, 0)
+			PlayerFrameManaBar.FeedbackFrame:SetHeight(13)
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:ClearAllPoints()
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:SetPoint(
+				"CENTER",
+				PlayerFrameManaBar.FullPowerFrame,
+				"RIGHT",
+				-6,
+				-3
+			)
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:SetSize(30, 29)
+			PlayerFrameManaBar.FullPowerFrame.PulseFrame:ClearAllPoints()
+			PlayerFrameManaBar.FullPowerFrame.PulseFrame:SetPoint("CENTER", PlayerFrameManaBar.FullPowerFrame, "CENTER", -6, -2)
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:ClearAllPoints()
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:SetPoint(
+				"CENTER",
+				PlayerFrameManaBar.FullPowerFrame,
+				"RIGHT",
+				5,
+				-4
+			)
+			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:SetSize(30, 50)
+		end
+		hooksecurefunc("PlayerFrame_ToPlayerArt", StylePlayerFrame)
+
+		--TARGET
+		function StyleTargetFrame(self, forceNormalTexture)
+			local classification = UnitClassification(self.unit)
+			self.deadText:ClearAllPoints()
+			self.deadText:SetPoint("CENTER", self.healthbar, "CENTER", 0, 0)
+			self.levelText:SetPoint("RIGHT", self.healthbar, "BOTTOMRIGHT", 63, 10)
+			self.nameBackground:Hide()
+			self.Background:SetSize(119, 42)
+			self.manabar.pauseUpdates = false
+			self.manabar:Show()
+			TextStatusBar_UpdateTextString(self.manabar)
+			self.threatIndicator:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Flash")
+			self.name:SetPoint("LEFT", self, 15, 36)
+			self.healthbar:SetSize(119, 26)
+			self.healthbar:ClearAllPoints()
+			self.healthbar:SetPoint("TOPLEFT", 5, -24)
+			self.healthbar.LeftText:ClearAllPoints()
+			self.healthbar.LeftText:SetPoint("LEFT", self.healthbar, "LEFT", 5, 0)
+			self.healthbar.RightText:ClearAllPoints()
+			self.healthbar.RightText:SetPoint("RIGHT", self.healthbar, "RIGHT", -5, 0)
+			self.healthbar.TextString:SetPoint("CENTER", self.healthbar, "CENTER", 0, 0)
+			self.manabar:ClearAllPoints()
+			self.manabar:SetPoint("TOPLEFT", 5, -52)
+			self.manabar:SetSize(119, 13)
+			self.manabar.LeftText:ClearAllPoints()
+			self.manabar.LeftText:SetPoint("LEFT", self.manabar, "LEFT", 5, 0)
+			self.manabar.RightText:ClearAllPoints()
+			self.manabar.RightText:SetPoint("RIGHT", self.manabar, "RIGHT", -5, 0)
+			self.manabar.TextString:SetPoint("CENTER", self.manabar, "CENTER", 0, 0)
+
+			--TargetOfTarget
+			TargetFrameToTHealthBar:ClearAllPoints()
+			TargetFrameToTHealthBar:SetPoint("TOPLEFT", 44, -15)
+			TargetFrameToTHealthBar:SetHeight(8)
+			TargetFrameToTManaBar:ClearAllPoints()
+			TargetFrameToTManaBar:SetPoint("TOPLEFT", 44, -24)
+			TargetFrameToTManaBar:SetHeight(5)
+			FocusFrameToTHealthBar:ClearAllPoints()
+			FocusFrameToTHealthBar:SetPoint("TOPLEFT", 45, -15)
+			FocusFrameToTHealthBar:SetHeight(8)
+			FocusFrameToTManaBar:ClearAllPoints()
+			FocusFrameToTManaBar:SetPoint("TOPLEFT", 45, -25)
+			FocusFrameToTManaBar:SetHeight(3)
+			FocusFrameToT.deadText:SetWidth(0.01)
+
+			if (forceNormalTexture) then
+				self.borderTexture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame")
+			elseif (classification == "minus") then
+				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
+				forceNormalTexture = true
+			elseif (classification == "worldboss" or classification == "elite") then
+				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Elite")
+			elseif (classification == "rareelite") then
+				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Rare-Elite")
+			elseif (classification == "rare") then
+				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Rare")
+			else
+				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
+				forceNormalTexture = true
+			end
+
+			if (forceNormalTexture) then
+				self.haveElite = nil
+				if (classification == "minus") then
+					self.Background:SetSize(119, 42)
+					self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
+					--
+					self.nameBackground:Hide()
+					self.name:SetPoint("LEFT", self, 15, 36)
+					self.healthbar:ClearAllPoints()
+					self.healthbar:SetPoint("LEFT", 5, 13)
+				else
+					self.Background:SetSize(119, 42)
+					self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
+				end
+				if (self.threatIndicator) then
+					if (classification == "minus") then
+						self.threatIndicator:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Minus-Flash")
+						self.threatIndicator:SetTexCoord(0, 1, 0, 1)
+						self.threatIndicator:SetWidth(256)
+						self.threatIndicator:SetHeight(128)
+						self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -24, 0)
+					else
+						self.threatIndicator:SetTexCoord(0, 0.9453125, 0, 0.181640625)
+						self.threatIndicator:SetWidth(242)
+						self.threatIndicator:SetHeight(93)
+						self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -24, 0)
+						self.threatNumericIndicator:SetPoint("BOTTOM", PlayerFrame, "TOP", 75, -22)
+					end
+				end
+			else
+				self.haveElite = true
+				TargetFrameBackground:SetSize(119, 42)
+				self.Background:SetSize(119, 42)
+				self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
+				if (self.threatIndicator) then
+					self.threatIndicator:SetTexCoord(0, 0.9453125, 0.181640625, 0.400390625)
+					self.threatIndicator:SetWidth(242)
+					self.threatIndicator:SetHeight(112)
+					self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -22, 9)
+				end
+			end
+
+			if (self.questIcon) then
+				if (UnitIsQuestBoss(self.unit)) then
+					self.questIcon:Show()
+				else
+					self.questIcon:Hide()
+				end
+			end
+		end
+		hooksecurefunc("TargetFrame_CheckClassification", StyleTargetFrame)
+
+		-- Hide Textures
+		hooksecurefunc("PlayerFrame_UpdateStatus", function()
+			PlayerStatusTexture:Hide()
+			PlayerRestGlow:Hide()
+			PlayerStatusGlow:Hide()
+			PlayerPrestigeBadge:SetAlpha(0)
+			PlayerPrestigePortrait:SetAlpha(0)
+			TargetFrameTextureFramePrestigeBadge:SetAlpha(0)
+			TargetFrameTextureFramePrestigePortrait:SetAlpha(0)
+			FocusFrameTextureFramePrestigeBadge:SetAlpha(0)
+			FocusFrameTextureFramePrestigePortrait:SetAlpha(0)
+		end)
+	end
+
 	-- HIT INDICATOR
 	PlayerFrame:UnregisterEvent("UNIT_COMBAT")
 	PetFrame:UnregisterEvent("UNIT_COMBAT")
 end 
 
 function Interface:Chat()
+
+	CHAT_FRAME_FADE_TIME = 0.15
+	CHAT_FRAME_FADE_OUT_TIME = 1
+	CHAT_TAB_HIDE_DELAY = 0
+	CHAT_FRAME_TAB_SELECTED_MOUSEOVER_ALPHA = 1
+	CHAT_FRAME_TAB_SELECTED_NOMOUSE_ALPHA = 0
+	CHAT_FRAME_TAB_ALERTING_MOUSEOVER_ALPHA = 1
+	CHAT_FRAME_TAB_ALERTING_NOMOUSE_ALPHA = 1
+	CHAT_FRAME_TAB_NORMAL_MOUSEOVER_ALPHA = 1
+	CHAT_FRAME_TAB_NORMAL_NOMOUSE_ALPHA = 0
+
+	for i = 1, 7 do
+		_G["ChatFrame" .. i]:SetFading(1)
+	end
+
+	ChatFrameMenuButton:HookScript("OnShow", ChatFrameMenuButton.Hide)
+	ChatFrameMenuButton:Hide()
 
 	-- Table to keep track of frames you already saw:
 	local frames = {}
@@ -176,6 +399,90 @@ function Interface:Chat()
 		frame:SetClampRectInsets(0, 0, 0, 0)
 		frame:SetMaxResize(UIParent:GetWidth(), UIParent:GetHeight())
 		frame:SetMinResize(250, 100)
+
+		local name = frame:GetName()
+		_G[name .. "ButtonFrame"]:Hide()
+		_G[name .. "EditBoxLeft"]:Hide()
+		_G[name .. "EditBoxMid"]:Hide()
+		_G[name .. "EditBoxRight"]:Hide()
+
+		local editbox = _G[name .. "EditBox"]
+		editbox:ClearAllPoints()
+		editbox:SetPoint("TOPLEFT", ChatFrame1, "BOTTOMLEFT", -7, 0)
+		editbox:SetPoint("TOPRIGHT", ChatFrame1, "BOTTOMRIGHT", 10, 0)
+		editbox:SetAltArrowKeyMode(false)
+
+		local cf = _G[name]
+
+		local tt = _G[name .. "ThumbTexture"]
+		tt:Hide()
+		tt.Show = function()
+		end
+
+		local sb = cf["ScrollBar"]
+		sb:Show()
+		sb.Show = function()
+		end
+
+		-- _G[name .. "EditBox"]:ClearAllPoints()
+		-- _G[name .. "EditBox"]:SetPoint("TOPLEFT", UIParent, "CENTER", -100, -50)
+		-- _G[name .. "EditBox"]:SetSize(250, 25)
+		-- _G[name .. "EditBox"]:SetScale(1.1)
+		-- _G[name.."EditBoxFocusLeft"]:SetTexture(nil)
+		-- _G[name.."EditBoxFocusRight"]:SetTexture(nil)
+		-- _G[name.."EditBoxFocusMid"]:SetTexture(nil)
+		-- _G[name .. "EditBox"]:EnableMouse(false)
+
+
+		cf:EnableMouse(1)
+		ChatFrameChannelButton:EnableMouse(1)
+		ChatFrameToggleVoiceDeafenButton:EnableMouse(1)
+		ChatFrameToggleVoiceMuteButton:EnableMouse(1)
+		ChatFrameChannelButton:SetAlpha(0)
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0)
+
+		cf:SetScript("OnEnter", function(self) 
+			ChatFrameChannelButton:SetAlpha(0.8)	
+			ChatFrameToggleVoiceDeafenButton:SetAlpha(0.8)
+			ChatFrameToggleVoiceMuteButton:SetAlpha(0.8)
+		end)
+		cf:SetScript("OnLeave", function(self) 
+			ChatFrameChannelButton:SetAlpha(0)	
+			ChatFrameToggleVoiceDeafenButton:SetAlpha(0)
+			ChatFrameToggleVoiceMuteButton:SetAlpha(0)
+		end)
+
+		ChatFrameChannelButton:SetScript("OnEnter", function(self) 
+		ChatFrameChannelButton:SetAlpha(0.8)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0.8)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0.8)
+		end)
+		ChatFrameChannelButton:SetScript("OnLeave", function(self) 
+		ChatFrameChannelButton:SetAlpha(0)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0)
+		end)
+		ChatFrameToggleVoiceDeafenButton:SetScript("OnEnter", function(self) 
+		ChatFrameChannelButton:SetAlpha(0.8)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0.8)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0.8)
+		end)
+		ChatFrameToggleVoiceDeafenButton:SetScript("OnLeave", function(self) 
+		ChatFrameChannelButton:SetAlpha(0)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0)
+		end)
+		ChatFrameToggleVoiceMuteButton:SetScript("OnEnter", function(self) 
+		ChatFrameChannelButton:SetAlpha(0.8)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0.8)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0.8)
+		end)
+		ChatFrameToggleVoiceMuteButton:SetScript("OnLeave", function(self) 
+		ChatFrameChannelButton:SetAlpha(0)	
+		ChatFrameToggleVoiceDeafenButton:SetAlpha(0)
+		ChatFrameToggleVoiceMuteButton:SetAlpha(0)
+		end)
 
 		frames[frame] = true
 	end
@@ -197,6 +504,12 @@ function Interface:Chat()
 		_G[chatWindowName.."TabSelectedMiddle"]:SetTexture(nil)
 		_G[chatWindowName.."TabSelectedRight"]:SetTexture(nil)
 
+		_G[chatWindowName .. "RightTexture"]:SetTexture(nil)
+		_G[chatWindowName .. "TopTexture"]:SetTexture(nil)
+		_G[chatWindowName .. "BottomTexture"]:SetTexture(nil)
+		_G[chatWindowName .. "LeftTexture"]:SetTexture(nil)
+		_G[chatWindowName .. "Background"]:Hide()
+
 		_G[chatWindowName.."ButtonFrameBackground"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameLeftTexture"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameRightTexture"]:SetTexture( nil );
@@ -207,6 +520,31 @@ function Interface:Chat()
 		_G[chatWindowName.."ButtonFrameBottomRightTexture"]:SetTexture( nil );
 		_G[chatWindowName.."ButtonFrameBottomLeftTexture"]:SetTexture( nil );
 		chatTab:SetAlpha( 1.0 );
+	end
+
+	local faneifyTab = function(frame, sel)
+		local i = frame:GetID()
+
+		if (not frame.Fane) then
+			frame.leftTexture:Hide()
+			frame.middleTexture:Hide()
+			frame.rightTexture:Hide()
+
+			frame.leftSelectedTexture:Hide()
+			frame.middleSelectedTexture:Hide()
+			frame.rightSelectedTexture:Hide()
+
+			frame.leftSelectedTexture.Show = frame.leftSelectedTexture.Hide
+			frame.middleSelectedTexture.Show = frame.middleSelectedTexture.Hide
+			frame.rightSelectedTexture.Show = frame.rightSelectedTexture.Hide
+
+			frame.Fane = true
+		end
+	end
+
+	hooksecurefunc("FCFTab_UpdateColors", faneifyTab)
+	for i = 1, 7 do
+		faneifyTab(_G["ChatFrame" .. i .. "Tab"])
 	end
 
 	-- Set up a dirty hook to catch temporary windows and customize them when they are created:
@@ -322,16 +660,124 @@ function Interface:CastBars()
 
 	if not InCombatLockdown() then
 
-		UIPARENT_MANAGED_FRAME_POSITIONS["CastingBarFrame"] = nil
+		-- Channels Ticks
+
+		local sparkfactory = {
+			__index = function(t,k)
+				local spark = CastingBarFrame:CreateTexture(nil, 'OVERLAY')
+				t[k] = spark
+				spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+				spark:SetVertexColor(1, 1, 1, 1)
+				spark:SetBlendMode('ADD')
+				spark:SetWidth(20)
+				spark:SetHeight(CastingBarFrame:GetHeight()*2.2)
+				return spark
+			end
+		}
+		local barticks = setmetatable({}, sparkfactory)
+
+		local function setBarTicks(ticknum, duration, ticks)
+			if( ticknum and ticknum > 0) then
+				local width = CastingBarFrame:GetWidth()
+				for k = 1, ticknum do
+					local t = barticks[k]
+					t:ClearAllPoints()
+					local x = ticks[k] / duration
+					t:SetPoint("CENTER", CastingBarFrame, "RIGHT", -width * x, 0 )
+					t:Show()
+				end
+				barticks[1]:Hide()
+				for k = ticknum+1, #barticks do
+					barticks[k]:Hide()
+				end
+			else
+				barticks[1].Hide = nil
+				for i=1,#barticks do
+					barticks[i]:Hide()
+				end
+			end
+		end
+
+		-- TODO: this will need updates for Cataclysm
+		local channelingTicks = {
+			-- warlock
+			[GetSpellInfo(234153)] = 6, -- drain life
+			[GetSpellInfo(193440)] = 3, -- demonwrath
+			[GetSpellInfo(198590)] = 6, -- drain soul
+			-- druid
+			[GetSpellInfo(740)] = 4, -- tranquility
+			-- priest
+			[GetSpellInfo(64843)] = 4, -- divine hymn
+			[GetSpellInfo(15407)] = 4, -- mind flay
+			[GetSpellInfo(48045)] = 4, -- mind sear
+			[GetSpellInfo(47540)] = 2, -- penance
+			[GetSpellInfo(205065)] = 5, -- void torrent
+			-- mage
+			[GetSpellInfo(5143)] = 5, -- arcane missiles
+			[GetSpellInfo(12051)] = 3, -- evocation
+			[GetSpellInfo(205021)] = 10, -- ray of frost
+			-- monk
+			[GetSpellInfo(117952)] = 4, -- crackling jade lightning
+			[GetSpellInfo(191837)] = 3, -- essence font
+		}
+
+		local function getChannelingTicks(spell)			
+			return channelingTicks[spell] or 0
+		end
+
+		local frame = CreateFrame("Frame", "ChannelTicks", UIParent)
+
+		frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+		frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+		frame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+
+		frame:SetScript("OnEvent", function(self, event, ...)
+			if event == "UNIT_SPELLCAST_CHANNEL_START" then
+				local unit = ...
+				local bar = CastingBarFrame
+				if bar.channeling and unit == "player" then
+					local spell, _, _, startTime, endTime = UnitChannelInfo(unit)
+					bar.channelingDuration = endTime - startTime
+					bar.channelingEnd = endTime
+					bar.channelingTicks = getChannelingTicks(spell)
+					bar.channelingTickTime = bar.channelingTicks > 0 and (bar.channelingDuration / bar.channelingTicks) or 0
+					bar.ticks = bar.ticks or {}
+					for i = 1, bar.channelingTicks do
+						bar.ticks[i] = bar.channelingDuration - (i - 1) * bar.channelingTickTime
+					end
+					setBarTicks(bar.channelingTicks, bar.channelingDuration, bar.ticks)
+				end
+			elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+				local unit = ...
+				local bar = CastingBarFrame
+				if unit == "player" then
+					setBarTicks(0)
+					bar.channelingDuration = nil
+				end
+			elseif event == "UNIT_SPELLCAST_DELAYED" then
+				local unit = ...
+				local bar = CastingBarFrame
+				if bar.channeling and bar.endTime > bar.channelingEnd then
+					local duration = bar.endTime - bar.startTime
+					if bar.channelingDuration and duration > bar.channelingDuration and bar.channelingTicks > 0 then
+						local extraTime = (duration - bar.channelingDuration)
+						for i = 1, bar.channelingTicks do
+							bar.ticks[i] = bar.ticks[i] + extraTime
+						end
+						while bar.ticks[bar.channelingTicks] > bar.channelingTickTime do
+							bar.channelingTicks = bar.channelingTicks + 1
+							bar.ticks[bar.channelingTicks] = bar.ticks[bar.channelingTicks-1] - bar.channelingTickTime
+						end
+						bar.channelingDuration = duration
+						bar.channelingEnd = bar.endTime
+						setBarTicks(bar.channelingTicks, bar.channelingDuration, bar.ticks)
+					end
+				end
+			end
+		end)
 
 		-- Player Castbar
-		CastingBarFrame:SetMovable(true)
-		CastingBarFrame:ClearAllPoints()
-		CastingBarFrame:SetScale(1)
-		CastingBarFrame:SetPoint("BOTTOM", UIParent,"BOTTOM", 0, Interface.settings.CastBars.player.y)
-		CastingBarFrame:SetUserPlaced(true)
-		CastingBarFrame:SetMovable(false)
-		CastingBarFrame:SetScale(1)
+		CastingBarFrame:SetScale(1.1)
 
  		CastingBarFrame.Icon:Show()
 		CastingBarFrame.Icon:ClearAllPoints()
@@ -362,6 +808,16 @@ function Interface:CastBars()
 		TargetFrameSpellBar.timer:SetPoint("LEFT", TargetFrameSpellBar, "RIGHT", 4, 0)
 		TargetFrameSpellBar.update = 0.1
 
+		-- Focus Castbar
+		FocusFrameSpellBar:SetScale(1.1)
+  		FocusFrameSpellBar.Icon:SetPoint("RIGHT", FocusFrameSpellBar, "LEFT", -3, 0)
+
+		-- Target Timer
+		FocusFrameSpellBar.timer = FocusFrameSpellBar:CreateFontString(nil)
+		FocusFrameSpellBar.timer:SetFont(STANDARD_TEXT_FONT, 11,'THINOUTLINE')
+		FocusFrameSpellBar.timer:SetPoint("LEFT", FocusFrameSpellBar, "RIGHT", 4, 0)
+		FocusFrameSpellBar.update = 0.1
+
 	end
 
 	-- CastBar timer function
@@ -383,6 +839,7 @@ function Interface:CastBars()
 
 	CastingBarFrame:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
 	TargetFrameSpellBar:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
+	FocusFrameSpellBar:HookScript("OnUpdate", CastingBarFrame_OnUpdate_Hook)
 end
 
 function Interface:Minimap()
@@ -581,7 +1038,7 @@ function Interface:Buffs()
 	      backdrop = backdropBuff
 	    end
 
-	--check class coloring options
+		--check class coloring options
 
 	    --button
 	    b:SetSize(buffFrame.button.size, buffFrame.button.size)
@@ -589,11 +1046,11 @@ function Interface:Buffs()
 	    --icon
 	    local icon = _G[name.."Icon"]
 	    if consolidated then
-	    if select(1,UnitFactionGroup("player")) == "Alliance" then  
-	        icon:SetTexture(select(3,GetSpellInfo(61573)))
-	    elseif select(1,UnitFactionGroup("player")) == "Horde" then
-	    icon:SetTexture(select(3,GetSpellInfo(61574)))
-	    end
+		    if select(1,UnitFactionGroup("player")) == "Alliance" then  
+		        icon:SetTexture(select(3,GetSpellInfo(61573)))
+		    elseif select(1,UnitFactionGroup("player")) == "Horde" then
+		    	icon:SetTexture(select(3,GetSpellInfo(61574)))
+		    end
 	    end
 	    icon:SetTexCoord(0.1,0.9,0.1,0.9)
 	    icon:ClearAllPoints()
@@ -604,16 +1061,17 @@ function Interface:Buffs()
 
 	    --border
 	    local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-	    border:SetTexture(border.texture)
-	    border:SetTexCoord(0,1,0,1)
-	    border:SetDrawLayer("BACKGROUND",-7)
-	    if tempenchant then
-	      border:SetVertexColor(0.7,0,1)
-	    elseif not debuff then
-	      border:SetVertexColor(buffFrame.border.color.r,buffFrame.border.color.g,buffFrame.border.color.b)
-	    end
-	    border:ClearAllPoints()
+	    -- border:SetTexture(border.texture)
+	    -- border:SetTexCoord(0,1,0,1)
+	    -- border:SetDrawLayer("BACKGROUND",-7)
+	    -- if tempenchant then
+	    --   border:SetVertexColor(0.7,0,1)
+	    -- elseif not debuff then
+	    --   border:SetVertexColor(buffFrame.border.color.r,buffFrame.border.color.g,buffFrame.border.color.b)
+	    -- end
+	    -- border:ClearAllPoints()
 	    border:SetAllPoints(b)
+	    border:SetSize(buffFrame.button.size+4, buffFrame.button.size+4)
 	    b.border = border
 
 	    --duration
@@ -622,9 +1080,9 @@ function Interface:Buffs()
 	    b.duration:SetPoint(buffFrame.duration.pos.a1,buffFrame.duration.pos.x,buffFrame.duration.pos.y)
 
 	    --count
-	    b.count:SetFont(buffFrame.count.font, buffFrame.count.size, "THINOUTLINE")
-	    b.count:ClearAllPoints()
-	    b.count:SetPoint(buffFrame.count.pos.a1,buffFrame.count.pos.x,buffFrame.count.pos.y)
+	    --b.count:SetFont(buffFrame.count.font, buffFrame.count.size, "THINOUTLINE")
+	    -- b.count:ClearAllPoints()
+	    -- b.count:SetPoint(buffFrame.count.pos.a1,buffFrame.count.pos.x,buffFrame.count.pos.y)
 
 	    --shadow
 	    if not buffFrame.background.show then
@@ -725,7 +1183,7 @@ function Interface:Buffs()
 	df:SetSize(debuffFrame.button.size,debuffFrame.button.size)
 	df:SetPoint(debuffFrame.pos.a1,debuffFrame.pos.af,debuffFrame.pos.a2,debuffFrame.pos.x,debuffFrame.pos.y)
 
-	  --temp enchant stuff
+	 --temp enchant stuff
 	applySkin(TempEnchant1)
 	applySkin(TempEnchant2)
 	applySkin(TempEnchant3)
@@ -746,7 +1204,7 @@ end
 function Interface:ReAnchor()
 
   	-- ETC
-  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, -15)
+  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, 0)
   	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
 
   	for i,v in pairs({
@@ -1115,15 +1573,72 @@ function Interface:Mover()
 end
 
 function Interface:Skin()
+
 	--CharacterFrame
 	for i, v in pairs(
 		{
+			--ActionBars
 			MainMenuBarArtFrameBackground.BackgroundLarge,
 			MainMenuBarArtFrame.LeftEndCap,
 			MainMenuBarArtFrame.RightEndCap,
+			--PlayerFrames
+			PlayerFrameTexture,
+			PetFrameTexture,
+			CastingBarFrame.Border,
+			TargetFrameTextureFrameTexture,
+			TargetFrameToTTextureFrameTexture,
+			TargetFrameSpellBar.Border,
+			FocusFrameTextureFrameTexture,
+			FocusFrameToTTextureFrameTexture,
+			FocusFrameSpellBar.Border,
+			--BossFrames
+			Boss1TargetFrameTextureFrameTexture,
+			Boss2TargetFrameTextureFrameTexture,
+			Boss3TargetFrameTextureFrameTexture,
+			Boss4TargetFrameTextureFrameTexture,
+			Boss5TargetFrameTextureFrameTexture,
+			--Minimap
+			MinimapBorder,
+			--Exp bar
+			StatusTrackingBarManager.SingleBarLarge,
+			StatusTrackingBarManager.SingleBarLargeUpper,
 		}
 	) do
-		v:SetVertexColor(.2, .2, .2)
+		v:SetVertexColor(.25, .25, .25)
+	end
+
+	for i = 1, 12 do
+		local button = _G["ActionButton"..i]
+		local buttonRight = _G["MultiBarBottomRightButton"..i]
+		local buttonLeft = _G["MultiBarBottomLeftButton"..i]
+
+		local barRight = _G["MultiBarRightButton"..i]
+		local barLeft = _G["MultiBarLeftButton"..i]
+
+		button.Border:SetTexture(nil)
+		button.FlyoutBorderShadow:SetTexture(nil)
+		button.FlyoutBorder:SetTexture(nil)
+		button.NormalTexture:SetTexture(nil)
+
+		buttonRight.Border:SetTexture(nil)
+		buttonRight.FlyoutBorderShadow:SetTexture(nil)
+		buttonRight.FlyoutBorder:SetTexture(nil)
+		buttonRight.NormalTexture:SetTexture(nil)
+
+		buttonLeft.Border:SetTexture(nil)
+		buttonLeft.FlyoutBorderShadow:SetTexture(nil)
+		buttonLeft.FlyoutBorder:SetTexture(nil)
+		buttonLeft.NormalTexture:SetTexture(nil)
+
+		barRight.Border:SetTexture(nil)
+		barRight.FlyoutBorderShadow:SetTexture(nil)
+		barRight.FlyoutBorder:SetTexture(nil)
+		barRight.NormalTexture:SetTexture(nil)
+
+		barLeft.Border:SetTexture(nil)
+		barLeft.FlyoutBorderShadow:SetTexture(nil)
+		barLeft.FlyoutBorder:SetTexture(nil)
+		barLeft.NormalTexture:SetTexture(nil)
 	end
 end
 
@@ -1150,4 +1665,517 @@ function Interface:RaidFrame()
  --    		end
  --    	end
  --    end)
+end
+
+function Interface:BossFrame()
+
+	-- initialize addon table
+	Interface.events = Interface.events or {}
+	Interface.commands = Interface.commands or {}
+
+	local db
+
+	local BF = {
+		space = -10, -- vertical space
+	}
+
+	Interface.anchorFrame = Interface.anchorFrame or CreateFrame("Frame", nil, _G.UIParent)
+
+	local events = Interface.events
+	local commands = Interface.commands
+	local anchorFrame = Interface.anchorFrame
+	local frames = {}
+
+	local function InterfaceSpellBar_OnSetPoint(self)
+		-- if self.boss then
+		-- 	if _G["Boss"..i.."TargetFrameBuff1"] then
+		-- 		self:SetPoint("TOP", self:GetParent(), "BOTTOM", 5.5, 65)
+		-- 	elseif _G["Boss"..i.."TargetFrameDebuff1"] and not _G["Boss"..i.."TargetFrameBuff1"] then
+		-- 		self:SetPoint("TOP", self:GetParent(), "BOTTOM", 5.5, 44)
+		-- 	else
+		-- 		self:SetPoint("TOP", self:GetParent(), "BOTTOM", 5.5, 26.5)
+		-- 	end
+		-- end
+	end
+
+	local function Interfaces_SetStyle()
+		local p
+		for i = 1, MAX_BOSS_FRAMES do
+			local boss = _G["Boss"..i.."TargetFrame"]
+			local bossPortrait = _G["Boss"..i.."TargetFramePortrait"]
+			local bossTexture = _G["Boss"..i.."TargetFrameTextureFrameTexture"]
+			local bossSpellBar = _G["Boss"..i.."TargetFrameSpellBar"]
+
+			boss:SetScale(1)-- taint
+
+			boss.highLevelTexture:SetPoint("CENTER", 62, -16);
+			boss.threatIndicator:SetTexture(nil)
+
+			if BF.space and i > 1 and boss:GetNumPoints() > 0 then
+				p = {boss:GetPoint(1)}
+				p[5] = BF.space
+				boss:ClearAllPoints() -- taint
+				boss:SetPoint(unpack(p)) -- taint
+			end
+
+			boss.raidTargetIcon:SetPoint("CENTER", frameBorder, "LEFT", -3, 0)
+
+			boss.name:SetPoint("BOTTOM", boss.healthbar, "TOP", 0, 4)
+			boss.highLevelTexture:SetPoint("CENTER", 62, -16);
+
+			boss.deadText:SetPoint("CENTER", boss.healthbar, "CENTER", 0, 0);
+			boss.unconsciousText:SetPoint("CENTER", boss.healthbar, "CENTER", 0, 0);
+			boss.nameBackground:Hide()
+
+			local frame = CreateFrame("Frame", nil, boss)
+			frame:SetHeight(64)
+			frame:SetWidth(64)
+			frame:SetPoint("TOPRIGHT", boss, "TOPRIGHT", -42, -12)
+
+			portrait = frame:CreateTexture(nil, "BACKGROUND")
+			portrait:SetHeight(64)
+			portrait:SetWidth(64)
+			portrait:SetPoint("TOPLEFT", 0, 0)
+
+			local frameBorder = CreateFrame("Frame", nil, boss)
+			local borderFrameLevel = frameBorder:GetFrameLevel()
+			boss.textureFrame:SetFrameLevel(borderFrameLevel + 1)
+			bossTexture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame")
+			_G["Boss"..i.."TargetFrameDropDown"]:SetFrameLevel(borderFrameLevel + 1)
+			frameBorder:SetPoint("TOPLEFT", boss.Background, "TOPLEFT", -4, 3)
+			frameBorder:SetPoint("BOTTOMRIGHT", boss.Background, "BOTTOMRIGHT", 4, -5)
+		end
+		wipe(p)
+		hooksecurefunc("Target_Spellbar_AdjustPosition", InterfaceSpellBar_OnSetPoint)
+	end
+
+	hooksecurefunc("BossTargetFrame_OnLoad", function(self, unit, event)
+		self.maxBuffs = 3;
+		self.maxDebuffs = 3;
+		self.levelText:SetPoint("CENTER", 62, select(5, self.levelText:GetPoint("CENTER")));
+	end)
+
+	local function Interfaces_SetScale(scale)
+		for i = 1, MAX_BOSS_FRAMES do
+			_G["Boss"..i.."TargetFrame"]:SetScale(scale)
+		end
+	end
+
+	function Interface:Enable()
+		Interfaces_SetStyle()
+
+		self.bossFrame = _G["Boss1TargetFrame"]
+		self.defaultScale = self.bossFrame:GetScale()
+		self.bossFrame.OrgSetPoint = self.bossFrame.SetPoint
+		self.bossFrame.SetPoint = function() end
+		self.bossFrame:HookScript("OnHide", function() anchorFrame:Hide() end)
+
+		anchorFrame:SetMovable(true)
+		anchorFrame:SetScale(self.defaultScale)
+		anchorFrame:SetSize(self.bossFrame:GetWidth(), self.bossFrame:GetHeight() * 5 - (BF.space * 4))
+		anchorFrame:SetScript("OnMouseDown", anchorFrame.OnMouseDown)
+		anchorFrame:SetScript("OnMouseUp", anchorFrame.OnMouseUp)
+		anchorFrame:SetScript("OnDragStop", anchorFrame.OnMouseUp)
+		anchorFrame:SetScript("OnUpdate", anchorFrame.OnUpdate)
+		anchorFrame:SetScript("OnMouseWheel", anchorFrame.OnMouseWheel)
+		anchorFrame:SetScript("OnShow", anchorFrame.OnShow)
+		anchorFrame:Hide()
+		if Interface.settings.BossFrame then
+			anchorFrame:ClearAllPoints()
+			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			self.bossFrame:ClearAllPoints() -- taint
+			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
+		else
+			anchorFrame:ClearAllPoints()
+			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			self.bossFrame:ClearAllPoints() -- taint
+			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
+		end
+
+		self.testMode = false
+	end
+
+	function Interface:UnregisterEvent(...)
+		anchorFrame:UnregisterEvent(...)
+	end
+
+	function anchorFrame:OnMouseDown(button)
+		if button == "LeftButton" then
+			self.moving = true
+			self:StartMoving()
+		end
+	end
+
+	function anchorFrame:OnMouseUp(button)
+		if button == "LeftButton" then
+			self.moving = false
+			self:StopMovingOrSizing()
+		end
+	end
+
+	function anchorFrame:OnUpdate(elapsed)
+		if not InCombatLockdown() and self.moving then
+			Interface.settings.BossFrame = {self:GetPoint(1)}
+			Interface.bossFrame:ClearAllPoints()
+			Interface.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame))
+		end
+	end
+
+	function anchorFrame:OnShow()
+		if not self.bkgndFrame then
+			self.bkgndFrame = CreateFrame("Frame", nil, self)
+			self.bkgndFrame:SetFrameStrata("DIALOG")
+			self.bkgndFrame:SetBackdrop({
+				bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+			})
+			self.bkgndFrame:SetAllPoints(self)
+			self.bkgndFrame:SetBackdropColor(0, 0.75, 0, 0.5)
+		end
+		self:EnableMouse(true)
+		self:EnableMouseWheel(true)
+		self:SetBackdrop({
+			edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
+			tile = true,
+			edgeSize = 14,
+			tileSize = 16,
+			insets = {left = 3, right = 3, top = 3, bottom = 3},
+		})
+		self:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+	end
+
+	function events:PLAYER_LOGIN(...)
+		self:UnregisterEvent("PLAYER_LOGIN")
+		self:UnregisterEvent("SPELLS_CHANGED")
+
+		self:Enable()
+	end
+	events.SPELLS_CHANGED = events.PLAYER_LOGIN
+
+	function events:PLAYER_REGEN_DISABLED()
+		if anchorFrame:IsShown() then
+			anchorFrame:Hide()
+		end
+		Interface.testMode = false
+	end
+
+	local MAX_BUFFS = 6;
+	local MAX_DEBUFFS = 12;
+
+	local function UpdateBuffAnchor(self, buffName, index, numDebuffs, newRow, startX, startY)
+		local buff = _G[buffName..index];
+		
+		if ( index == 1 ) then
+			if ( numDebuffs > 0 ) then
+				-- XarBar.db.profile.buffsOnTop is true or there are no debuffs... buffs start on top
+				buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY-23);
+			else
+				buff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
+			end
+		elseif ( newRow ) then
+			buff:SetPoint("TOPLEFT", _G[buffName..(index - 6)], "BOTTOMLEFT", 0, -3);
+		else
+			buff:SetPoint("TOPLEFT", _G[buffName..(index - 1)], "TOPRIGHT", 3, 0);
+		end
+
+		-- Resize
+		buff:SetWidth(17);
+		buff:SetHeight(17);
+	end
+
+	local function UpdateDebuffAnchor(self, debuffName, index, numBuffs, newRow, startX, startY)
+		local debuff = _G[debuffName..index];
+
+		if ( index == 1 ) then
+			debuff:SetPoint("TOPLEFT", self, "BOTTOMLEFT", startX, startY);
+			--DebuffsFrame:SetPoint("TOPLEFT", debuff, "TOPLEFT", 0, 0);
+			--DebuffsFrame:SetPoint("BOTTOMLEFT", debuff, "BOTTOMLEFT", 0, -3);
+		elseif ( newRow ) then
+			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - 6)], "BOTTOMLEFT", 0, -3);
+		else
+			debuff:SetPoint("TOPLEFT", _G[debuffName..(index - 1)], "TOPRIGHT", 3 + 1, 0);
+		end
+
+		-- Resize
+		debuff:SetWidth(21);
+		debuff:SetHeight(21);
+		
+		local debuffFrame =_G[debuffName..index.."Border"];
+		debuffFrame:SetWidth(21+2);
+		debuffFrame:SetHeight(21+2);
+	end
+
+	local function UpdateAuraPositions(self, auraName, numAuras, numOppositeAuras, updateFunc)
+		local startX, startY;
+		startX, startY = 4, 32;
+
+		-- current width of a row, increases as auras are added and resets when a new aura's width exceeds the max row width
+		local rowSize = 0;
+		for i=1, numAuras do
+			-- anchor the current aura
+			if ( i == 1 ) then
+				rowSize = 1;
+			else
+				rowSize = rowSize + 1;
+			end
+			if ( rowSize > 6 ) then
+				-- this aura would cause the current row to exceed the max row size, so make this aura
+				-- the start of a new row instead
+				rowSize = 1;
+				updateFunc(self, auraName, i, numOppositeAuras, true, startX, startY);
+			else
+				updateFunc(self, auraName, i, numOppositeAuras, false, startX, startY);
+			end
+		end
+	end
+
+	local function UpdateAuras(bossID)
+		local self = _G["Boss"..bossID.."TargetFrame"];
+		local frame, frameName;
+		local frameIcon, frameCount, frameCooldown;
+		local numBuffs = 0;
+
+		if not UnitExists("boss"..bossID) then return end
+		
+		for i = 1, 6 do
+			local buffName, icon, count, _, duration, expirationTime = UnitBuff(self.unit, i, nil);
+			if ( buffName ) then
+				frameName = "Boss"..bossID.."TargetFrameBuff"..(i);
+				frame = _G[frameName];
+				if ( not frame ) then
+					if ( not icon ) then
+						break;
+					else
+						frame = CreateFrame("Button", frameName, self, "TargetBuffFrameTemplate");
+						frame.unit = self.unit;
+					end
+				end
+				if ( icon ) then
+					frame:SetID(i);
+					
+					-- set the icon
+					frameIcon = _G[frameName.."Icon"];
+					frameIcon:SetTexture(icon);
+					
+					-- set the count
+					frameCount = _G[frameName.."Count"];
+					if ( count > 1 ) then
+						frameCount:SetText(count);
+						frameCount:Show();
+					else
+						frameCount:Hide();
+					end
+					
+					-- Handle cooldowns
+					frameCooldown = _G[frameName.."Cooldown"];
+					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
+					
+					numBuffs = numBuffs + 1;
+
+					frame:ClearAllPoints();
+					frame:Show();
+				else
+					frame:Hide();
+				end
+			else
+				break;
+			end
+		end
+		
+		for i = numBuffs + 1, MAX_BUFFS do
+			local frame = _G["Boss1TargetFrameBuff"..i];
+			if ( frame ) then
+				frame:Hide();
+			else
+				break;
+			end
+		end
+		
+		local color;
+		local frameBorder;
+		local numDebuffs = 0;
+		
+		for i = 1, 12 do
+			local debuffName, icon, count, debuffType, duration, expirationTime, caster, _, _, _, _, isBossDebuff = UnitDebuff(self.unit, i, nil);
+			if ( debuffName ) and (caster == "player" or isBossDebuff) then
+				frameName = "Boss"..bossID.."TargetFrameDebuff"..(i);
+				frame = _G[frameName];
+				if ( not frame ) then
+					if ( not icon ) then
+						break;
+					else
+						frame = CreateFrame("Button", frameName, self, "TargetDebuffFrameTemplate");
+						frame.unit = self.unit;
+					end
+				end
+				if ( icon ) then
+					frame:SetID(i);
+					
+					-- set the icon
+					frameIcon = _G[frameName.."Icon"];
+					frameIcon:SetTexture(icon);
+					
+					-- set the count
+					frameCount = _G[frameName.."Count"];
+					if ( count > 1 ) then
+						frameCount:SetText(count);
+						frameCount:Show();
+					else
+						frameCount:Hide();
+					end
+					
+					-- Handle cooldowns
+					frameCooldown = _G[frameName.."Cooldown"];
+					CooldownFrame_Set(frameCooldown, expirationTime - duration, duration, duration > 0, true);
+					
+					-- set debuff type color
+					if ( debuffType ) then
+						color = DebuffTypeColor[debuffType];
+					else
+						color = DebuffTypeColor["none"];
+					end
+					frameBorder = _G[frameName.."Border"];
+					frameBorder:SetVertexColor(color.r, color.g, color.b);
+					
+					numDebuffs = numDebuffs + 1;
+
+					frame:ClearAllPoints();
+					frame:Show();
+				else
+					frame:Hide();
+				end
+			else
+				break;
+			end
+		end
+		
+		for i = numDebuffs + 1, MAX_DEBUFFS do
+			local frame = _G["Boss"..bossID.."TargetFrameDebuff"..i];
+			if ( frame ) then
+				frame:Hide();
+			else
+				break;
+			end
+		end
+		
+		-- update buff positions
+		UpdateAuraPositions(self, "Boss"..bossID.."TargetFrameBuff", numBuffs, numDebuffs, UpdateBuffAnchor);
+		
+		-- update debuff positions
+		UpdateAuraPositions(self, "Boss"..bossID.."TargetFrameDebuff", numDebuffs, numBuffs, UpdateDebuffAnchor);
+	end
+
+	function events:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		events:PLAYER_REGEN_DISABLED()
+		-- -- --
+		for i = 1, MAX_BOSS_FRAMES do
+			local boss = _G["Boss"..i.."TargetFrame"]
+			local healthBar = _G["Boss"..i.."TargetFrameHealthBar"]
+			local portrait = _G["Boss"..i.."TargetFramePortrait"]
+
+			
+
+			if not UnitIsFriend("player", "boss"..i) then
+				healthBar:SetStatusBarColor(0.8, 0.3, 0.22)
+			else
+				healthBar:SetStatusBarColor(0, 1, 0)
+			end
+			SetPortraitTexture(portrait, "boss"..i)
+
+			UpdateAuras("boss"..i)	
+		end
+		for i = 1, #frames do
+			frames[i].value = nil
+			frames[i].elapsed = 1
+		end
+	end
+
+	function events:UNIT_AURA(self, unit)
+		if unit:find("boss") then
+			local bossID = strsub(unit, 5)
+			UpdateAuras(bossID)
+		end	
+	end
+
+	local function BossColor()
+		for i = 1, MAX_BOSS_FRAMES do
+			local boss = _G["Boss"..i.."TargetFrame"]
+			local healthBar = _G["Boss"..i.."TargetFrameHealthBar"]
+
+			if not UnitIsFriend("player", "boss"..i) then
+				healthBar:SetStatusBarColor(0.8, 0.3, 0.22)
+			else
+				healthBar:SetStatusBarColor(0, 1, 0)
+			end
+		end
+	end
+
+	hooksecurefunc("HealthBar_OnValueChanged", function(self)
+		if Boss1TargetFrame:IsShown() then
+			BossColor()
+		end
+	end)
+
+	hooksecurefunc("BossTargetFrame_UpdateLevelTextAnchor", function(self, targetLevel)
+		if ( targetLevel >= 100 ) then
+			self.levelText:SetPoint("CENTER", 61, -16);
+			self.highLevelTexture:SetPoint("CENTER", 61, -16);
+		else
+			self.levelText:SetPoint("CENTER", 62, -16);
+			self.highLevelTexture:SetPoint("CENTER", 61, -16);
+		end
+	end)
+
+	local function RandomFactionColor()
+		local colors = {
+			RED_FONT_COLOR,
+			GREEN_FONT_COLOR,
+			YELLOW_FONT_COLOR,
+			ORANGE_FONT_COLOR
+		}
+		local c = colors[random(1, 4)]
+		return c.r, c.g, c.b
+	end
+
+	local function BossFrameTest()
+		if InCombatLockdown() then return end
+		local shown = anchorFrame:IsShown()
+		Interface.testMode = not shown
+		for i = 1, MAX_BOSS_FRAMES do
+			local b = "Boss"..i.."TargetFrame"
+			if shown then
+				_G[b]:Hide()
+				anchorFrame:Hide()
+			else
+				SetPortraitTexture(_G[b.."Portrait"], "player")
+				_G[b.."TextureFrameName"]:SetText("Boss"..i.."Name")
+				_G[b.."NameBackground"]:SetVertexColor(RandomFactionColor())
+				_G[b.."HealthBar"]:SetMinMaxValues(1, 99999999)
+				_G[b.."HealthBar"]:SetValue(random(11111111, 88888888))
+				_G[b.."ManaBar"]:SetMinMaxValues(1, 100)
+				_G[b.."ManaBar"]:SetValue(random(15, 85))
+				_G[b.."ManaBar"]:SetStatusBarColor(0.2, 0.2, 1)
+				_G[b]:Show()
+				anchorFrame:Show()
+			end
+		end
+		for i = 1, #frames do
+			Text_Refresh(frames[i])
+		end
+	end
+
+	do
+		SLASH_SIMPLEBOSS1 = "/bossframe"
+		SlashCmdList.SIMPLEBOSS = function()
+			BossFrameTest()
+		end
+
+		anchorFrame:SetScript("OnEvent", function(self, event, ...)
+			events[event](Interface, event, ...)
+		end)
+		for event, func in pairs(events) do
+			if type(func) == "function" then 
+				anchorFrame:RegisterEvent(event) 
+			end
+		end
+	end
 end
