@@ -66,13 +66,11 @@ function Misc:OnInitialize()
 	self:Surrender()
 	self:TeleportCloak()
 	self:Quests()
-	self:SkipCinematic()
 	self:PowerBarAlt()
 	self:FixGroupContainer()
 
 	-- Set Max Equipement Sets to 100.	
 	setglobal("MAX_EQUIPMENT_SETS_PER_PLAYER",100)
-
 end
 
 function Misc:OnEnable()
@@ -132,6 +130,29 @@ do
 					SetCVar("cameraDistanceMaxZoomFactor", 2.6)
 					MoveViewOutStart(50000)
 				end)
+			end
+		end)
+end
+
+do
+	Misc:RegisterFeature("SkipCinematic",
+		"Skip Cinematic",
+		"Automatically skip cinematics.",
+		true,
+		false,
+		function(state)
+			if state then				
+				CinematicFrame:HookScript("OnShow", function(self, ...)
+				  if IsModifierKeyDown() then return end
+				  CinematicFrame_CancelCinematic()
+				end)
+
+				local omfpf = _G["MovieFrame_PlayMovie"]
+				_G["MovieFrame_PlayMovie"] = function(...)
+				  if IsModifierKeyDown() then return omfpf(...) end
+				  GameMovieFinished()
+				  return true
+				end
 			end
 		end)
 end
@@ -2534,21 +2555,6 @@ function Misc:Quests()
  		ObjectiveTrackerBlocksFrame.QuestHeader.Text:SetText("Quests : "..N.."/25")
  		ObjectiveTrackerFrame.HeaderMenu.Title:SetText("Quests : "..N.."/25")
  	end)
-end
-
-function Misc:SkipCinematic()
-
-	CinematicFrame:HookScript("OnShow", function(self, ...)
-	  if IsModifierKeyDown() then return end
-	  CinematicFrame_CancelCinematic()
-	end)
-
-	local omfpf = _G["MovieFrame_PlayMovie"]
-	_G["MovieFrame_PlayMovie"] = function(...)
-	  if IsModifierKeyDown() then return omfpf(...) end
-	  GameMovieFinished()
-	  return true
-	end
 end
 
 function Misc:PowerBarAlt()

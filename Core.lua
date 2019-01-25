@@ -14,7 +14,7 @@ JokUI:SetDefaultModuleLibraries("AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 function Core:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("JokUIDB", nil, true)
 
-	AceConfigDialog:SetDefaultSize("JokUI", 700, 650)
+	AceConfigDialog:SetDefaultSize("JokUI", 600, 500)
 	AceConfigDialog:AddToBlizOptions("JokUI", "|cffFF7D0AJok|rUI", options)
 end
 

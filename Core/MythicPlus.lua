@@ -73,21 +73,11 @@ local mythicplus_config = {
         fontSize = "medium",
         order = 1,
     },
-    enableProgress = {
-		type = "toggle",
-		name = "Enable",
-		width = "full",
-		order = 2,
-		set = function(info,val) MythicPlus.settings.enableProgress = val
-		end,
-		get = function(info) return MythicPlus.settings.enableProgress end
-	},
     progress = {
         name = "Mythic + Progress",
         type = "group",
         inline = true,
         order = 3,
-        disabled = function() return not MythicPlus.settings.enableProgress end,
         args = {
 	        nameplateProgress = {
 				type = "toggle",
@@ -99,14 +89,6 @@ local mythicplus_config = {
 				set = function(info,val) MythicPlus.settings.enableNameplateText = val
 				end,
 				get = function(info) return MythicPlus.settings.enableNameplateText end
-			},
-			exportProgress = {
-				type = "execute",
-				name = "Export Progress",
-				desc = "",
-				order = 4,
-				func = function(info,val) exportData() 
-				end,
 			},
         },
     },
@@ -135,13 +117,11 @@ function MythicPlus:OnEnable()
 		self:SyncFeature(name)
 	end
 
-	if MythicPlus.settings.enableProgress then
-		--self:Progress()
-	end
+	self:Progress()
 
 	self:Timer()
 	self:Schedule()
-	--self:GuildBest()
+	self:GuildBest()
 	C_MythicPlus.RequestCurrentAffixes()
 
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -699,32 +679,20 @@ end
 
 function MythicPlus:Progress()
 
-	local _GetTime = GetTime
-
 	local quantity = 0
-	local lastKill = {0} -- To be populated later, do not remove the initial value. The zero means inconclusive/invalid data.
-	local currentPullUpdateTimer = 0
 	local activeNameplates = {}
-
-	--
-	-- GENERAL FUNCTION
-	-- 
-
-	local function tlen(t)
-		local length = 0
-		for _ in pairs(t) do
-			length = length + 1
-		end
-		return length
-	end
-
-	local function GetTime()
-		return _GetTime() * 1000
-	end
 
 	--
 	-- MYTHIC+ FUNCTION
 	--
+
+	local function isUsingMdt()
+		if IsAddOnLoaded("MethodDungeonTools") then
+			return true
+		else
+			return false
+		end
+	end
 
 	local function getNPCID(guid)
 		local targetType, _,_,_,_, npcID = strsplit("-", guid or "")
@@ -733,18 +701,11 @@ function MythicPlus:Progress()
 		end
 	end
 
-	local function isValidTarget(targetToken)
-		if UnitCanAttack("player", targetToken) and not UnitIsDead(targetToken) then
-			return true
-		end
-	end
-
 	local function isDungeonFinished()
 		local steps = select(3, C_Scenario.GetStepInfo())
 		return (steps and steps < 1)
 	end
 
-	-- Will also return true in challenge modes if those are ever re-implemented as M+ is basically recycled Challenge Mode.
 	local function isMythicPlus()
 		local difficulty = select(3, GetInstanceInfo()) or -1
 		if difficulty == 8 and not isDungeonFinished() then
@@ -803,72 +764,13 @@ function MythicPlus:Progress()
 	--
 
 	local function getValue(npcID)
-		local npcData = JokUIDB["npcData"][npcID]
-		if npcData then
-			local hiValue, hiOccurrence = nil, -1
-			for value, occurrence in pairs(npcData["values"]) do
-				if occurrence > hiOccurrence then
-					hiValue, hiOccurrence = value, occurrence
-				end
-			end
-			if hiValue ~= nil then
-				return hiValue
-			end
-		end
-	end
+		if (isUsingMdt() and MethodDungeonTools ~= nil and MethodDungeonTools.GetEnemyForces ~= nil) then
+	      	local count, max, maxTeeming = MethodDungeonTools:GetEnemyForces(npcID);
 
-	local function updateValue(npcID, value, npcName, forceQuantity)
-		if value <= 0 then
-			return
-		end
-		local npcData = JokUIDB["npcData"][npcID]
-		if not npcData then
-			JokUIDB["npcData"][npcID] = {values={}, name=npcName or "Unknown"}
-			return updateValue(npcID, value, npcName, forceQuantity)
-		end
-		local values = npcData["values"]
-		if values[value] == nil then
-			values[value] = (forceQuantity or 1)
-		else
-			values[value] = values[value] + (forceQuantity or 1)
-		end
-		for val, occurrence in pairs(values) do
-			if val ~= value then
-				values[val] = occurrence * 0.75 -- Newer values will quickly overtake old ones
-			end
-		end
-	end
-
-	local function verifyDB(forceWipe)
-		if not JokUIDB["npcData"] then
-			JokUIDB["npcData"] = {}
-		end
-		if MythicProgressValues ~= nil then
-			for k,v in pairs(MythicProgressValues) do
-				local npcID, value, name = unpack(v)
-				if getValue(npcID) == nil then
-					updateValue(npcID, value, name, 1)
-				end
-			end
-		end
-	end
-
-	function exportData()
-		local a = string.format("{",  tlen(JokUIDB["npcData"]))
-		for npcID,t in pairs(JokUIDB["npcData"]) do
-		   local value = getValue(npcID)
-		   local name = t["name"]
-		   a = a .. "{".. npcID..","..value..",\""..name.."\"},"
-		end
-		a = a .. "}"
-		local f = CreateFrame('EditBox', "MPPExportBox", UIParent, "InputBoxTemplate")
-		f:SetSize(400, 50)
-		f:SetMultiLine()
-		f:SetPoint("CENTER", 0, 350)
-		f:SetFrameStrata("TOOLTIP")
-		f:SetScript("OnEnterPressed", f.Hide)
-		f:SetScript("OnEscapePressed", f.Hide)
-		f:SetText(a)
+	      	if (count ~= nil and max ~= nil and maxTeeming ~= nil) then
+	        	return count      	
+	      	end
+	    end
 	end
 
 	local function getEstimatedProgress(npcID)
@@ -901,13 +803,12 @@ function MythicPlus:Progress()
 	end
 		
 	local function onNPCTooltip(self)
-		local scenarioType = select(10, C_Scenario.GetInfo())
-		if scenarioType == LE_SCENARIO_TYPE_CHALLENGE_MODE then
+		if isMythicPlus() then
 			local unit = select(2, self:GetUnit())
 			if unit then
 				local guid = UnitGUID(unit)
-				npcID = getNPCID(guid)
-				if npcID and isValidTarget(npcID) then
+				local npcID = getNPCID(guid)
+				if npcID then
 					local tooltipMessage = getTooltipMessage(npcID)
 					local forcesFormat = format(" - %s: %%s", "Enemy Forces")
 					if tooltipMessage then
@@ -924,7 +825,7 @@ function MythicPlus:Progress()
 					end
 				end
 			end
-		end		
+		end	
 	end
 
 	---
@@ -1023,50 +924,7 @@ function MythicPlus:Progress()
 	--- HOOKS
 	---
 
-	local function onProgressUpdated(deltaProgress)
-		if currentQuantity == getMaxQuantity() then
-			return -- Disregard data that caps us as we don't know if we got the full value.
-		end
-		local timestamp, npcID, npcName, isDataUseful = unpack(lastKill) -- See what the last mob we killed was
-		if timestamp and npcID and deltaProgress and isDataUseful then -- Assert that we have some useful data to work with
-			local timeSinceKill = GetTime() - timestamp
-			if timeSinceKill <= 400 then
-				updateValue(npcID, deltaProgress, npcName) -- Looks like we have ourselves a valid entry. Set this in our database/list/whatever.
-			end
-		end
-	end	
-
-	local function onCriteriaUpdate()
-		if not currentQuantity then
-			currentQuantity = 0
-		end
-		if not isMythicPlus() then return end
-		newQuantity = getCurrentQuantity()
-		deltaQuantity = newQuantity - currentQuantity
-		if deltaQuantity > 0 then
-			currentQuantity = newQuantity
-			onProgressUpdated(deltaQuantity)
-		end
-	end		
-
-	local function onCombatLogEvent()
-		local timestamp, combatType, something, srcGUID, srcName, srcFlags, something2, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo()
-		if combatType == "PARTY_KILL" then
-			if not isMythicPlus() then return end
-			local npcID = getNPCID(destGUID)
-			if npcID then
-				local isDataUseful = true
-				local timeSinceLastKill = GetTime() - lastKill[1]
-				if timeSinceLastKill <= 50 then
-					isDataUseful = false
-				end
-				lastKill = {GetTime(), npcID, destName, isDataUseful} -- timestamp is not at all accurate, we use GetTime() instead.
-			end
-		end
-	end	
-
 	local function onAddonLoad()
-		verifyDB()
 		if isMythicPlus() then
 			quantity = getEnemyForcesProgress()
 		else
@@ -1076,8 +934,6 @@ function MythicPlus:Progress()
 
 	local MythicProgress = CreateFrame("FRAME")
 	MythicProgress:RegisterEvent("PLAYER_ENTERING_WORLD")
-	MythicProgress:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
-	MythicProgress:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 
@@ -1085,10 +941,6 @@ function MythicPlus:Progress()
 		args={...}
 		if event == "PLAYER_ENTERING_WORLD" then
 			onAddonLoad(args[1])
-		elseif event == "SCENARIO_CRITERIA_UPDATE" then
-			onCriteriaUpdate()
-		elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-			onCombatLogEvent()
 		elseif event == "NAME_PLATE_UNIT_ADDED" then
 			onAddNameplate(...)
 		elseif event == "NAME_PLATE_UNIT_REMOVED" then

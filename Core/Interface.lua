@@ -17,11 +17,6 @@ local interface_defaults = {
     profile = {
     	UnitFrames = {
     		scale = 1.1,
-    		skin = true,
-    	},
-    	CastBars = {
-    		player = { x = 0, y = 175},
-    		target = { x = 0, y = 550},
     	},
     	BossFrame = {"TOPLEFT", nil, "TOPLEFT", 1250, -285},
     }
@@ -62,18 +57,7 @@ local interface_config = {
 					FocusFrame:SetScale(val)
                 end,
                 get = function(info) return Interface.settings.UnitFrames.scale end
-            },
-            skin = {
-                type = "toggle",
-                name = "Skin Unit Frames",
-                desc = "|cffaaaaaa Skin Unit Frames. |r",
-                descStyle = "inline",
-                width = "full",
-                order = 1,
-                set = function(info,val) Interface.settings.UnitFrames.skin = val
-                end,
-                get = function(info) return Interface.settings.UnitFrames.skin end
-            },		
+            },	
         },
     },
 }
@@ -107,35 +91,6 @@ function Interface:OnEnable()
 	self:BossFrame()
 	self:Skin()
 	self:RaidFrame()
-end
-
-do
-	local order = 10
-	function Interface:RegisterFeature(name, short, long, default, reload, fn)
-		interface_config[name] = {
-			type = "toggle",
-			name = short,
-			descStyle = "inline",
-			desc = "|cffaaaaaa" .. long,
-			width = "full",
-			get = function() return Interface.settings[name] end,
-			set = function(_, v)
-				Interface.settings[name] = v
-				self:SyncFeature(name)
-				if reload then
-					StaticPopup_Show ("ReloadUI_Popup")
-				end
-			end,
-			order = order
-		}
-		interface_defaults.profile[name] = default
-		order = order + 1
-		features[name] = fn
-	end
-end
-
-function Interface:SyncFeature(name)
-	features[name](Interface.settings[name])
 end
 
 -------------------------------------------------------------------------------
@@ -176,194 +131,6 @@ function Interface:UnitFrames()
 	hooksecurefunc("HealthBar_OnValueChanged", function(self)
 	    colour(self, self.unit)
 	end)
-
-	if Interface.settings.UnitFrames.skin then
-
-		--PLAYER
-		function StylePlayerFrame(self)
-			PlayerFrameTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
-
-			PlayerName:SetPoint("CENTER", PlayerFrame, "CENTER", 50, 36)
-
-			PlayerFrameGroupIndicatorText:ClearAllPoints()
-			PlayerFrameGroupIndicatorText:SetPoint("BOTTOMLEFT", PlayerFrame, "TOP", 0, -20)
-			PlayerFrameGroupIndicatorLeft:Hide()
-			PlayerFrameGroupIndicatorMiddle:Hide()
-			PlayerFrameGroupIndicatorRight:Hide()
-
-			PlayerFrameHealthBar:SetPoint("TOPLEFT", 106, -24)
-			PlayerFrameHealthBar:SetHeight(26)
-
-			PlayerFrameHealthBar.LeftText:ClearAllPoints()
-			PlayerFrameHealthBar.LeftText:SetPoint("LEFT", PlayerFrameHealthBar, "LEFT", 5, 0)
-
-			PlayerFrameHealthBar.RightText:ClearAllPoints()
-			PlayerFrameHealthBar.RightText:SetPoint("RIGHT", PlayerFrameHealthBar, "RIGHT", -5, 0)
-			PlayerFrameHealthBar.RightText:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE")
-			PlayerFrameHealthBarText:SetPoint("CENTER", PlayerFrameHealthBar, "CENTER", 0, 0)
-
-			PlayerFrameManaBar:SetPoint("TOPLEFT", 106, -52)
-			PlayerFrameManaBar:SetHeight(13)
-
-			PlayerFrameManaBar.LeftText:ClearAllPoints()
-			PlayerFrameManaBar.LeftText:SetPoint("LEFT", PlayerFrameManaBar, "LEFT", 5, 0)
-
-			PlayerFrameManaBar.RightText:ClearAllPoints()
-			PlayerFrameManaBar.RightText:SetPoint("RIGHT", PlayerFrameManaBar, "RIGHT", -3, 1)
-			PlayerFrameManaBarText:SetPoint("CENTER", PlayerFrameManaBar, "CENTER", 0, 0)
-
-			PlayerFrameManaBar.FeedbackFrame:ClearAllPoints()
-			PlayerFrameManaBar.FeedbackFrame:SetPoint("CENTER", PlayerFrameManaBar, "CENTER", 0, 0)
-			PlayerFrameManaBar.FeedbackFrame:SetHeight(13)
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:ClearAllPoints()
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:SetPoint(
-				"CENTER",
-				PlayerFrameManaBar.FullPowerFrame,
-				"RIGHT",
-				-6,
-				-3
-			)
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.AlertSpikeStay:SetSize(30, 29)
-			PlayerFrameManaBar.FullPowerFrame.PulseFrame:ClearAllPoints()
-			PlayerFrameManaBar.FullPowerFrame.PulseFrame:SetPoint("CENTER", PlayerFrameManaBar.FullPowerFrame, "CENTER", -6, -2)
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:ClearAllPoints()
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:SetPoint(
-				"CENTER",
-				PlayerFrameManaBar.FullPowerFrame,
-				"RIGHT",
-				5,
-				-4
-			)
-			PlayerFrameManaBar.FullPowerFrame.SpikeFrame.BigSpikeGlow:SetSize(30, 50)
-		end
-		hooksecurefunc("PlayerFrame_ToPlayerArt", StylePlayerFrame)
-
-		--TARGET
-		function StyleTargetFrame(self, forceNormalTexture)
-			local classification = UnitClassification(self.unit)
-			self.deadText:ClearAllPoints()
-			self.deadText:SetPoint("CENTER", self.healthbar, "CENTER", 0, 0)
-			self.levelText:SetPoint("RIGHT", self.healthbar, "BOTTOMRIGHT", 63, 10)
-			self.nameBackground:Hide()
-			self.Background:SetSize(119, 42)
-			self.manabar.pauseUpdates = false
-			self.manabar:Show()
-			TextStatusBar_UpdateTextString(self.manabar)
-			self.threatIndicator:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Flash")
-			self.name:SetPoint("LEFT", self, 15, 36)
-			self.healthbar:SetSize(119, 26)
-			self.healthbar:ClearAllPoints()
-			self.healthbar:SetPoint("TOPLEFT", 5, -24)
-			self.healthbar.LeftText:ClearAllPoints()
-			self.healthbar.LeftText:SetPoint("LEFT", self.healthbar, "LEFT", 5, 0)
-			self.healthbar.RightText:ClearAllPoints()
-			self.healthbar.RightText:SetPoint("RIGHT", self.healthbar, "RIGHT", -5, 0)
-			self.healthbar.TextString:SetPoint("CENTER", self.healthbar, "CENTER", 0, 0)
-			self.manabar:ClearAllPoints()
-			self.manabar:SetPoint("TOPLEFT", 5, -52)
-			self.manabar:SetSize(119, 13)
-			self.manabar.LeftText:ClearAllPoints()
-			self.manabar.LeftText:SetPoint("LEFT", self.manabar, "LEFT", 5, 0)
-			self.manabar.RightText:ClearAllPoints()
-			self.manabar.RightText:SetPoint("RIGHT", self.manabar, "RIGHT", -5, 0)
-			self.manabar.TextString:SetPoint("CENTER", self.manabar, "CENTER", 0, 0)
-
-			--TargetOfTarget
-			TargetFrameToTHealthBar:ClearAllPoints()
-			TargetFrameToTHealthBar:SetPoint("TOPLEFT", 44, -15)
-			TargetFrameToTHealthBar:SetHeight(8)
-			TargetFrameToTManaBar:ClearAllPoints()
-			TargetFrameToTManaBar:SetPoint("TOPLEFT", 44, -24)
-			TargetFrameToTManaBar:SetHeight(5)
-			FocusFrameToTHealthBar:ClearAllPoints()
-			FocusFrameToTHealthBar:SetPoint("TOPLEFT", 45, -15)
-			FocusFrameToTHealthBar:SetHeight(8)
-			FocusFrameToTManaBar:ClearAllPoints()
-			FocusFrameToTManaBar:SetPoint("TOPLEFT", 45, -25)
-			FocusFrameToTManaBar:SetHeight(3)
-			FocusFrameToT.deadText:SetWidth(0.01)
-
-			if (forceNormalTexture) then
-				self.borderTexture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame")
-			elseif (classification == "minus") then
-				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
-				forceNormalTexture = true
-			elseif (classification == "worldboss" or classification == "elite") then
-				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Elite")
-			elseif (classification == "rareelite") then
-				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Rare-Elite")
-			elseif (classification == "rare") then
-				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame-Rare")
-			else
-				self.borderTexture:SetTexture("Interface\\Addons\\JokUI\\media\\textures\\unitframes\\UI-TargetingFrame")
-				forceNormalTexture = true
-			end
-
-			if (forceNormalTexture) then
-				self.haveElite = nil
-				if (classification == "minus") then
-					self.Background:SetSize(119, 42)
-					self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
-					--
-					self.nameBackground:Hide()
-					self.name:SetPoint("LEFT", self, 15, 36)
-					self.healthbar:ClearAllPoints()
-					self.healthbar:SetPoint("LEFT", 5, 13)
-				else
-					self.Background:SetSize(119, 42)
-					self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
-				end
-				if (self.threatIndicator) then
-					if (classification == "minus") then
-						self.threatIndicator:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Minus-Flash")
-						self.threatIndicator:SetTexCoord(0, 1, 0, 1)
-						self.threatIndicator:SetWidth(256)
-						self.threatIndicator:SetHeight(128)
-						self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -24, 0)
-					else
-						self.threatIndicator:SetTexCoord(0, 0.9453125, 0, 0.181640625)
-						self.threatIndicator:SetWidth(242)
-						self.threatIndicator:SetHeight(93)
-						self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -24, 0)
-						self.threatNumericIndicator:SetPoint("BOTTOM", PlayerFrame, "TOP", 75, -22)
-					end
-				end
-			else
-				self.haveElite = true
-				TargetFrameBackground:SetSize(119, 42)
-				self.Background:SetSize(119, 42)
-				self.Background:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 7, 35)
-				if (self.threatIndicator) then
-					self.threatIndicator:SetTexCoord(0, 0.9453125, 0.181640625, 0.400390625)
-					self.threatIndicator:SetWidth(242)
-					self.threatIndicator:SetHeight(112)
-					self.threatIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", -22, 9)
-				end
-			end
-
-			if (self.questIcon) then
-				if (UnitIsQuestBoss(self.unit)) then
-					self.questIcon:Show()
-				else
-					self.questIcon:Hide()
-				end
-			end
-		end
-		hooksecurefunc("TargetFrame_CheckClassification", StyleTargetFrame)
-
-		-- Hide Textures
-		hooksecurefunc("PlayerFrame_UpdateStatus", function()
-			PlayerStatusTexture:Hide()
-			PlayerRestGlow:Hide()
-			PlayerStatusGlow:Hide()
-			PlayerPrestigeBadge:SetAlpha(0)
-			PlayerPrestigePortrait:SetAlpha(0)
-			TargetFrameTextureFramePrestigeBadge:SetAlpha(0)
-			TargetFrameTextureFramePrestigePortrait:SetAlpha(0)
-			FocusFrameTextureFramePrestigeBadge:SetAlpha(0)
-			FocusFrameTextureFramePrestigePortrait:SetAlpha(0)
-		end)
-	end
 
 	-- HIT INDICATOR
 	PlayerFrame:UnregisterEvent("UNIT_COMBAT")
@@ -754,25 +521,25 @@ function Interface:CastBars()
 					setBarTicks(0)
 					bar.channelingDuration = nil
 				end
-			elseif event == "UNIT_SPELLCAST_DELAYED" then
-				local unit = ...
-				local bar = CastingBarFrame
-				if bar.channeling and bar.endTime > bar.channelingEnd then
-					local duration = bar.endTime - bar.startTime
-					if bar.channelingDuration and duration > bar.channelingDuration and bar.channelingTicks > 0 then
-						local extraTime = (duration - bar.channelingDuration)
-						for i = 1, bar.channelingTicks do
-							bar.ticks[i] = bar.ticks[i] + extraTime
-						end
-						while bar.ticks[bar.channelingTicks] > bar.channelingTickTime do
-							bar.channelingTicks = bar.channelingTicks + 1
-							bar.ticks[bar.channelingTicks] = bar.ticks[bar.channelingTicks-1] - bar.channelingTickTime
-						end
-						bar.channelingDuration = duration
-						bar.channelingEnd = bar.endTime
-						setBarTicks(bar.channelingTicks, bar.channelingDuration, bar.ticks)
-					end
-				end
+			-- elseif event == "UNIT_SPELLCAST_DELAYED" then
+			-- 	local unit = ...
+			-- 	local bar = CastingBarFrame
+			-- 	if bar.channeling and bar.endTime > bar.channelingEnd then
+			-- 		local duration = bar.endTime - bar.startTime
+			-- 		if bar.channelingDuration and duration > bar.channelingDuration and bar.channelingTicks > 0 then
+			-- 			local extraTime = (duration - bar.channelingDuration)
+			-- 			for i = 1, bar.channelingTicks do
+			-- 				bar.ticks[i] = bar.ticks[i] + extraTime
+			-- 			end
+			-- 			while bar.ticks[bar.channelingTicks] > bar.channelingTickTime do
+			-- 				bar.channelingTicks = bar.channelingTicks + 1
+			-- 				bar.ticks[bar.channelingTicks] = bar.ticks[bar.channelingTicks-1] - bar.channelingTickTime
+			-- 			end
+			-- 			bar.channelingDuration = duration
+			-- 			bar.channelingEnd = bar.endTime
+			-- 			setBarTicks(bar.channelingTicks, bar.channelingDuration, bar.ticks)
+			-- 		end
+			-- 	end
 			end
 		end)
 
@@ -817,7 +584,6 @@ function Interface:CastBars()
 		FocusFrameSpellBar.timer:SetFont(STANDARD_TEXT_FONT, 11,'THINOUTLINE')
 		FocusFrameSpellBar.timer:SetPoint("LEFT", FocusFrameSpellBar, "RIGHT", 4, 0)
 		FocusFrameSpellBar.update = 0.1
-
 	end
 
 	-- CastBar timer function
@@ -1196,7 +962,7 @@ function Interface:Buffs()
 	TempEnchant3:ClearAllPoints()
 	TempEnchant3:SetPoint("TOPRIGHT", TempEnchant2, "TOPLEFT", -buffFrame.colSpacing, 0)
 	  
-	  --hook Blizzard functions
+	--hook Blizzard functions
 	hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
 	hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
 end
@@ -1644,27 +1410,184 @@ end
 
 function Interface:RaidFrame()
 
-	-- hooksecurefunc("CompactUnitFrame_UpdateDebuffs", function(frame)
- --    	if ( frame:IsForbidden() ) then return end
- --    	if frame:GetName():match("^Compact") then
- --    		CompactUnitFrame_SetMaxDebuffs(frame,12); 
- --    		if not frame.debuffFrames[4] then 
- --    			for i=4,12 do 
- --    				debuff=CreateFrame("Button", frame:GetName().."Debuff"..i, frame, "CompactDebuffTemplate");
- --    				debuff.baseSize=22;
- --    				debuff:SetSize(frame.buffFrames[1]:GetSize()) 
- --    				debuff:Hide()
- --    			end 
- --    		end 
- --    		for i=4,12 do       
- --    			if not frame.debuffFrames[i] then return end 
-	-- 			local width = frame.debuffFrames[1]:GetWidth();
-	-- 			frame.debuffFrames[i]:SetSize(width, width);
-	-- 			frame.debuffFrames[i]:ClearAllPoints();
-	-- 			frame.debuffFrames[i]:SetPoint("BOTTOMRIGHT", frame.debuffFrames[1], "BOTTOMLEFT", -(width*(i-7)), 0)
- --    		end
- --    	end
- --    end)
+	--//User Options
+
+	local iconCount = 3
+	local iconScale = 1.2
+	local iconAlpha = 0.9
+	local iconPosition = "TOP"
+	local growDirection = "RIGHT"
+	local showCooldownNumbers = false
+	local cooldownNumberScale = 0.5
+
+	--[[ Notes
+	iconCount: Number of icons you want to display (per frame).
+	iconScale: The scale of the icon based on the size of the default icons on raidframe.
+	iconAlpha: Icon transparency.
+	iconPosition: "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT", "TOP", "BOTTOM", "RIGHT", "LEFT", "CENTER", "HIGHCENTER"
+	growDirection:"DOWN", "UP", "LEFT", "RIGHT"
+	showCooldownNumbers: Show or hide cooldown text (must have it enabled in blizzard settings or use an addon).
+	cooldownNumberScale: Scale the icon's cooldown text size.
+	]]
+
+	local spellList = {
+		--Death Knight
+		48707,  --Anti-Magic Shell
+		48792,  --Icebound Fortitude
+		55233,  --Vampiric Blood
+		194679, --Rune Tap
+		145629, --Anti-Magic Zone
+		81256,  --Dancing Rune Weapon
+
+		--Demon Hunter
+		196555, --Netherwalk
+		187827, --Metamorphosis (Vengeance)
+		212800, --Blur
+
+		--Druid
+		102342, --Ironbark
+		22812,  --Barkskin
+		61336,  --Survival Instincts
+		5215,   --Prowl
+
+		--Hunter
+		186265, --Aspect of the Turtle
+		53480,  --Roar of Sacrifice
+		264735, --Survival of the Fittest (Pet Ability)
+		281195, --Survival of the Fittest (Lone Wolf)
+
+		--Mage
+		45438,  --Ice Block
+		198111, --Temporal Shield
+		198144, --Ice Form
+
+		--Monk
+		125174, --Touch of Karma
+		120954, --Fortifying Brew (Brewmaster)
+		243435, --Fortifying Brew (Mistweaver)
+		201318, --Fortifying Brew (Windwalker)
+		115176, --Zen Meditation
+		116849, --Life Cocoon
+		122278, --Dampen Harm
+		122783, --Diffuse Magic
+
+		--Paladin
+		642,    --Divine Shield
+		1022,   --Blessing of Protection
+		204018, --Blessing of Spellwarding
+		498,    --Divine Protection
+		31850,  --Ardent Defender
+		86659,  --Guardian of Ancient Kings
+
+		--Priest
+		47788,  --Guardian Spirit
+		47585,  --Dispersion
+		33206,  --Pain Suppression
+		81782,  --Power Word: Barrier
+		271466, --Luminous Barrier
+
+		--Rogue
+		31224,  --Cloak of Shadows
+		5277,   --Evasion
+		199754, --Riposte
+		45182,  --Cheating Death
+		1784,   --Stealth
+
+		--Shaman
+		210918, --Ethereal Form
+		108271, --Astral Shift
+
+		--Warlock
+		104773, --Unending Resolve
+		108416, --Dark Pact
+
+		--Warrior
+		118038, --Die by the Sword
+		184364, --Enraged Regeneration
+		871,    --Shield Wall
+		97463,  --Rallying Cry
+		12975,  --Last Stand
+
+		--Other
+		"Food",
+		"Drink",
+		"Food & Drink",
+		"Refreshment",
+	}
+
+	local buffs = {}
+	local overlays = {}
+
+	for k, v in ipairs(spellList) do
+	    buffs[v] = k
+	end
+
+	--Anchor Settings
+	if iconPosition == "HIGHCENTER" then
+	    anchor = "BOTTOM"
+	    iconPosition = "CENTER"
+	else
+	    anchor = iconPosition
+	end
+
+	hooksecurefunc("CompactUnitFrame_UpdateBuffs", function(self)
+	    if self:IsForbidden() or not self:IsVisible() or not self.buffFrames then
+	        return
+	    end
+
+	    local unit = self.displayedUnit
+	    local frame = self:GetName() .. "BuffOverlay"
+	    local index = 1
+	    local overlayNum = 1
+
+	    for i = 1, iconCount do
+	        local overlay = overlays[frame .. i]
+	        if not overlay then
+	            if not self or not unit then return end
+	            overlay = _G[frame .. i] or CreateFrame("Button", frame .. i, self, "CompactAuraTemplate")
+	            overlay.cooldown:SetHideCountdownNumbers(not showCooldownNumbers)
+	            overlay.cooldown:SetScale(cooldownNumberScale)
+	            overlay:ClearAllPoints()
+	            if i == 1 then
+	                overlay:SetPoint(anchor, self, iconPosition)
+	            else
+	                if growDirection == "DOWN" then
+	                    overlay:SetPoint("TOP", _G[frame .. i - 1], "BOTTOM")
+	                elseif growDirection == "LEFT" then
+	                    overlay:SetPoint("BOTTOMRIGHT", _G[frame .. i - 1], "BOTTOMLEFT")
+	                elseif growDirection == "UP" then
+	                    overlay:SetPoint("BOTTOM", _G[frame .. i - 1], "TOP")
+	                else
+	                    overlay:SetPoint("BOTTOMLEFT", _G[frame .. i - 1], "BOTTOMRIGHT")
+	                end
+	            end
+	            overlay:SetScale(iconScale)
+	            overlay:SetAlpha(iconAlpha)
+	            overlay:EnableMouse(false)
+	            overlay:RegisterForClicks()
+	            overlays[frame .. i] = overlay
+	        end
+	        overlay:Hide()
+	    end
+
+	    while overlayNum <= iconCount do
+	        local buffName, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, index)
+	        if spellId then
+	            if buffs[buffName] and not buffs[spellId] then
+	                buffs[spellId] = buffs[buffName]
+	            end
+	            
+	            if buffs[spellId] then
+	                CompactUnitFrame_UtilSetBuff(overlays[frame .. overlayNum], unit, index, nil)
+	                overlays[frame .. overlayNum]:SetSize(self.buffFrames[1]:GetSize())
+	                overlayNum = overlayNum + 1
+	            end
+	        else
+	            break
+	        end
+	        index = index + 1
+	    end
+	end)
 end
 
 function Interface:BossFrame()
