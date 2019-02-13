@@ -117,7 +117,7 @@ function MythicPlus:OnEnable()
 		self:SyncFeature(name)
 	end
 
-	self:Progress()
+	--self:Progress()
 
 	self:Timer()
 	self:Schedule()
@@ -224,7 +224,7 @@ end
 -- Functions
 -------------------------------------------------------------------------------
 
-function MythicPlus:Timer()
+function MythicPlus:Timer()	
 
 	local TIME_FOR_3 = 0.6
 	local TIME_FOR_2 = 0.8
@@ -352,7 +352,8 @@ function MythicPlus:Timer()
 	hooksecurefunc("Scenario_ChallengeMode_ShowBlock", ShowBlock)
 
 	function MythicPlus:PLAYER_ENTERING_WORLD()
-		challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()			
+		challengeMapID = C_ChallengeMode.GetActiveChallengeMapID()
+		local totalQuantity = 100
 	end
 
 	function MythicPlus:CHALLENGE_MODE_START()
@@ -776,7 +777,7 @@ function MythicPlus:Progress()
 	local function getEstimatedProgress(npcID)
 		local npcValue, maxQuantity = getValue(npcID), getMaxQuantity()
 		if npcValue and maxQuantity then
-			return (npcValue / maxQuantity) * 100
+			return tonumber(format("%.2f", (npcValue / maxQuantity)*100))
 		end
 	end
 
@@ -794,10 +795,11 @@ function MythicPlus:Progress()
 	local function getTooltipMessage(npcID)
 		local text
 		local rawProg = getExactProgress(npcID)
+		local estProg = getEstimatedProgress(npcID)
 		if not rawProg then
 			text = string.format("%s : +%s", "- Enemy Forces", "n/a")
 		else
-			text = string.format("%s : +%s", "- Enemy Forces", rawProg)
+			text = string.format("|cFF82E0FF%s : +%s / +%s%s", "- Enemy Forces", rawProg, estProg, "%")
 		end
 		return text
 	end
@@ -806,6 +808,7 @@ function MythicPlus:Progress()
 		if isMythicPlus() then
 			local unit = select(2, self:GetUnit())
 			if unit then
+				if not UnitIsEnemy("player", unit) then return end
 				local guid = UnitGUID(unit)
 				local npcID = getNPCID(guid)
 				if npcID then
@@ -828,126 +831,5 @@ function MythicPlus:Progress()
 		end	
 	end
 
-	---
-	--- NAMEPLATES
-	---
-
-	local function createNameplateText(token)
-		local npcID = getNPCID(UnitGUID(token))
-		if npcID and MythicPlus.settings.enableNameplateText then
-			if activeNameplates[token] then
-				activeNameplates[token]:Hide() -- This should never happen...
-			end
-			local nameplate = C_NamePlate.GetNamePlateForUnit(token)
-			if nameplate then
-				activeNameplates[token] = nameplate:CreateFontString(token.."mppProgress", nameplate.UnitFrame.healthBar, "GameFontHighlightSmall")
-				activeNameplates[token]:SetText("+?%")
-			end
-		end
-	end
-
-	local function removeNameplateText(token)
-		if activeNameplates[token] ~= nil then
-			activeNameplates[token]:SetText("")
-			activeNameplates[token]:Hide()
-			activeNameplates[token] = nil
-		end
-	end
-		
-	local function updateNameplateValue(token)
-		local npcID = getNPCID(UnitGUID(token))
-		if npcID then
-			local estProg = getEstimatedProgress(npcID)
-			local rawProg = getExactProgress(npcID)
-			if estProg and estProg > 0 then
-				local tempMessage = "|cFF82E0FF(+"
-				tempMessage = string.format("%s%s)", tempMessage, rawProg, estProg, "%")
-				activeNameplates[token]:SetText(tempMessage)
-				activeNameplates[token]:SetText(tempMessage)
-				activeNameplates[token]:Show()
-				return true
-			end
-		end
-		if activeNameplates[token] then -- If mob dies, a new nameplate is created but not shown, and this ui widget will then not exist.
-			activeNameplates[token]:SetText("")
-			activeNameplates[token]:Hide()
-		end
-		return false
-	end
-
-	local function updateNameplateValues()
-		for token,_ in pairs(activeNameplates) do
-			updateNameplateValue(token)
-		end
-	end
-
-	local function updateNameplatePosition(token)
-		local nameplate = C_NamePlate.GetNamePlateForUnit(token)
-		if nameplate.UnitFrame.unitExists and activeNameplates[token] ~= nil then
-			activeNameplates[token]:SetPoint("LEFT", nameplate.UnitFrame.name, "RIGHT", 3, -1)
-			activeNameplates[token]:SetFont("Fonts\\FRIZQT__.TTF", 8)
-		else
-			removeNameplateText(token)
-		end
-	end
-
-	local function onAddNameplate(token)
-		if MythicPlus.settings.enableNameplateText and isMythicPlus() and not isDungeonFinished() then
-			createNameplateText(token)
-			updateNameplateValue(token)
-			updateNameplatePosition(token)
-		end
-	end
-
-	local function onRemoveNameplate(token)
-		removeNameplateText(token)
-		activeNameplates[token] = nil -- This line has been made superflous tbh.
-	end
-
-	local function removeNameplates()
-		for token,_ in pairs(activeNameplates) do
-			removeNameplateText(token)
-		end
-	end
-
-	local function updateNameplates()
-		if isMythicPlus() then
-			for token,_ in pairs(activeNameplates) do
-				updateNameplatePosition(token)
-			end
-		else
-			removeNameplates()
-		end
-	end
-
-	---
-	--- HOOKS
-	---
-
-	local function onAddonLoad()
-		if isMythicPlus() then
-			quantity = getEnemyForcesProgress()
-		else
-			quantity = 0
-		end
-	end
-
-	local MythicProgress = CreateFrame("FRAME")
-	MythicProgress:RegisterEvent("PLAYER_ENTERING_WORLD")
-	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-	MythicProgress:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-
-	function MythicProgress:OnEvent(event, ...)
-		args={...}
-		if event == "PLAYER_ENTERING_WORLD" then
-			onAddonLoad(args[1])
-		elseif event == "NAME_PLATE_UNIT_ADDED" then
-			onAddNameplate(...)
-		elseif event == "NAME_PLATE_UNIT_REMOVED" then
-			onRemoveNameplate(...)
-		end
-	end
-
-	MythicProgress:SetScript("OnEvent", MythicProgress.OnEvent)
 	GameTooltip:HookScript("OnTooltipSetUnit", onNPCTooltip)
 end
