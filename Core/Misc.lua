@@ -842,7 +842,7 @@ function Misc:TooltipID()
 	end)
 
 	hooksecurefunc("TaskPOI_OnEnter", function(self)
-	  if self and self.questID then addLine(WorldMapTooltip, self.questID, kinds.quest) end
+	  if self and self.questID then addLine(GameTooltip, self.questID, kinds.quest) end
 	end)
 end
 
@@ -2251,6 +2251,9 @@ function Misc:ItemLevel()
 	function ShowPaperDollItemLevel(self, unit)
 	    result = "";
 	    id = self:GetID();
+	    local textureName = GetInventoryItemTexture("player", id);
+
+    	local hasItem = textureName ~= nil;
 	    if id == 4 or id > 17 then
 	        return
 	    end;
@@ -2260,7 +2263,7 @@ function Misc:ItemLevel()
 	        self.levelString:SetPoint("TOP");
 	        self.levelString:SetTextColor(1, 0.82, 0);
 	    end;
-	    if unit and self.hasItem then
+	    if unit and hasItem then
 	        _, level, _, _, quality = LibItemLevel:GetUnitItemInfo(unit, id);
 	        if level > 0 and quality > 1 then
 	            self.levelString:SetText(level);
@@ -2563,6 +2566,9 @@ function Misc:PowerBarAlt()
 	PlayerPowerBarAlt:SetMovable(true)
 	PlayerPowerBarAlt:SetUserPlaced(true)
 
+	ZoneAbilityFrame:Hide()
+	ZoneAbilityFrame:UnregisterAllEvents()
+
 	local locked = true
 	local moving = nil
 
@@ -2631,6 +2637,13 @@ function Misc:PowerBarAlt()
 		end
 	end)
 	overlay:RegisterEvent("CVAR_UPDATE")
+
+	PlayerPowerBarAlt:SetScale(0.8)
+
+	function UnitPowerBarAlt_OnEnter(self) 
+    return 
+end
+
 
 	function PowerBarAlt:Move()
 		if locked == false then

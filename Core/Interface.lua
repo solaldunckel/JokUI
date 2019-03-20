@@ -88,7 +88,7 @@ function Interface:OnEnable()
 	self:ReAnchor()
 	self:Mover()
 	self:AutoQuest()
-	self:BossFrame()
+	--self:BossFrame()
 	self:Skin()
 end
 
@@ -969,19 +969,19 @@ end
 function Interface:ReAnchor()
 
   	-- ETC
-  	VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, 0)
-  	MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
+  	--VerticalMultiBarsContainer:SetPoint("TOP", MinimapCluster, "BOTTOM", -2, 0)
+  	--MicroButtonAndBagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 5, -4)
 
-  	for i,v in pairs({
-		MainMenuBarBackpackButton,
-  		CharacterBag0Slot,
-  		CharacterBag1Slot,
-  		CharacterBag2Slot,
-  		CharacterBag3Slot,
-  		MicroButtonAndBagsBar.MicroBagBar,
-	}) do
-        v:Hide()
-	end	
+ --  	for i,v in pairs({
+	-- 	MainMenuBarBackpackButton,
+ --  		CharacterBag0Slot,
+ --  		CharacterBag1Slot,
+ --  		CharacterBag2Slot,
+ --  		CharacterBag3Slot,
+ --  		MicroButtonAndBagsBar.MicroBagBar,
+	-- }) do
+ --        v:Hide()
+	-- end	
 
 	if InCombatLockdown() then return end
 
@@ -1018,27 +1018,53 @@ function Interface:AutoQuest()
 			local void, void, void, void, void, npcID = strsplit("-", npcGuid)
 			if npcID then
 				-- Ignore specific NPCs for selecting, accepting and turning-in quests (required if automation has consequences)
-				if npcID == "45400" 	-- Fiona's Caravan (Eastern Plaguelands)
-				or npcID == "18166" 	-- Khadgar (Allegiance to Aldor/Scryer, Shattrath)
-				or npcID == "114719" 	-- Trader Caelen (Obliterum Forge, Dalaran, Broken Isles)
-				or npcID == "6294" 		-- Krom Stoutarm (Heirloom Curator, Ironforge)
+				if npcID == "15192" 	-- Anachronos (Caverns of Time)
+				or npcID == "119388" 	-- Chieftain Hatuun (Krokul Hovel, Krokuun)
 				or npcID == "6566" 		-- Estelle Gendry (Heirloom Curator, Undercity)
+				or npcID == "45400" 	-- Fiona's Caravan (Eastern Plaguelands)
+				or npcID == "18166" 	-- Khadgar (Allegiance to Aldor/Scryer, Shattrath)
+				or npcID == "55402" 	-- Korgol Crushskull (Darkmoon Faire, Pit Master)
+				or npcID == "6294" 		-- Krom Stoutarm (Heirloom Curator, Ironforge)
+				or npcID == "109227" 	-- Meliah Grayfeather (Tradewind Roost, Highmountain)
+				or npcID == "99183" 	-- Renegade Ironworker (Tanaan Jungle, repeatable quest)
+				or npcID == "114719" 	-- Trader Caelen (Obliterum Forge, Dalaran, Broken Isles)
+				-- Seals of Fate
+				or npcID == "111243" 	-- Archmage Lan'dalock (Seal quest, Dalaran)
+				or npcID == "87391" 	-- Fate-Twister Seress (Seal quest, Stormshield)
+				or npcID == "88570"		-- Fate-Twister Tiklal (Seal quest, Horde)
+				or npcID == "142063" 	-- Tezran (Seal quest, Boralus Harbor)
+				-- Wartime Donations (Alliance)
+				or npcID == "142994" 	-- Brandal Darkbeard (Boralus)
+				or npcID == "142995" 	-- Charlane (Boralus)
+				or npcID == "142993" 	-- Chelsea Strand (Boralus)
+				or npcID == "142998" 	-- Faella (Boralus)
+				or npcID == "143004" 	-- Larold Kyne (Boralus)
+				or npcID == "143005" 	-- Liao (Boralus)
+				or npcID == "143007" 	-- Mae Wagglewand (Boralus)
+				or npcID == "143008" 	-- Norber Togglesprocket (Boralus)
+				or npcID == "142685" 	-- Paymaster Vauldren (Boralus)
+				or npcID == "142700" 	-- Quartermaster Peregrin (Boralus)
+				or npcID == "142997" 	-- Senedras (Boralus)
+				-- Wartime Donations (Horde)
+				or npcID == "142970" 	-- Kuma Longhoof (Dazar'alor)
+				or npcID == "142969" 	-- Logarr (Dazar'alor)
+				or npcID == "142973" 	-- Mai-Lu (Dazar'alor)
+				or npcID == "142977" 	-- Meredith Swane (Dazar'alor)
+				or npcID == "142981" 	-- Merill Redgrave (Dazar'alor)
+				or npcID == "142157" 	-- Paymaster Grintooth (Dazar'alor)
+				or npcID == "142158" 	-- Quartermaster Rauka (Dazar'alor)
+				or npcID == "142975" 	-- Seamstress Vessa (Dazar'alor)
+				or npcID == "142983" 	-- Swizzle Fizzcrank (Dazar'alor)
+				or npcID == "142992" 	-- Uma'wi (Dazar'alor)
+				or npcID == "142159" 	-- Zen'kin (Dazar'alor)
 				then
 					return true
 				end
-				-- Ignore specific NPCs for selecting quests only (required if incomplete quest turn-ins are selected automatically)
+				-- Ignore specific NPCs for selecting quests only (only used for items that have no other purpose)
 				if actionType == "Select" then
-					if npcID == "15192" 	-- Anachronos (Caverns of Time)
-					or npcID == "111243" 	-- Archmage Lan'dalock (Seal quest, Dalaran)
-					or npcID == "119388" 	-- Chieftain Hatuun (Krokul Hovel, Krokuun)
-					or npcID == "87391" 	-- Fate-Twister Seress (Seal quest, Stormshield)
-					or npcID == "88570"		-- Fate-Twister Tiklal (Seal quest, Horde)
-					or npcID == "87706" 	-- Gazmolf Futzwangler (Reputation quests, Nagrand, Draenor)
-					or npcID == "55402" 	-- Korgol Crushskull (Darkmoon Faire, Pit Master)
+					if npcID == "87706" 	-- Gazmolf Futzwangler (Reputation quests, Nagrand, Draenor)
 					or npcID == "70022" 	-- Ku'ma (Isle of Giants, Pandaria)
 					or npcID == "12944" 	-- Lokhtos Darkbargainer (Thorium Brotherhood, Blackrock Depths)
-					or npcID == "109227" 	-- Meliah Grayfeather (Tradewind Roost, Highmountain)
-					or npcID == "99183" 	-- Renegade Ironworker (Tanaan Jungle, repeatable quest)
 					or npcID == "87393" 	-- Sallee Silverclamp (Reputation quests, Nagrand, Draenor)
 					then
 						return true
@@ -1048,12 +1074,28 @@ function Interface:AutoQuest()
 		end
 	end
 
-	-- Function to check if quest requires currency
+	-- Function to check if quest requires currency or a crafting reagent
 	local function QuestRequiresCurrency()
 		for i = 1, 6 do
 			local progItem = _G["QuestProgressItem" ..i] or nil
-			if progItem and progItem:IsShown() and progItem.type == "required" and progItem.objectType == "currency" then
-				return true
+			if progItem and progItem:IsShown() and progItem.type == "required" then
+				if progItem.objectType == "currency" then
+					-- Quest requires currency so do nothing
+					return true
+				elseif progItem.objectType == "item" then
+					-- Quest requires an item
+					local name, texture, numItems = GetQuestItemInfo("required", i)
+					if name then
+						local itemID = GetItemInfoInstant(name)
+						if itemID then
+							local void, void, void, void, void, void, void, void, void, void, void, void, void, void, void, void, isCraftingReagent = GetItemInfo(itemID)
+							if isCraftingReagent then
+								-- Item is a crafting reagent so do nothing
+								return true
+							end
+						end
+					end
+				end
 			end
 		end
 	end
@@ -1147,11 +1189,6 @@ function Interface:AutoQuest()
 			end
 		end
 
-		-- Show quest dialog for quests that use the objective tracker (it will be completed automatically)
-		-- if event == "QUEST_AUTOCOMPLETE" then
-		-- 	LeaPlusLC.PopupQuestTicker = C_Timer.NewTicker(0.25, PopupQuestComplete, 20)
-		-- end
-
 		----------------------------------------------------------------------
 		-- Select quests automatically
 		----------------------------------------------------------------------
@@ -1172,12 +1209,14 @@ function Interface:AutoQuest()
 						for i = 1, availableCount do
 							if _G["QuestTitleButton" .. i].isActive == 0 then
 								-- Select available quests
-								C_Timer.After(0.01, function() SelectAvailableQuest(_G["QuestTitleButton" .. i]:GetID()) end)
+								SelectAvailableQuest(_G["QuestTitleButton" .. i]:GetID())
+								break
 							else
 								-- Select completed quests
 								local void, isComplete = GetActiveTitle(i)
 								if isComplete then
 									SelectActiveQuest(_G["QuestTitleButton" .. i]:GetID())
+									break
 								end
 							end
 						end
@@ -1189,13 +1228,15 @@ function Interface:AutoQuest()
 						for i = 1, availableCount do
 							if _G["GossipTitleButton" .. i].type == "Available" then
 								-- Select available quests
-								C_Timer.After(0.01, function() SelectGossipAvailableQuest(i) end)
+								SelectGossipAvailableQuest(i)
+								break
 							else
 								-- Select completed quests
 								local isComplete = select(i * 6 - 5 + 3, GetGossipActiveQuests()) -- 4th argument of 6 argument line
 								if isComplete then
 									if _G["GossipTitleButton" .. i].type == "Active" then
 										SelectGossipActiveQuest(_G["GossipTitleButton" .. i]:GetID())
+										break
 									end
 								end
 							end
@@ -1507,8 +1548,8 @@ function Interface:BossFrame()
 		self.bossFrame = _G["Boss1TargetFrame"]
 		self.defaultScale = self.bossFrame:GetScale()
 		self.bossFrame.OrgSetPoint = self.bossFrame.SetPoint
-		self.bossFrame.SetPoint = function() end
-		self.bossFrame:HookScript("OnHide", function() anchorFrame:Hide() end)
+		--self.bossFrame.SetPoint = function() end
+		--self.bossFrame:HookScript("OnHide", function() anchorFrame:Hide() end)
 
 		anchorFrame:SetMovable(true)
 		anchorFrame:SetScale(self.defaultScale)
@@ -1521,15 +1562,15 @@ function Interface:BossFrame()
 		anchorFrame:SetScript("OnShow", anchorFrame.OnShow)
 		anchorFrame:Hide()
 		if Interface.settings.BossFrame then
-			anchorFrame:ClearAllPoints()
-			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
-			self.bossFrame:ClearAllPoints() -- taint
-			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
+			--anchorFrame:ClearAllPoints()
+			--anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			--self.bossFrame:ClearAllPoints() -- taint
+			--self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
 		else
-			anchorFrame:ClearAllPoints()
-			anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
-			self.bossFrame:ClearAllPoints() -- taint
-			self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
+			--anchorFrame:ClearAllPoints()
+			--anchorFrame:SetPoint(unpack(Interface.settings.BossFrame))
+			--self.bossFrame:ClearAllPoints() -- taint
+			--self.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame)) -- taint
 		end
 
 		self.testMode = false
@@ -1555,9 +1596,9 @@ function Interface:BossFrame()
 
 	function anchorFrame:OnUpdate(elapsed)
 		if not InCombatLockdown() and self.moving then
-			Interface.settings.BossFrame = {self:GetPoint(1)}
-			Interface.bossFrame:ClearAllPoints()
-			Interface.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame))
+			--nterface.settings.BossFrame = {self:GetPoint(1)}
+			--Interface.bossFrame:ClearAllPoints()
+			--Interface.bossFrame:OrgSetPoint(unpack(Interface.settings.BossFrame))
 		end
 	end
 
