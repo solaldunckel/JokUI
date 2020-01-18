@@ -14,13 +14,13 @@ local misc_defaults = {
     	PowerBarAlt = {
     		point = "BOTTOM",
     		x = -240,
-    		y = 197, 
+    		y = 197,
     	},
     	ExtraActionButton = {
     		point = "BOTTOM",
     		x = 0,
-    		y = 205, 
-    	},		
+    		y = 205,
+    	},
     }
 }
 
@@ -68,9 +68,9 @@ function Misc:OnInitialize()
 	self:Quests()
 	self:PowerBarAlt()
 	self:FixGroupContainer()
-	self:PvPRewardTooltip()	
+	self:AzeriteTalent()
 
-	-- Set Max Equipement Sets to 100.	
+	-- Set Max Equipement Sets to 100.
 	setglobal("MAX_EQUIPMENT_SETS_PER_PLAYER",100)
 end
 
@@ -142,7 +142,7 @@ do
 		true,
 		false,
 		function(state)
-			if state then				
+			if state then
 				CinematicFrame:HookScript("OnShow", function(self, ...)
 				  if IsModifierKeyDown() then return end
 				  CinematicFrame_CancelCinematic()
@@ -181,8 +181,8 @@ do
 		"Automatically fills the 'DELETE' string when trying to delete a rare item.",
 		true,
 		false,
-		function(state)		
-			hooksecurefunc(StaticPopupDialogs["DELETE_GOOD_ITEM"],"OnShow",function(s) 
+		function(state)
+			hooksecurefunc(StaticPopupDialogs["DELETE_GOOD_ITEM"],"OnShow",function(s)
 				if state then s.editBox:SetText(DELETE_ITEM_CONFIRM_STRING) end
 			end)
 		end)
@@ -196,10 +196,10 @@ do
 		false,
 		function(state)
 			if state then
-				LossOfControlFrame:ClearAllPoints() 
+				LossOfControlFrame:ClearAllPoints()
 				LossOfControlFrame:SetPoint("CENTER",UIParent,"CENTER",0,0)
 				select(1,LossOfControlFrame:GetRegions()):SetAlpha(0)
-				select(2,LossOfControlFrame:GetRegions()):SetAlpha(0) 
+				select(2,LossOfControlFrame:GetRegions()):SetAlpha(0)
 				select(3,LossOfControlFrame:GetRegions()):SetAlpha(0)
 			end
 		end)
@@ -257,7 +257,7 @@ function Misc:AutoRep()
 	StartMsg.s:SetAllPoints()
 	StartMsg.s:SetColorTexture(0.1, 0.1, 0.1, 1.0)
 
-	StartMsg.f = StartMsg:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge") 
+	StartMsg.f = StartMsg:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	StartMsg.f:SetAllPoints();
 	StartMsg.f:SetText("SELLING JUNK")
 
@@ -313,9 +313,9 @@ function Misc:AutoRep()
 		end
 
 		-- Stop selling if no items were sold for this iteration or iteration limit was reached
-		if SoldCount == 0 or SellJunkTicker and SellJunkTicker._remainingIterations == 1 then 
-			StopSelling() 
-			if totalPrice > 0 then 
+		if SoldCount == 0 or SellJunkTicker and SellJunkTicker._remainingIterations == 1 then
+			StopSelling()
+			if totalPrice > 0 then
 				print("Sold junk for".. " " .. GetCoinText(totalPrice) .. ".")
 			end
 		end
@@ -386,7 +386,7 @@ function Misc:AutoRep()
 end
 
 function Misc:SGrid()
-	
+
 	local frame
 	local w
 	local h
@@ -451,7 +451,7 @@ function Misc:SGrid()
 
 	SLASH_SGRIDA1 = "/sgrid"
 	SlashCmdList["SGRIDA"] = function(msg, editbox)
-		SGrid(msg)	
+		SGrid(msg)
 	end
 end
 
@@ -492,7 +492,7 @@ function Misc:FixGroupContainer()
 	                container:Hide()
 	            end
 	        end
-	    end 
+	    end
 	end)
 end
 
@@ -1058,7 +1058,7 @@ function Misc:Specialization()
 	SpecFrame.text:SetShadowOffset(1, -1)
 	SpecFrame.text:SetShadowColor(0, 0, 0)
 
-	local function update(self)		
+	local function update(self)
 		local specIndex = GetSpecialization();
 		if not specIndex then
 			SpecFrame.text:SetText('N/A')
@@ -1091,7 +1091,7 @@ function Misc:Specialization()
 			end
 		end
 
-		SpecFrame.text:SetFormattedText('%s: %s %s: %s', "|c"..color.."SPEC ", talent," - ".. " LOOT ", loot)		
+		SpecFrame.text:SetFormattedText('%s: %s %s: %s', "|c"..color.."SPEC ", talent," - ".. " LOOT ", loot)
 	end
 
 	SpecFrame:SetScript("OnEvent", function(self, event)
@@ -1136,9 +1136,9 @@ function Misc:Specialization()
 
 			EasyMenu(menuList, menuFrame, SpecFrame, -4, -7, "MENU", 2)
 			DropDownList1:SetScale(0.9)
-		end	
+		end
 	end)
-	
+
 	local function addonTooltip(self)
 		GameTooltip:ClearLines()
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -1176,6 +1176,44 @@ function Misc:Specialization()
 	SpecFrame:RegisterEvent("PLAYER_LOOT_SPEC_UPDATED")
 	SpecFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 	SpecFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+end
+
+function Misc:AzeriteTalent()
+	if not IsAddOnLoaded("Blizzard_TalentUI") then
+		hooksecurefunc("LoadAddOn", function(addon)
+			if addon == "Blizzard_TalentUI" then
+				local AzeriteButton = CreateFrame('Frame', 'AzeriteButton', PlayerTalentFrameTalents)
+				AzeriteButton:SetPoint("LEFT", PlayerTalentFrame.TopTileStreaks, "LEFT", 100, 0)
+				AzeriteButton:SetWidth(38)
+				AzeriteButton:SetHeight(38)
+				AzeriteButton:EnableMouse(true)
+				AzeriteButton:SetFrameStrata("HIGH")
+
+				AzeriteButton.icon = AzeriteButton:CreateTexture("AzeriteButton", "BACKGROUND")
+				AzeriteButton.icon:SetTexCoord(0.1,0.9,0.1,0.9)
+				AzeriteButton.icon:SetWidth(38)
+				AzeriteButton.icon:SetHeight(38)
+				AzeriteButton.icon:SetPoint("TOPLEFT", 0, 0)
+				AzeriteButton.icon:SetTexture(1869493)
+
+				AzeriteButton:SetScript("OnMouseDown", function(self, button)
+					if button == "LeftButton" then
+						if not IsAddOnLoaded("Blizzard_AzeriteEssenceUI") then
+							LoadAddOn("Blizzard_AzeriteEssenceUI")
+						end
+						if not AzeriteEssenceUI:IsShown() then
+							ShowUIPanel(AzeriteEssenceUI)
+						else
+							HideUIPanel(AzeriteEssenceUI)
+						end
+					end
+				end)
+
+			end
+		end)
+	end
+
+
 end
 
 function Misc:Warmode()
@@ -1532,10 +1570,10 @@ function Misc:Friends()
 									if UnitInParty(info[4]) or UnitInRaid(info[4]) then grouped = 1 else grouped = 2 end
 
 									GameTooltip:AddDoubleLine(
-										format("|T%s:18:18:0:0:64:64:4:60:4:60|t  |cff82c5ff%s (|r%s|cff82c5ff)|r%s", BNet_GetClientTexture(info[6]), info[2], info[4], status), 
+										format("|T%s:18:18:0:0:64:64:4:60:4:60|t  |cff82c5ff%s (|r%s|cff82c5ff)|r%s", BNet_GetClientTexture(info[6]), info[2], info[4], status),
 										info[15],
 										classc.r,classc.g,classc.b)
-									
+
 								end
 							end
 						end
@@ -1588,7 +1626,7 @@ function Misc:Dampening()
 		local _, instanceType = IsInInstance()
 		if instanceType == "arena" then
 			self:RegisterUnitEvent("UNIT_AURA", "player")
-		else	
+		else
 			self:UnregisterEvent("UNIT_AURA")
 		end
 	end
@@ -2566,9 +2604,6 @@ function Misc:PowerBarAlt()
 	PlayerPowerBarAlt:SetMovable(true)
 	PlayerPowerBarAlt:SetUserPlaced(true)
 
-	ZoneAbilityFrame:Hide()
-	ZoneAbilityFrame:UnregisterAllEvents()
-
 	local locked = true
 	local moving = nil
 
@@ -2623,8 +2658,8 @@ function Misc:PowerBarAlt()
 		PlayerPowerBarAlt.statusFrame.text:SetText("")
 	end)
 
-	overlay:SetScript("OnEnter", function() 
-		UnitPowerBarAlt_OnEnter(PlayerPowerBarAlt) 
+	overlay:SetScript("OnEnter", function()
+		UnitPowerBarAlt_OnEnter(PlayerPowerBarAlt)
 	end)
 
 	overlay:SetScript("OnLeave", function()
@@ -2640,10 +2675,9 @@ function Misc:PowerBarAlt()
 
 	PlayerPowerBarAlt:SetScale(0.8)
 
-	function UnitPowerBarAlt_OnEnter(self) 
-    return 
-end
-
+	function UnitPowerBarAlt_OnEnter(self)
+		return
+	end
 
 	function PowerBarAlt:Move()
 		if locked == false then
@@ -2658,7 +2692,7 @@ end
 			MoveBackgroundFrame:SetFrameStrata("DIALOG")
 			MoveBackgroundFrame:Show()
 		end
-		
+
 		if UnitAlternatePowerInfo("player") then return end -- don't mess with it if it's real!
 
 		UnitPowerBarAlt_TearDown(PlayerPowerBarAlt)
@@ -2693,56 +2727,4 @@ end
 			PlayerPowerBarAlt:Hide()
 		end
 	end
-end
-
-function Misc:PvPRewardTooltip()	
-	local BFA_START_SEASON = 26;
-	local SEASON_REWARD_ACHIEVEMENTS = {
-		[BFA_START_SEASON] = {
-			[PLAYER_FACTION_GROUP[0]] = 13136,
-			[PLAYER_FACTION_GROUP[1]] = 13137,
-		},
-		[BFA_START_SEASON + 1] = {
-			[PLAYER_FACTION_GROUP[0]] = 13227,
-			[PLAYER_FACTION_GROUP[1]] = 13228,
-		},
-	};
-
-	local seasonAchievements = SEASON_REWARD_ACHIEVEMENTS[GetCurrentArenaSeason()];
-	local achievementID = seasonAchievements and seasonAchievements[UnitFactionGroup("player")];
-
-	LoadAddOn("Blizzard_PVPUI")
-
-	hooksecurefunc(PVPQueueFrame.HonorInset.RatedPanel.SeasonRewardFrame, "UpdateTooltip", function(self)
-		
-		EmbeddedItemTooltip:SetOwner(self, "ANCHOR_RIGHT");
-		GameTooltip_SetTitle(EmbeddedItemTooltip, PVP_SEASON_REWARD);
-
-		local criteriaString, criteriaType, completed, quantity, reqQuantity, charName, flags, assetID, quantityString = GetAchievementCriteriaInfo(PVPUISeasonRewardFrameMixin:GetAchievementID(), 1);
-		local victoriesLeft2v2 = math.ceil((reqQuantity-quantity)/10)
-		local victoriesLeft3v3 = math.ceil((reqQuantity-quantity)/30)
-		local victoriesLeftrbg = math.ceil((reqQuantity-quantity)/60)
-
-		if criteriaString then
-			if completed then
-				GameTooltip_AddColoredLine(EmbeddedItemTooltip, GOAL_COMPLETED, GREEN_FONT_COLOR);
-			else
-				local wordWrap = true;
-				GameTooltip_AddNormalLine(EmbeddedItemTooltip, criteriaString, wordWrap);
-				local roundToNearestInteger = true;
-				local progressString = format("%s (%d / %d)", FormatPercentage(quantity / reqQuantity, roundToNearestInteger), quantity, reqQuantity)
-				GameTooltip_ShowProgressBar(EmbeddedItemTooltip, 0, reqQuantity, quantity, progressString);
-				GameTooltip_AddNormalLine(EmbeddedItemTooltip, format("Victories required:\n    2v2:  %d\n    3v3:  %d\n    RBG: %d", victoriesLeft2v2, victoriesLeft3v3, victoriesLeftrbg), wordWrap)
-				local rewardItemID = C_AchievementInfo.GetRewardItemID(PVPUISeasonRewardFrameMixin:GetAchievementID());
-				if rewardItemID then
-					GameTooltip_AddBlankLinesToTooltip(EmbeddedItemTooltip, 1);
-					GameTooltip_AddNormalLine(EmbeddedItemTooltip, REWARD, wordWrap);
-					EmbeddedItemTooltip_SetItemByID(EmbeddedItemTooltip.ItemTooltip, rewardItemID);
-				end
-			end
-		end	
-
-		EmbeddedItemTooltip:Show()
-
-	end)
 end
